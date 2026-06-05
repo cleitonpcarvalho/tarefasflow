@@ -1,0 +1,51 @@
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --tf-purple: #534AB7;
+  --tf-purple-light: #EEEDFE;
+  --tf-teal-bg: #E1F5EE;
+  --tf-teal-text: #0F6E56;
+  --tf-coral-bg: #FAECE7;
+  --tf-coral-text: #993C1D;
+  --tf-amber-bg: #FAEEDA;
+  --tf-amber-text: #854F0B;
+  --tf-bg-page: #F9FAFB;
+  --tf-bg-sidebar: #FFFFFF;
+  --tf-bg-card: #FFFFFF;
+  --tf-border: #E5E7EB;
+  --tf-border-light: #F3F4F6;
+  --tf-text-primary: #111827;
+  --tf-text-muted: #6B7280;
+  --tf-text-faint: #9CA3AF;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--tf-bg-page);
+  color: var(--tf-text-primary);
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}

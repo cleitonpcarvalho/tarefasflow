@@ -1,0 +1,43 @@
+# Dependências
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+.next/
+out/
+build/
+
+# Variáveis de ambiente — NUNCA commitar
+.env
+.env.local
+.env.production
+.env.development
+backend/.env
+frontend/.env.local
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.local.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Runtime e cache
+.DS_Store
+Thumbs.db
+*.pem
+.cache/
+.turbo/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Testes
+coverage/
+playwright-report/
+test-results/
+/tmp/
