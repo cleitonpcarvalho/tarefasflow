@@ -1,8 +1,9 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { processMessage } from "../agents/task-agent";
+import { sql } from "../config/db";
 import { env } from "../config/env";
-import { getAuthorizedNumberByPhone } from "../services/authorized-number.service";
+import { getAuthorizedNumberByPhones } from "../services/authorized-number.service";
 import { sendTextMessage } from "../services/evolution.service";
 import { findPublicUserById } from "../services/auth.service";
 import { transcribeAudio } from "../services/whisper.service";
@@ -19,6 +20,7 @@ const webhookPayloadSchema = z
   .object({
     event: z.string().optional(),
     instance: z.string().optional(),
+    apikey: z.union([z.string(), z.number()]).optional(),
     data: z
       .object({
         instance: z.string().optional(),
@@ -42,15 +44,6 @@ const webhookPayloadSchema = z
 export const webhookRoutes: FastifyPluginAsync = async (app) => {
   app.post("/whatsapp", async (request, reply) => {
     try {
-      if (!isValidWebhookApiKey(request.headers.apikey)) {
-        return reply.code(200).send({
-          success: false,
-          data: null,
-          message: "Webhook ignorado.",
-          error: "API key inválida."
-        });
-      }
-
       const parsedPayload = webhookPayloadSchema.safeParse(request.body);
 
       if (!parsedPayload.success) {
@@ -63,6 +56,35 @@ export const webhookRoutes: FastifyPluginAsync = async (app) => {
       }
 
       const payload = parsedPayload.data;
+      const receivedApiKey = getReceivedApiKey(
+        payload.apikey,
+        request.headers.apikey
+      );
+
+      app.log.info(
+        {
+          event: payload.event,
+          instance: payload.instance,
+          apikey: maskApiKey(receivedApiKey),
+          remoteJid: payload.data?.key?.remoteJid
+        },
+        "Webhook WhatsApp recebido"
+      );
+
+      if (!(await isValidWebhookApiKey(receivedApiKey))) {
+        app.log.warn(
+          { receivedApiKey: maskApiKey(receivedApiKey) },
+          "Webhook rejeitado: apikey inválida"
+        );
+
+        return reply.code(200).send({
+          success: false,
+          data: null,
+          message: "Webhook ignorado.",
+          error: "API key inválida."
+        });
+      }
+
       const instanceName = extractInstanceName(payload);
 
       if (!instanceName) {
@@ -140,10 +162,11 @@ export const webhookRoutes: FastifyPluginAsync = async (app) => {
 
       const rawPhone = extractRawPhone(payload);
       const phone = rawPhone ? normalizeWhatsappPhone(rawPhone) : null;
+      const phoneVariants = phone ? normalizePhone(phone) : [];
       const extractedMessage = await extractMessageContent(payload);
       const inboundContent = extractedMessage.text || "[mensagem sem texto]";
 
-      if (!phone) {
+      if (!phone || phoneVariants.length === 0) {
         await createWhatsappLog({
           userId: user.id,
           direction: "inbound",
@@ -160,9 +183,9 @@ export const webhookRoutes: FastifyPluginAsync = async (app) => {
         });
       }
 
-      const authorizedNumber = await getAuthorizedNumberByPhone(
+      const authorizedNumber = await getAuthorizedNumberByPhones(
         instance.id,
-        phone,
+        phoneVariants,
         true
       );
 
@@ -386,9 +409,42 @@ function normalizeEvent(event: string | undefined) {
   return event?.trim().toLowerCase().replace(/_/g, ".") ?? "";
 }
 
-function isValidWebhookApiKey(value: string | string[] | undefined) {
-  const headerValue = Array.isArray(value) ? value[0] : value;
-  return headerValue === env.EVOLUTION_API_KEY;
+async function isValidWebhookApiKey(receivedApiKey: string) {
+  if (!receivedApiKey) {
+    return false;
+  }
+
+  const instances = await sql<{ instance_token: string | null }[]>`
+    SELECT instance_token
+    FROM whatsapp_instances
+    WHERE instance_token IS NOT NULL
+  `;
+  const validKeys = [
+    env.EVOLUTION_API_KEY,
+    env.EVOLUTION_INSTANCE_APIKEY,
+    ...instances.map((instance) => instance.instance_token)
+  ].filter((key): key is string => Boolean(key));
+
+  return validKeys.includes(receivedApiKey);
+}
+
+function getReceivedApiKey(
+  payloadApiKey: string | number | undefined,
+  headerApiKey: string | string[] | undefined
+) {
+  if (payloadApiKey !== undefined && String(payloadApiKey).length > 0) {
+    return String(payloadApiKey);
+  }
+
+  const headerValue = Array.isArray(headerApiKey)
+    ? headerApiKey[0]
+    : headerApiKey;
+
+  return String(headerValue ?? "");
+}
+
+function maskApiKey(apiKey: string) {
+  return apiKey ? `${apiKey.slice(0, 8)}...` : "";
 }
 
 function normalizeWhatsappPhone(rawPhone: string) {
@@ -402,6 +458,28 @@ function normalizeWhatsappPhone(rawPhone: string) {
     .replace(/\D/g, "");
 
   return phone.length > 0 ? phone : null;
+}
+
+function normalizePhone(phone: string) {
+  const clean = phone.replace(/\D/g, "");
+  const variants = new Set<string>();
+
+  if (clean) {
+    variants.add(clean);
+  }
+
+  if (clean.length === 12 && clean.startsWith("55")) {
+    const ddd = clean.substring(2, 4);
+    const number = clean.substring(4);
+    variants.add(`55${ddd}9${number}`);
+  }
+
+  if (clean.length === 13 && clean.startsWith("55")) {
+    const withoutNinth = `55${clean.substring(2, 4)}${clean.substring(5)}`;
+    variants.add(withoutNinth);
+  }
+
+  return [...variants];
 }
 
 function normalizeText(value: string | null) {

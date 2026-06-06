@@ -14,6 +14,7 @@ const envSchema = z.object({
     .string()
     .url("EVOLUTION_API_URL deve ser uma URL valida"),
   EVOLUTION_API_KEY: z.string().min(1, "EVOLUTION_API_KEY e obrigatoria"),
+  EVOLUTION_INSTANCE_APIKEY: z.string().default(""),
   WEBHOOK_BASE_URL: z
     .string()
     .url("WEBHOOK_BASE_URL deve ser uma URL valida")

@@ -67,17 +67,32 @@ export async function getAuthorizedNumberByPhone(
   phone: string,
   activeOnly = false
 ): Promise<AuthorizedNumber | null> {
+  return getAuthorizedNumberByPhones(instanceId, [phone], activeOnly);
+}
+
+export async function getAuthorizedNumberByPhones(
+  instanceId: string,
+  phones: string[],
+  activeOnly = false
+): Promise<AuthorizedNumber | null> {
+  if (phones.length === 0) {
+    return null;
+  }
+
   const activeClause = activeOnly ? "AND active = true" : "";
+  const phonePlaceholders = phones
+    .map((_, index) => `$${index + 2}`)
+    .join(", ");
   const rows = await sql.unsafe<AuthorizedNumberRow[]>(
     `
       SELECT ${authorizedNumberColumns}
       FROM authorized_numbers
       WHERE instance_id = $1
-        AND phone = $2
+        AND phone IN (${phonePlaceholders})
         ${activeClause}
       LIMIT 1
     `,
-    [instanceId, phone]
+    [instanceId, ...phones]
   );
 
   return rows[0] ? toAuthorizedNumber(rows[0]) : null;

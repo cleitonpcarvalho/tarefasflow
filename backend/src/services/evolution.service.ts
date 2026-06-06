@@ -18,9 +18,10 @@ interface CreateInstanceResponse {
     instanceId?: string;
     status?: string;
   };
-  hash?: {
+  hash?: string | {
     apikey?: string;
   };
+  token?: string;
 }
 
 interface QRCodeResponse {
@@ -82,7 +83,7 @@ export async function createInstance(
 
   return {
     instanceName: payload?.instance?.instanceName ?? instanceName,
-    instanceToken: payload?.hash?.apikey ?? null,
+    instanceToken: extractInstanceToken(payload),
     status: normalizeConnectionState(payload?.instance?.status ?? "created")
   };
 }
@@ -210,6 +211,18 @@ function normalizeConnectionState(value: string): EvolutionConnectionState {
   }
 
   return "close";
+}
+
+function extractInstanceToken(payload: CreateInstanceResponse | null) {
+  if (payload?.token) {
+    return payload.token;
+  }
+
+  if (typeof payload?.hash === "string") {
+    return payload.hash;
+  }
+
+  return payload?.hash?.apikey ?? null;
 }
 
 function getEvolutionErrorMessage(payload: unknown, fallback: string) {
