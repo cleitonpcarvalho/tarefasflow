@@ -5,10 +5,10 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
-  active?: boolean;
+  active: boolean;
   whatsapp_phone: string | null;
   createdAt: string;
-  updatedAt?: string;
+  updatedAt: string;
 }
 
 export interface Task {
@@ -20,6 +20,12 @@ export interface Task {
   task_time: string | null;
   color: TaskColor;
   done: boolean;
+  rrule: string | null;
+  is_recurring: boolean;
+  parent_id: string | null;
+  recurrence_end: string | null;
+  excluded_dates: string[];
+  is_virtual?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -35,12 +41,32 @@ export interface Reminder {
 
 export type TaskColor = "purple" | "teal" | "coral" | "amber";
 
+export type RecurrenceFrequency = "daily" | "weekly" | "monthly";
+export type RecurrenceMonthlyMode = "monthDay" | "monthWeekday";
+
+export interface RecurrenceOptions {
+  frequency: RecurrenceFrequency;
+  interval?: number;
+  weekdays?: number[];
+  monthlyMode?: RecurrenceMonthlyMode;
+  monthDay?: number;
+  monthWeekday?: {
+    week: 1 | 2 | 3 | 4 | -1;
+    day: number;
+  };
+  until?: Date;
+  count?: number;
+}
+
 export interface CreateTaskInput {
   title: string;
   description?: string | null;
   task_date: string;
   task_time?: string | null;
   color?: TaskColor;
+  rrule?: string | null;
+  is_recurring?: boolean;
+  recurrence_end?: string | null;
 }
 
 export interface UpdateTaskInput {
@@ -50,6 +76,9 @@ export interface UpdateTaskInput {
   task_time?: string | null;
   color?: TaskColor;
   done?: boolean;
+  rrule?: string | null;
+  is_recurring?: boolean;
+  recurrence_end?: string | null;
 }
 
 export interface ApiResponse<TData = unknown> {

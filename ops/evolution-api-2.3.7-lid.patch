@@ -1,0 +1,77 @@
+diff --git a/src/api/integrations/channel/whatsapp/whatsapp.baileys.service.ts b/src/api/integrations/channel/whatsapp/whatsapp.baileys.service.ts
+index 60e857f..f87114a 100644
+--- a/src/api/integrations/channel/whatsapp/whatsapp.baileys.service.ts
++++ b/src/api/integrations/channel/whatsapp/whatsapp.baileys.service.ts
+@@ -1476,8 +1476,13 @@ export class BaileysStartupService extends ChannelStartupService {
+ 
+           sendTelemetry(`received.message.${messageRaw.messageType ?? 'unknown'}`);
+           if (messageRaw.key.remoteJid?.includes('@lid') && messageRaw.key.remoteJidAlt) {
++            const lid = messageRaw.key.remoteJid;
++
+             messageRaw.key.remoteJid = messageRaw.key.remoteJidAlt;
++            messageRaw.key.remoteJidAlt = lid;
++            messageRaw.key.addressingMode = 'pn';
+           }
++
+           console.log(messageRaw);
+ 
+           this.sendDataWebhook(Events.MESSAGES_UPSERT, messageRaw);
+@@ -3568,28 +3573,32 @@ export class BaileysStartupService extends ChannelStartupService {
+ 
+     const verifiedUsers = await Promise.all(
+       jids.users.map(async (user) => {
+-        // Try to get from cache first (works for all: normal and LID)
+-        const cached = cachedNumbers.find((cached) => cached.jidOptions.includes(user.jid.replace('+', '')));
+-
+-        if (cached) {
+-          this.logger.verbose(`Number ${user.number} found in cache`);
++        // An explicit LID is already a routable WhatsApp address. Do not let
++        // the PN/LID cache rewrite it back to a phone JID.
++        if (user.jid.includes('@lid')) {
+           return new OnWhatsAppDto(
+-            cached.remoteJid,
++            user.jid,
+             true,
+             user.number,
+-            contacts.find((c) => c.remoteJid === cached.remoteJid)?.pushName,
+-            cached.lid || (cached.remoteJid.includes('@lid') ? 'lid' : undefined),
++            contacts.find((c) => c.remoteJid === user.jid)?.pushName,
++            'lid',
+           );
+         }
+ 
+-        // If it's a LID number and not in cache, consider it valid
+-        if (user.jid.includes('@lid')) {
++        // Try to get from cache first (works for all: normal and LID)
++        const cached = cachedNumbers.find((cached) => cached.jidOptions.includes(user.jid.replace('+', '')));
++
++        if (cached) {
++          const cachedLid = cached.jidOptions.find((jid) => jid.includes('@lid'));
++          const targetJid = cachedLid || cached.remoteJid;
++
++          this.logger.verbose(`Number ${user.number} found in cache as ${targetJid}`);
+           return new OnWhatsAppDto(
+-            user.jid,
++            targetJid,
+             true,
+             user.number,
+-            contacts.find((c) => c.remoteJid === user.jid)?.pushName,
+-            'lid',
++            contacts.find((c) => c.remoteJid === targetJid)?.pushName,
++            cached.lid || (targetJid.includes('@lid') ? 'lid' : undefined),
+           );
+         }
+ 
+diff --git a/src/utils/onWhatsappCache.ts b/src/utils/onWhatsappCache.ts
+index 08de071..190285a 100644
+--- a/src/utils/onWhatsappCache.ts
++++ b/src/utils/onWhatsappCache.ts
+@@ -126,7 +126,7 @@ export async function saveOnWhatsappCache(data: ISaveOnWhatsappCacheParams[]) {
+       // Ordena os JIDs para garantir consistência na string final
+       const sortedJidOptions = [...finalJidOptions].sort();
+       const newJidOptionsString = sortedJidOptions.join(',');
+-      const newLid = item.lid === 'lid' || item.remoteJid?.includes('@lid') ? 'lid' : null;
++      const newLid = item.lid === 'lid' || item.remoteJid?.includes('@lid') || lidAltJid ? 'lid' : null;
+ 
+       const dataPayload = {
+         remoteJid: remoteJid,

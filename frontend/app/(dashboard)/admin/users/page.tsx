@@ -1,49 +1,433 @@
-import { Badge } from "@/components/ui/Badge";
+"use client";
 
-const users = [
-  {
-    id: "1",
-    name: "Admin TaskFlow",
-    email: "admin@taskflow.local",
-    role: "admin"
-  },
-  {
-    id: "2",
-    name: "Usuario Demo",
-    email: "user@taskflow.local",
-    role: "user"
-  }
-];
+import { useEffect, useMemo, useState } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Edit3,
+  Plus,
+  Power,
+  RotateCcw,
+  Search,
+  ShieldCheck,
+  Smartphone,
+  UserCheck,
+  Users
+} from "lucide-react";
+import { UserModal } from "@/components/admin/UserModal";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { useAdminUsers } from "@/hooks/useAdminUsers";
+import { useConfirm } from "@/hooks/useConfirm";
+import { cn } from "@/lib/cn";
+import { useAuth } from "@/lib/auth-context";
+import type { User } from "@/types";
+
+type UserFilter = "all" | "admin" | "user" | "inactive";
+
+const pageSize = 10;
 
 export default function AdminUsersPage() {
+  const { user: currentUser } = useAuth();
+  const {
+    users,
+    loading,
+    error,
+    fetchUsers,
+    createUser,
+    updateUser,
+    toggleActive
+  } = useAdminUsers();
+  const { confirm, modalProps } = useConfirm();
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<UserFilter>("all");
+  const [page, setPage] = useState(1);
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [userToEdit, setUserToEdit] = useState<User | null>(null);
+
+  useEffect(() => {
+    void fetchUsers();
+  }, [fetchUsers]);
+
+  const statistics = useMemo(
+    () => ({
+      total: users.length,
+      active: users.filter((user) => user.active).length,
+      admins: users.filter((user) => user.role === "admin").length,
+      whatsapp: users.filter((user) => Boolean(user.whatsapp_phone)).length
+    }),
+    [users]
+  );
+
+  const filteredUsers = useMemo(() => {
+    const query = search.trim().toLocaleLowerCase("pt-BR");
+
+    return users.filter((user) => {
+      if (filter === "admin" && user.role !== "admin") {
+        return false;
+      }
+
+      if (filter === "user" && user.role !== "user") {
+        return false;
+      }
+
+      if (filter === "inactive" && user.active) {
+        return false;
+      }
+
+      return (
+        !query ||
+        user.name.toLocaleLowerCase("pt-BR").includes(query) ||
+        user.email.toLocaleLowerCase("pt-BR").includes(query)
+      );
+    });
+  }, [filter, search, users]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+  const visibleUsers = filteredUsers.slice(
+    (Math.min(page, totalPages) - 1) * pageSize,
+    Math.min(page, totalPages) * pageSize
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [filter, search]);
+
+  async function handleDeactivate(user: User) {
+    const accepted = await confirm({
+      title: "Desativar usuário",
+      message: `Desativar ${user.name}? O usuário perderá acesso ao sistema.`,
+      confirmLabel: "Desativar",
+      variant: "danger"
+    });
+
+    if (accepted) {
+      await toggleActive(user.id, false);
+    }
+  }
+
+  function openCreateModal() {
+    setUserToEdit(null);
+    setIsUserModalOpen(true);
+  }
+
+  function openEditModal(user: User) {
+    setUserToEdit(user);
+    setIsUserModalOpen(true);
+  }
+
   return (
     <section className="space-y-5 p-5">
-      <div>
-        <h1 className="text-2xl font-semibold text-slate-950">Usuarios</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Area reservada para administradores.
-        </p>
+      <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-[#111827]">Usuários</h1>
+          <p className="mt-1 text-sm text-[#6B7280]">
+            Gerencie os usuários da plataforma
+          </p>
+        </div>
+        <Button className="h-10" onClick={openCreateModal} type="button">
+          <Plus className="h-4 w-4" />
+          Novo usuário
+        </Button>
+      </header>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          icon={Users}
+          label="Total de usuários"
+          value={statistics.total}
+        />
+        <StatCard icon={UserCheck} label="Ativos" value={statistics.active} />
+        <StatCard icon={ShieldCheck} label="Admins" value={statistics.admins} />
+        <StatCard
+          icon={Smartphone}
+          label="Com WhatsApp"
+          value={statistics.whatsapp}
+        />
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
-        <div className="grid min-w-[640px] grid-cols-[1fr_1.2fr_120px] border-b border-slate-100 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-          <span>Nome</span>
-          <span>Email</span>
-          <span>Role</span>
-        </div>
-        {users.map((user) => (
-          <div
-            className="grid min-w-[640px] grid-cols-[1fr_1.2fr_120px] items-center border-b border-slate-100 px-4 py-4 text-sm last:border-b-0"
-            key={user.id}
-          >
-            <span className="font-medium text-slate-950">{user.name}</span>
-            <span className="text-slate-500">{user.email}</span>
-            <Badge variant={user.role === "admin" ? "purple" : "slate"}>
-              {user.role}
-            </Badge>
+      <div className="rounded-lg border border-slate-200 bg-white p-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <label className="relative block w-full lg:max-w-sm">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" />
+            <input
+              aria-label="Buscar usuários"
+              className="h-10 w-full rounded-lg border border-slate-200 pl-10 pr-3 text-sm outline-none focus:border-[#534AB7] focus:ring-4 focus:ring-[#EEEDFE]"
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Buscar por nome ou email"
+              value={search}
+            />
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {[
+              ["all", "Todos"],
+              ["admin", "Admins"],
+              ["user", "Usuários"],
+              ["inactive", "Inativos"]
+            ].map(([value, label]) => (
+              <button
+                className={cn(
+                  "h-9 rounded-lg px-3 text-xs font-medium transition",
+                  filter === value
+                    ? "bg-[#EEEDFE] text-[#534AB7]"
+                    : "text-[#6B7280] hover:bg-[#F3F4F6]"
+                )}
+                key={value}
+                onClick={() => setFilter(value as UserFilter)}
+                type="button"
+              >
+                {label}
+              </button>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
+
+      {error ? (
+        <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">
+          {error}
+        </p>
+      ) : null}
+
+      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <div className="overflow-x-auto">
+          <table className="min-w-[1040px] w-full border-collapse text-left">
+            <thead className="bg-[#F9FAFB] text-[11px] uppercase tracking-wide text-[#6B7280]">
+              <tr>
+                <TableHeader>Nome</TableHeader>
+                <TableHeader>Email</TableHeader>
+                <TableHeader>Role</TableHeader>
+                <TableHeader>Status</TableHeader>
+                <TableHeader>WhatsApp</TableHeader>
+                <TableHeader>Criado em</TableHeader>
+                <TableHeader className="text-right">Ações</TableHeader>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td className="px-4 py-8 text-center text-sm text-[#6B7280]" colSpan={7}>
+                    Carregando usuários...
+                  </td>
+                </tr>
+              ) : visibleUsers.length ? (
+                visibleUsers.map((user) => {
+                  const isCurrentUser = user.id === currentUser?.id;
+
+                  return (
+                    <tr
+                      className={cn(
+                        "border-t border-slate-100 text-sm",
+                        isCurrentUser && "bg-[#FAFAFA]"
+                      )}
+                      key={user.id}
+                    >
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EEEDFE] text-xs font-semibold text-[#534AB7]">
+                            {getInitials(user.name)}
+                          </span>
+                          <div>
+                            <p className="font-medium text-[#111827]">
+                              {user.name}
+                            </p>
+                            {isCurrentUser ? (
+                              <p className="text-[11px] text-[#6B7280]">
+                                Você
+                              </p>
+                            ) : null}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-[#6B7280]">{user.email}</td>
+                      <td className="px-4 py-3">
+                        <Badge variant={user.role === "admin" ? "purple" : "slate"}>
+                          {user.role === "admin" ? "Admin" : "Usuário"}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge variant={user.active ? "teal" : "coral"}>
+                          {user.active ? "Ativo" : "Inativo"}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-[#6B7280]">
+                        {user.whatsapp_phone ? (
+                          formatPhone(user.whatsapp_phone)
+                        ) : (
+                          <span className="text-[#9CA3AF]">Não vinculado</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-[#6B7280]">
+                        {new Date(user.createdAt).toLocaleDateString("pt-BR")}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end gap-1">
+                          <ActionButton
+                            label={`Editar ${user.name}`}
+                            onClick={() => openEditModal(user)}
+                          >
+                            <Edit3 className="h-4 w-4" />
+                          </ActionButton>
+                          {!isCurrentUser ? (
+                            user.active ? (
+                              <ActionButton
+                                danger
+                                label={`Desativar ${user.name}`}
+                                onClick={() => void handleDeactivate(user)}
+                              >
+                                <Power className="h-4 w-4" />
+                              </ActionButton>
+                            ) : (
+                              <button
+                                className="inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-xs font-medium text-[#0F6E56] hover:bg-[#E1F5EE]"
+                                onClick={() => void toggleActive(user.id, true)}
+                                type="button"
+                              >
+                                <RotateCcw className="h-3.5 w-3.5" />
+                                Reativar
+                              </button>
+                            )
+                          ) : null}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td className="px-4 py-8 text-center text-sm text-[#6B7280]" colSpan={7}>
+                    Nenhum usuário encontrado.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
+          <p className="text-xs text-[#6B7280]">
+            {filteredUsers.length} usuário(s)
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              aria-label="Página anterior"
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-[#6B7280] disabled:opacity-40"
+              disabled={page <= 1}
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              type="button"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="min-w-20 text-center text-xs font-medium text-[#374151]">
+              Página {Math.min(page, totalPages)} de {totalPages}
+            </span>
+            <button
+              aria-label="Próxima página"
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-[#6B7280] disabled:opacity-40"
+              disabled={page >= totalPages}
+              onClick={() =>
+                setPage((current) => Math.min(totalPages, current + 1))
+              }
+              type="button"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <UserModal
+        canChangeActive={userToEdit?.id !== currentUser?.id}
+        isOpen={isUserModalOpen}
+        onClose={() => setIsUserModalOpen(false)}
+        onCreate={async (data) => {
+          await createUser(data);
+        }}
+        onUpdate={async (id, data) => {
+          await updateUser(id, data);
+        }}
+        user={userToEdit}
+      />
+      <ConfirmModal {...modalProps} />
     </section>
   );
+}
+
+function StatCard({
+  icon: Icon,
+  label,
+  value
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: number;
+}) {
+  return (
+    <article className="rounded-lg border border-slate-200 bg-white p-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs text-[#6B7280]">{label}</p>
+          <p className="mt-1 text-2xl font-semibold text-[#111827]">{value}</p>
+        </div>
+        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#EEEDFE] text-[#534AB7]">
+          <Icon className="h-5 w-5" />
+        </span>
+      </div>
+    </article>
+  );
+}
+
+function TableHeader({
+  children,
+  className
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return <th className={cn("px-4 py-3 font-semibold", className)}>{children}</th>;
+}
+
+function ActionButton({
+  children,
+  danger,
+  label,
+  onClick
+}: {
+  children: React.ReactNode;
+  danger?: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      aria-label={label}
+      className={cn(
+        "flex h-8 w-8 items-center justify-center rounded-md text-[#6B7280] hover:bg-[#F3F4F6]",
+        danger && "hover:bg-rose-50 hover:text-rose-600"
+      )}
+      onClick={onClick}
+      title={label}
+      type="button"
+    >
+      {children}
+    </button>
+  );
+}
+
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+}
+
+function formatPhone(phone: string) {
+  if (phone.length === 13 && phone.startsWith("55")) {
+    return `+55 (${phone.slice(2, 4)}) ${phone.slice(4, 9)}-${phone.slice(9)}`;
+  }
+
+  return `+${phone}`;
 }

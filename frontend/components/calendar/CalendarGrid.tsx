@@ -1,9 +1,8 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { RefreshCw } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { formatMonthYear, todayKey, toDateKey } from "@/lib/date";
+import { toDateKey } from "@/lib/date";
 import { taskColorClasses } from "@/lib/task-colors";
 import type { Task } from "@/types";
 
@@ -11,11 +10,8 @@ interface CalendarGridProps {
   tasks: Task[];
   selectedDate: string | null;
   onSelectDate: (date: string) => void;
-  onCreateTask: (date: string) => void;
   currentMonth: number;
   currentYear: number;
-  onPrevMonth: () => void;
-  onNextMonth: () => void;
 }
 
 interface CalendarCell {
@@ -31,64 +27,13 @@ export function CalendarGrid({
   tasks,
   selectedDate,
   onSelectDate,
-  onCreateTask,
   currentMonth,
-  currentYear,
-  onPrevMonth,
-  onNextMonth
+  currentYear
 }: CalendarGridProps) {
   const cells = buildCalendarCells(currentMonth, currentYear);
-  const createDate = selectedDate ?? todayKey();
 
   return (
-    <section className="space-y-3">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
-          <button
-            aria-label="Mês anterior"
-            className="flex h-7 w-7 items-center justify-center rounded-md border border-tf-border text-tf-text-muted transition hover:bg-tf-bg-page"
-            onClick={onPrevMonth}
-            type="button"
-          >
-            <ChevronLeft className="h-3.5 w-3.5" />
-          </button>
-          <button
-            aria-label="Próximo mês"
-            className="flex h-7 w-7 items-center justify-center rounded-md border border-tf-border text-tf-text-muted transition hover:bg-tf-bg-page"
-            onClick={onNextMonth}
-            type="button"
-          >
-            <ChevronRight className="h-3.5 w-3.5" />
-          </button>
-          <h2 className="ml-2 text-[15px] font-medium capitalize text-tf-text-primary">
-            {formatMonthYear(currentMonth, currentYear)}
-          </h2>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1">
-            {["Mês", "Semana", "Dia"].map((view) => (
-              <button
-                className={cn(
-                  "h-7 rounded-md border border-tf-border px-2.5 text-[11px] font-medium transition",
-                  view === "Mês"
-                    ? "bg-tf-border-light text-tf-text-primary"
-                    : "text-tf-text-muted hover:bg-tf-bg-page"
-                )}
-                key={view}
-                type="button"
-              >
-                {view}
-              </button>
-            ))}
-          </div>
-          <Button onClick={() => onCreateTask(createDate)} type="button">
-            <Plus className="h-3.5 w-3.5" />
-            Nova tarefa
-          </Button>
-        </div>
-      </div>
-
+    <section>
       <div className="overflow-hidden rounded-lg border border-tf-border bg-white">
         <div className="grid grid-cols-7 border-b border-tf-border bg-tf-bg-page">
           {weekDays.map((day) => (
@@ -136,13 +81,28 @@ export function CalendarGrid({
                     {dayTasks.slice(0, 2).map((task) => (
                       <span
                         className={cn(
-                          "block truncate rounded px-1.5 py-px text-[10px] font-medium",
+                          "flex items-center gap-1 truncate rounded px-1.5 py-px text-[10px]",
                           taskColorClasses[task.color]
                         )}
                         key={task.id}
-                        title={task.title}
+                        title={
+                          task.description
+                            ? `${task.title} — ${task.description}`
+                            : task.title
+                        }
                       >
-                        {task.title}
+                        {task.is_recurring ? (
+                          <RefreshCw
+                            aria-label="Tarefa recorrente"
+                            className="h-2.5 w-2.5 shrink-0"
+                          />
+                        ) : null}
+                        {task.task_time ? (
+                          <strong className="shrink-0 font-bold">
+                            {task.task_time.slice(0, 5)}
+                          </strong>
+                        ) : null}
+                        <span className="truncate font-normal">{task.title}</span>
                       </span>
                     ))}
                     {dayTasks.length > 2 ? (

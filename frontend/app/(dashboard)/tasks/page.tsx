@@ -1,8 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Bell, Check, Edit3, Plus, Search, Trash2 } from "lucide-react";
+import {
+  Bell,
+  Check,
+  Edit3,
+  Plus,
+  RefreshCw,
+  Search,
+  Trash2
+} from "lucide-react";
 import { ReminderModal } from "@/components/tasks/ReminderModal";
+import { RecurringDeleteModal } from "@/components/tasks/RecurringDeleteModal";
 import { TaskModal } from "@/components/tasks/TaskModal";
 import { Button } from "@/components/ui/Button";
 import { useTasks } from "@/hooks/useTasks";
@@ -19,6 +28,7 @@ export default function TasksPage() {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
   const [taskForReminder, setTaskForReminder] = useState<Task | null>(null);
+  const [taskPendingDelete, setTaskPendingDelete] = useState<Task | null>(null);
   const {
     tasks,
     loading,
@@ -74,6 +84,24 @@ export default function TasksPage() {
   function handleCloseTaskModal() {
     setIsTaskModalOpen(false);
     setTaskToEdit(null);
+  }
+
+  async function handleDeleteTask(task: Task) {
+    if (task.is_recurring) {
+      setTaskPendingDelete(task);
+      return;
+    }
+
+    await deleteTask(task.id);
+  }
+
+  async function handleDeleteRecurringTask(scope: "this" | "all") {
+    if (!taskPendingDelete) {
+      return;
+    }
+
+    await deleteTask(taskPendingDelete.id, scope);
+    setTaskPendingDelete(null);
   }
 
   return (
@@ -153,7 +181,7 @@ export default function TasksPage() {
                 {group.tasks.map((task) => (
                   <TaskRow
                     key={task.id}
-                    onDelete={() => deleteTask(task.id)}
+                    onDelete={() => handleDeleteTask(task)}
                     onEdit={() => {
                       setTaskToEdit(task);
                       setIsTaskModalOpen(true);
@@ -196,6 +224,12 @@ export default function TasksPage() {
           task={taskForReminder}
         />
       ) : null}
+
+      <RecurringDeleteModal
+        onCancel={() => setTaskPendingDelete(null)}
+        onDelete={handleDeleteRecurringTask}
+        task={taskPendingDelete}
+      />
     </section>
   );
 }
@@ -237,7 +271,12 @@ function TaskRow({
               task.done && "line-through opacity-70"
             )}
           >
-            {task.title}
+            <span className="inline-flex items-center gap-1.5">
+              {task.is_recurring ? (
+                <RefreshCw className="h-3 w-3 text-[#534AB7]" />
+              ) : null}
+              {task.title}
+            </span>
           </h3>
         </div>
       </div>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -14,6 +13,7 @@ import {
   X
 } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
 import type { Task } from "@/types";
@@ -89,14 +89,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         <div className="px-5 pb-6 pt-5">
           <div className="flex items-center justify-between gap-3">
             <Link className="flex items-center" href="/calendar">
-              <Image
-                alt="TaskFlow"
-                className="h-auto w-[112px]"
-                height={35}
-                priority
-                src="/logo-light.png"
-                width={112}
-              />
+              <BrandLogo compact />
             </Link>
             <button
               aria-label="Fechar menu"
@@ -149,7 +142,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             </div>
             <div className="min-w-0">
               <p className="truncate text-[12px] font-medium text-tf-text-primary">
-                {user?.name ?? "TaskFlow"}
+                {user?.name ?? "TarefasFlow"}
               </p>
               <p className="truncate text-[11px] text-tf-text-faint">
                 {user?.email ?? "Carregando sessão"}

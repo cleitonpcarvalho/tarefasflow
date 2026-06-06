@@ -2,17 +2,29 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { X } from "lucide-react";
+import { RecurrenceBuilder } from "@/components/tasks/RecurrenceBuilder";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
+import {
+  buildRRule,
+  dateToInputValue,
+  parseRRule
+} from "@/lib/rrule-builder";
 import { taskColorHex } from "@/lib/task-colors";
 import { todayKey } from "@/lib/date";
-import type { CreateTaskInput, Task, TaskColor } from "@/types";
+import type {
+  CreateTaskInput,
+  RecurrenceOptions,
+  Task,
+  TaskColor
+} from "@/types";
 
 interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: CreateTaskInput) => Promise<void>;
   initialDate?: string;
+  initialTime?: string;
   task?: Task | null;
 }
 
@@ -23,6 +35,7 @@ export function TaskModal({
   onClose,
   onSave,
   initialDate,
+  initialTime,
   task
 }: TaskModalProps) {
   const [title, setTitle] = useState("");
@@ -30,6 +43,8 @@ export function TaskModal({
   const [taskTime, setTaskTime] = useState("");
   const [description, setDescription] = useState("");
   const [color, setColor] = useState<TaskColor>("purple");
+  const [recurrenceOptions, setRecurrenceOptions] =
+    useState<RecurrenceOptions | null>(null);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -40,12 +55,17 @@ export function TaskModal({
 
     setTitle(task?.title ?? "");
     setTaskDate(task?.task_date ?? initialDate ?? todayKey());
-    setTaskTime(task?.task_time ?? "");
+    setTaskTime(task?.task_time ?? initialTime ?? "");
     setDescription(task?.description ?? "");
     setColor(task?.color ?? "purple");
+    setRecurrenceOptions(
+      task?.is_recurring && task.rrule
+        ? parseRRule(task.rrule, task.recurrence_end)
+        : null
+    );
     setError("");
     setSaving(false);
-  }, [initialDate, isOpen, task]);
+  }, [initialDate, initialTime, isOpen, task]);
 
   if (!isOpen) {
     return null;
@@ -63,12 +83,23 @@ export function TaskModal({
     setSaving(true);
 
     try {
+      const rrule = recurrenceOptions
+        ? buildRRule(recurrenceOptions)
+        : null;
+
       await onSave({
         title: title.trim(),
         task_date: taskDate,
         task_time: taskTime || undefined,
         description: description.trim() || undefined,
-        color
+        color,
+        rrule: rrule ?? (task ? null : undefined),
+        is_recurring: Boolean(recurrenceOptions),
+        recurrence_end: recurrenceOptions?.until
+          ? dateToInputValue(recurrenceOptions.until)
+          : task
+            ? null
+            : undefined
       });
       onClose();
     } catch (error) {
@@ -82,7 +113,7 @@ export function TaskModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6">
-      <section className="w-[90vw] max-w-[480px] rounded-xl bg-white p-6 shadow-xl">
+      <section className="max-h-[calc(100vh-48px)] w-[94vw] max-w-[640px] overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-[#111827]">
             {task ? "Editar tarefa" : "Nova tarefa"}
@@ -170,6 +201,11 @@ export function TaskModal({
               ))}
             </div>
           </div>
+
+          <RecurrenceBuilder
+            onChange={setRecurrenceOptions}
+            value={recurrenceOptions}
+          />
 
           {error ? (
             <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">

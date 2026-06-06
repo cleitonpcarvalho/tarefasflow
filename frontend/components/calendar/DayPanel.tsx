@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Edit3,
   Plus,
+  RefreshCw,
   Trash2,
   Wifi
 } from "lucide-react";
@@ -19,16 +20,20 @@ import {
   todayKey
 } from "@/lib/date";
 import { taskColorDots } from "@/lib/task-colors";
+import { describeRRule } from "@/lib/rrule-builder";
 import type { Task } from "@/types";
 
 interface DayPanelProps {
   date: string | null;
   tasks: Task[];
   open: boolean;
+  width: number;
+  resizing: boolean;
   onToggleOpen: () => void;
+  onResizeStart: (event: React.MouseEvent<HTMLDivElement>) => void;
   onToggleDone: (id: string) => void;
   onEditTask: (task: Task) => void;
-  onDeleteTask: (id: string) => void;
+  onDeleteTask: (task: Task) => void;
   onAddReminder: (task: Task) => void;
   onCreateTask: () => void;
 }
@@ -37,7 +42,10 @@ export function DayPanel({
   date,
   tasks,
   open,
+  width,
+  resizing,
   onToggleOpen,
+  onResizeStart,
   onToggleDone,
   onEditTask,
   onDeleteTask,
@@ -65,10 +73,22 @@ export function DayPanel({
   return (
     <aside
       className={cn(
-        "relative h-[calc(100vh-56px)] shrink-0 bg-white transition-[width] duration-200 ease-in-out",
-        open ? "w-[240px] border-l border-tf-border" : "w-0 border-l-0"
+        "relative h-[calc(100vh-56px)] shrink-0 bg-white",
+        !resizing && "transition-[width] duration-200 ease-in-out",
+        open ? "border-l border-tf-border" : "border-l-0"
       )}
+      style={{ width: open ? width : 0 }}
     >
+      {open ? (
+        <div
+          aria-label="Redimensionar painel lateral"
+          className="absolute bottom-0 left-0 top-0 z-10 w-1 -translate-x-1/2 cursor-col-resize transition hover:bg-[#E5E7EB]"
+          data-testid="day-panel-resize-handle"
+          onMouseDown={onResizeStart}
+          role="separator"
+        />
+      ) : null}
+
       <button
         aria-label={open ? "Esconder painel" : "Mostrar painel"}
         className="absolute left-0 top-1/2 z-20 flex h-9 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-md border border-tf-border bg-white text-tf-text-muted shadow-sm transition hover:text-tf-purple"
@@ -126,6 +146,17 @@ export function DayPanel({
                     >
                       {task.title}
                     </p>
+                    {task.is_recurring && task.rrule ? (
+                      <div className="mt-1">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-[#EEEDFE] px-1.5 py-0.5 text-[9px] font-medium text-[#534AB7]">
+                          <RefreshCw className="h-2.5 w-2.5" />
+                          Recorrente
+                        </span>
+                        <p className="mt-1 text-[10px] leading-4 text-tf-text-muted">
+                          {describeRRule(task.rrule)}
+                        </p>
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="flex shrink-0 items-start gap-0.5 opacity-0 transition group-hover:opacity-100">
@@ -140,7 +171,7 @@ export function DayPanel({
                     </IconButton>
                     <IconButton
                       label="Deletar"
-                      onClick={() => onDeleteTask(task.id)}
+                      onClick={() => onDeleteTask(task)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </IconButton>

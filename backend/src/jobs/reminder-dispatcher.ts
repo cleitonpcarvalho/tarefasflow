@@ -61,18 +61,18 @@ async function dispatchReminder(reminder: PendingReminderRow) {
       return;
     }
 
-    const sent = await sendTextMessage(
+    const delivery = await sendTextMessage(
       reminder.instance_name,
       phone,
       buildReminderMessage(reminder)
     );
 
-    if (sent) {
+    if (delivery.delivered) {
       await markReminderSent(reminder.id);
       return;
     }
 
-    console.error(`Erro ao enviar lembrete: ${reminder.title}`);
+    console.error(`Erro ao enviar lembrete: ${reminder.title}`, delivery);
   } catch (error) {
     console.error("Erro ao processar lembrete pendente:", error);
   }
@@ -88,7 +88,7 @@ async function markReminderSent(reminderId: string) {
 
 function buildReminderMessage(reminder: PendingReminderRow) {
   return [
-    `Lembrete TaskFlow: ${reminder.title}`,
+    `Lembrete TarefasFlow: ${reminder.title}`,
     `Data: ${formatDate(reminder.task_date)} as ${formatTime(reminder.task_time)}`,
     `${reminder.minutes_before} min antes do compromisso.`
   ].join("\n");

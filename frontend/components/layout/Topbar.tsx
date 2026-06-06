@@ -37,7 +37,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
           <div className="min-w-0">
             <p className="truncate text-[11px] text-tf-text-faint">Workspace</p>
             <h2 className="truncate text-[15px] font-semibold text-tf-text-primary">
-              {titles[pathname] ?? "TaskFlow"}
+              {titles[pathname] ?? "TarefasFlow"}
             </h2>
           </div>
         </div>

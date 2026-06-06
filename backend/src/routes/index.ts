@@ -10,7 +10,7 @@ export const routes: FastifyPluginAsync = async (app) => {
   app.get("/health", async () => ({
     success: true,
     data: { status: "ok" },
-    message: "TaskFlow API online.",
+    message: "TarefasFlow API online.",
     error: null
   }));
 

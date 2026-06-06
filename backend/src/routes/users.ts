@@ -4,6 +4,7 @@ import { authenticate } from "../middlewares/authenticate";
 import { authorize } from "../middlewares/authorize";
 import {
   changeOwnPassword,
+  createUser,
   deleteUser,
   getUserById,
   listUsers,
@@ -17,11 +18,19 @@ const idParamsSchema = z.object({
 });
 
 const usersQuerySchema = z.object({
+  search: z.string().trim().max(255).optional(),
   role: z.enum(["admin", "user"]).optional(),
   active: z
     .enum(["true", "false"])
     .transform((value) => value === "true")
     .optional()
+});
+
+const createUserBodySchema = z.object({
+  name: z.string().trim().min(2).max(255),
+  email: z.string().trim().email(),
+  password: z.string().min(8, "Senha deve ter pelo menos 8 caracteres."),
+  role: z.enum(["admin", "user"]).default("user")
 });
 
 const updateUserBodySchema = z.object({
@@ -66,6 +75,36 @@ export const usersRoutes: FastifyPluginAsync = async (app) => {
       message: "Usuários carregados com sucesso.",
       error: null
     });
+  });
+
+  app.post("/", async (request, reply) => {
+    const parsedBody = createUserBodySchema.safeParse(request.body);
+
+    if (!parsedBody.success) {
+      return sendValidationError(reply, parsedBody.error);
+    }
+
+    try {
+      const user = await createUser(parsedBody.data);
+
+      return reply.code(201).send({
+        success: true,
+        data: user,
+        message: "Usuário criado com sucesso.",
+        error: null
+      });
+    } catch (error) {
+      if (error instanceof UserServiceError) {
+        return reply.code(error.statusCode).send({
+          success: false,
+          data: null,
+          message: "Erro ao criar usuário.",
+          error: error.message
+        });
+      }
+
+      throw error;
+    }
   });
 
   app.get("/:id", async (request, reply) => {

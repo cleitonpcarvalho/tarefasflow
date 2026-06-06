@@ -16,7 +16,12 @@ import {
 } from "../services/task.service";
 
 const idParamsSchema = z.object({
-  id: z.string().uuid("ID inválido.")
+  id: z
+    .string()
+    .regex(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(?:_\d{4}-\d{2}-\d{2})?$/i,
+      "ID inválido."
+    )
 });
 
 const taskReminderParamsSchema = z.object({
@@ -47,7 +52,21 @@ const taskBodySchema = z.object({
     .string()
     .regex(/^\d{2}:\d{2}$/, "Hora deve estar no formato HH:MM.")
     .optional(),
-  color: z.enum(["purple", "teal", "coral", "amber"]).default("purple")
+  color: z.enum(["purple", "teal", "coral", "amber"]).default("purple"),
+  rrule: z.string().trim().min(1).max(500).optional(),
+  is_recurring: z.boolean().optional().default(false),
+  recurrence_end: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Data final deve estar no formato YYYY-MM-DD.")
+    .optional()
+}).superRefine((data, context) => {
+  if (data.is_recurring && !data.rrule) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "RRULE é obrigatória para tarefas recorrentes.",
+      path: ["rrule"]
+    });
+  }
 });
 
 const taskPatchBodySchema = z.object({
@@ -63,7 +82,18 @@ const taskPatchBodySchema = z.object({
     .nullable()
     .optional(),
   color: z.enum(["purple", "teal", "coral", "amber"]).optional(),
-  done: z.boolean().optional()
+  done: z.boolean().optional(),
+  rrule: z.string().trim().min(1).max(500).nullable().optional(),
+  is_recurring: z.boolean().optional(),
+  recurrence_end: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Data final deve estar no formato YYYY-MM-DD.")
+    .nullable()
+    .optional()
+});
+
+const deleteTaskQuerySchema = z.object({
+  scope: z.enum(["this", "all"]).default("this")
 });
 
 const reminderBodySchema = z.object({
@@ -257,15 +287,20 @@ export const tasksRoutes: FastifyPluginAsync = async (app) => {
 
   app.delete("/:id", async (request, reply) => {
     const parsedParams = idParamsSchema.safeParse(request.params);
+    const parsedQuery = deleteTaskQuerySchema.safeParse(request.query);
 
     if (!parsedParams.success) {
       return sendValidationError(reply, parsedParams.error);
     }
 
+    if (!parsedQuery.success) {
+      return sendValidationError(reply, parsedQuery.error);
+    }
+
     const result = await deleteTask(parsedParams.data.id, {
       requesterId: request.user.id,
       requesterRole: request.user.role
-    });
+    }, parsedQuery.data.scope);
 
     if (!result) {
       return sendNotFound(reply, "Tarefa não encontrada");

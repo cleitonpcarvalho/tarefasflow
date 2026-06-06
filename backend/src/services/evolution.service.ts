@@ -36,10 +36,60 @@ interface ConnectionStateResponse {
   };
 }
 
+interface EvolutionMessageKey {
+  id?: string;
+  remoteJid?: string;
+  remoteJidAlt?: string;
+  fromMe?: boolean;
+  addressingMode?: string;
+}
+
+interface EvolutionMessageRecord {
+  key?: EvolutionMessageKey;
+  MessageUpdate?: Array<{
+    status?: string;
+  }>;
+}
+
+interface EvolutionFindMessagesResponse {
+  messages?: {
+    records?: EvolutionMessageRecord[];
+  };
+}
+
+interface EvolutionSendTextResponse {
+  key?: EvolutionMessageKey;
+  status?: string;
+}
+
+interface EvolutionMediaResponse {
+  base64?: string;
+  mimetype?: string;
+}
+
+export interface EvolutionSendResult {
+  accepted: boolean;
+  delivered: boolean;
+  messageId: string | null;
+  remoteJid: string | null;
+  status: string;
+  error: string | null;
+}
+
 const defaultHeaders = {
   "Content-Type": "application/json",
   apikey: env.EVOLUTION_API_KEY
 };
+
+const deliveryStatuses = new Set([
+  "SERVER_ACK",
+  "DELIVERY_ACK",
+  "READ",
+  "PLAYED"
+]);
+
+const deliveryPollAttempts = 8;
+const deliveryPollIntervalMs = 750;
 
 export async function createInstance(
   instanceName: string,
@@ -61,7 +111,7 @@ export async function createInstance(
       webhook: {
         url: webhookUrl,
         byEvents: false,
-        base64: false,
+        base64: true,
         events: [
           "QRCODE_UPDATED",
           "MESSAGES_UPSERT",
@@ -154,9 +204,9 @@ export async function logoutInstance(instanceName: string): Promise<void> {
 
 export async function sendTextMessage(
   instanceName: string,
-  phone: string,
+  destination: string,
   text: string
-): Promise<boolean> {
+): Promise<EvolutionSendResult> {
   try {
     const response = await fetch(
       `${env.EVOLUTION_API_URL}/message/sendText/${instanceName}`,
@@ -164,24 +214,228 @@ export async function sendTextMessage(
         method: "POST",
         headers: defaultHeaders,
         body: JSON.stringify({
-          number: phone,
+          number: destination,
           text
         })
       }
     );
+    const payload = (await readJson(response)) as EvolutionSendTextResponse | null;
 
     if (!response.ok) {
-      console.error(
-        `Erro ao enviar mensagem Evolution: HTTP ${response.status}`
+      const error = getEvolutionErrorMessage(
+        payload,
+        `Evolution recusou o envio com HTTP ${response.status}.`
       );
-      return false;
+      console.error(
+        "Evolution recusou o envio de mensagem.",
+        {
+          instanceName,
+          destination,
+          statusCode: response.status,
+          error,
+          payload
+        }
+      );
+      return {
+        accepted: false,
+        delivered: false,
+        messageId: null,
+        remoteJid: null,
+        status: "REJECTED",
+        error
+      };
     }
 
-    return true;
+    const messageId = payload?.key?.id ?? null;
+    const remoteJid = payload?.key?.remoteJid ?? null;
+
+    if (!messageId) {
+      const error = "Evolution aceitou o envio, mas não retornou o ID da mensagem.";
+      console.error(error, { instanceName, destination, payload });
+      return {
+        accepted: true,
+        delivered: false,
+        messageId: null,
+        remoteJid,
+        status: normalizeDeliveryStatus(payload?.status),
+        error
+      };
+    }
+
+    const delivery = await waitForMessageDelivery(instanceName, messageId);
+    const result: EvolutionSendResult = {
+      accepted: true,
+      delivered: deliveryStatuses.has(delivery.status),
+      messageId,
+      remoteJid,
+      status: delivery.status,
+      error:
+        delivery.status === "ERROR"
+          ? "A Evolution aceitou a mensagem, mas o WhatsApp falhou ao entregá-la."
+          : null
+    };
+
+    if (!result.delivered) {
+      console.error("Mensagem da Evolution não foi confirmada como entregue.", {
+        instanceName,
+        destination,
+        ...result
+      });
+    }
+
+    return result;
   } catch (error) {
     console.error("Erro ao enviar mensagem Evolution:", error);
-    return false;
+    return {
+      accepted: false,
+      delivered: false,
+      messageId: null,
+      remoteJid: null,
+      status: "ERROR",
+      error: error instanceof Error ? error.message : String(error)
+    };
   }
+}
+
+export async function findMessageReplyTarget(
+  instanceName: string,
+  messageId: string
+): Promise<string | null> {
+  try {
+    const records = await findMessages(instanceName, messageId);
+    const lidRecord = records.find((record) =>
+      record.key?.remoteJid?.toLowerCase().endsWith("@lid")
+    );
+
+    return lidRecord?.key?.remoteJid ?? null;
+  } catch (error) {
+    console.error("Erro ao recuperar o LID da mensagem na Evolution.", {
+      instanceName,
+      messageId,
+      error
+    });
+    return null;
+  }
+}
+
+export async function getMediaMessageBase64(
+  instanceName: string,
+  messageId: string
+): Promise<{ base64: string; mimeType: string } | null> {
+  try {
+    const response = await fetch(
+      `${env.EVOLUTION_API_URL}/chat/getBase64FromMediaMessage/${instanceName}`,
+      {
+        method: "POST",
+        headers: defaultHeaders,
+        body: JSON.stringify({
+          message: {
+            key: {
+              id: messageId
+            }
+          }
+        })
+      }
+    );
+    const payload = (await readJson(response)) as EvolutionMediaResponse | null;
+
+    if (!response.ok || !payload?.base64) {
+      console.error("Evolution não retornou a mídia da mensagem.", {
+        instanceName,
+        messageId,
+        statusCode: response.status,
+        payload
+      });
+      return null;
+    }
+
+    return {
+      base64: payload.base64,
+      mimeType: payload.mimetype ?? "audio/ogg"
+    };
+  } catch (error) {
+    console.error("Erro ao recuperar mídia da mensagem na Evolution.", {
+      instanceName,
+      messageId,
+      error
+    });
+    return null;
+  }
+}
+
+async function waitForMessageDelivery(
+  instanceName: string,
+  messageId: string
+): Promise<{ status: string }> {
+  for (let attempt = 0; attempt < deliveryPollAttempts; attempt += 1) {
+    if (attempt > 0) {
+      await sleep(deliveryPollIntervalMs);
+    }
+
+    const records = await findMessages(instanceName, messageId);
+    const statuses = records.flatMap((record) =>
+      (record.MessageUpdate ?? [])
+        .map((update) => normalizeDeliveryStatus(update.status))
+        .filter(Boolean)
+    );
+
+    if (statuses.includes("ERROR")) {
+      return { status: "ERROR" };
+    }
+
+    const deliveredStatus = statuses.find((status) =>
+      deliveryStatuses.has(status)
+    );
+
+    if (deliveredStatus) {
+      return { status: deliveredStatus };
+    }
+  }
+
+  return { status: "PENDING" };
+}
+
+async function findMessages(
+  instanceName: string,
+  messageId: string
+): Promise<EvolutionMessageRecord[]> {
+  const response = await fetch(
+    `${env.EVOLUTION_API_URL}/chat/findMessages/${instanceName}`,
+    {
+      method: "POST",
+      headers: defaultHeaders,
+      body: JSON.stringify({
+        where: {
+          key: {
+            id: messageId
+          }
+        },
+        page: 1,
+        offset: 10
+      })
+    }
+  );
+  const payload = (await readJson(response)) as EvolutionFindMessagesResponse | null;
+
+  if (!response.ok) {
+    throw new EvolutionServiceError(
+      getEvolutionErrorMessage(
+        payload,
+        "Erro ao consultar a entrega da mensagem na Evolution."
+      ),
+      response.status
+    );
+  }
+
+  return payload?.messages?.records ?? [];
+}
+
+function normalizeDeliveryStatus(status: string | undefined) {
+  return status?.trim().toUpperCase() || "PENDING";
+}
+
+function sleep(milliseconds: number) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
 async function runDeleteRequest(url: string, fallbackMessage: string) {

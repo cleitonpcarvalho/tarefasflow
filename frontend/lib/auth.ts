@@ -9,8 +9,10 @@ interface JwtUserPayload {
   email: string;
   role: User["role"];
   name?: string;
+  active?: boolean;
   whatsapp_phone?: string | null;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 export function getAuthToken() {
@@ -94,11 +96,13 @@ export function getUserFromToken(): User | null {
 
     return {
       id: payload.id,
-      name: payload.name ?? "Usuario TaskFlow",
+      name: payload.name ?? "Usuário TarefasFlow",
       email: payload.email,
       role: payload.role,
+      active: payload.active ?? true,
       whatsapp_phone: payload.whatsapp_phone ?? null,
-      createdAt: payload.createdAt ?? ""
+      createdAt: payload.createdAt ?? "",
+      updatedAt: payload.updatedAt ?? ""
     };
   } catch {
     return null;

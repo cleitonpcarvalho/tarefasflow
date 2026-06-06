@@ -3,8 +3,8 @@ import { sql } from "../config/db";
 import type { UserRole } from "../types/auth";
 
 const admin = {
-  name: "TaskFlow Admin",
-  email: "admin@taskflow.com",
+  name: "TarefasFlow Admin",
+  email: "admin@tarefasflow.com",
   password: "Admin@2026!",
   role: "admin" satisfies UserRole
 };

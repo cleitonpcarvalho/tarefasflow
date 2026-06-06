@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { useConfirm } from "@/hooks/useConfirm";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import type {
@@ -36,6 +38,7 @@ interface NumberFormState extends AuthorizedNumberPermissions {
 }
 
 export default function WhatsAppPage() {
+  const { confirm, modalProps } = useConfirm();
   const [instance, setInstance] = useState<WhatsappInstance | null>(null);
   const [qrCode, setQrCode] = useState<WhatsappQRCode | null>(null);
   const [instanceName, setInstanceName] = useState("minha-agenda");
@@ -224,6 +227,18 @@ export default function WhatsAppPage() {
       return;
     }
 
+    const confirmed = await confirm({
+      title: "Desconectar instância",
+      message:
+        "O número será desconectado do agente. Você precisará escanear o QR Code novamente para reconectar.",
+      variant: "warning",
+      confirmLabel: "Desconectar"
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
     setBusyAction("logout");
     setError(null);
     setFeedback(null);
@@ -248,9 +263,13 @@ export default function WhatsAppPage() {
       return;
     }
 
-    const confirmed = window.confirm(
-      "Deseja deletar esta instância? Será necessário criar uma nova conexão."
-    );
+    const confirmed = await confirm({
+      title: "Deletar instância",
+      message:
+        "A instância será removida permanentemente. Todas as configurações e números autorizados serão perdidos.",
+      variant: "danger",
+      confirmLabel: "Deletar permanentemente"
+    });
 
     if (!confirmed) {
       return;
@@ -404,9 +423,12 @@ export default function WhatsAppPage() {
       return;
     }
 
-    const confirmed = window.confirm(
-      `Remover ${number.label ?? number.phone} da lista autorizada?`
-    );
+    const confirmed = await confirm({
+      title: "Remover número",
+      message: `Remover "${number.label || number.phone}" da lista de números autorizados?`,
+      variant: "danger",
+      confirmLabel: "Remover"
+    });
 
     if (!confirmed) {
       return;
@@ -432,8 +454,9 @@ export default function WhatsAppPage() {
   }
 
   return (
-    <section className="min-h-[calc(100vh-56px)] p-5">
-      <div className="mx-auto max-w-3xl space-y-4">
+    <>
+      <section className="min-h-[calc(100vh-56px)] p-5">
+        <div className="mx-auto max-w-3xl space-y-4">
         {error ? (
           <p className="rounded-md bg-rose-50 px-3 py-2 text-[12px] font-medium text-rose-700">
             {error}
@@ -488,8 +511,10 @@ export default function WhatsAppPage() {
             submitError={numberFormError}
           />
         ) : null}
-      </div>
-    </section>
+        </div>
+      </section>
+      <ConfirmModal {...modalProps} />
+    </>
   );
 }
 

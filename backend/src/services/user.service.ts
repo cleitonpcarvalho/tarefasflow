@@ -13,8 +13,16 @@ export class UserServiceError extends Error {
 }
 
 export interface UserFilters {
+  search?: string;
   role?: UserRole;
   active?: boolean;
+}
+
+export interface CreateUserData {
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
 }
 
 export interface UpdateUserData {
@@ -31,6 +39,13 @@ const userSelectColumns =
 export async function listUsers(filters: UserFilters = {}): Promise<PublicUser[]> {
   const conditions: string[] = [];
   const params: Array<string | boolean> = [];
+
+  if (filters.search?.trim()) {
+    params.push(`%${filters.search.trim()}%`);
+    conditions.push(
+      `(name ILIKE $${params.length} OR email ILIKE $${params.length})`
+    );
+  }
 
   if (filters.role) {
     params.push(filters.role);
@@ -56,6 +71,35 @@ export async function listUsers(filters: UserFilters = {}): Promise<PublicUser[]
   );
 
   return rows.map(toPublicUser);
+}
+
+export async function createUser(
+  data: CreateUserData
+): Promise<PublicUser> {
+  const email = data.email.trim().toLowerCase();
+  const passwordHash = await bcrypt.hash(data.password, 12);
+
+  try {
+    const rows = await sql<UserRow[]>`
+      INSERT INTO users (name, email, password, role)
+      VALUES (
+        ${data.name.trim()},
+        ${email},
+        ${passwordHash},
+        ${data.role}
+      )
+      RETURNING id, name, email, password, role, active, whatsapp_phone,
+        created_at, updated_at
+    `;
+
+    return toPublicUser(rows[0]);
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      throw new UserServiceError("Email já cadastrado.", 409);
+    }
+
+    throw error;
+  }
 }
 
 export async function getUserById(id: string): Promise<PublicUser | null> {

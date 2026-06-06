@@ -22,46 +22,81 @@ export function useTasks() {
     error: null
   });
   const currentMonthRef = useRef({
-    month: new Date().getMonth() + 1,
-    year: new Date().getFullYear()
+    periods: [
+      {
+        month: new Date().getMonth() + 1,
+        year: new Date().getFullYear()
+      }
+    ]
   });
 
+  const fetchTaskPeriods = useCallback(
+    async (periods: Array<{ month: number; year: number }>) => {
+      currentMonthRef.current = { periods };
+      setState((current) => ({ ...current, loading: true, error: null }));
+
+      try {
+        const responses = await Promise.all(
+          periods.map(({ month, year }) =>
+            apiFetch<Task[]>(`/tasks?month=${month}&year=${year}`)
+          )
+        );
+        const tasksById = new Map<string, Task>();
+
+        responses.forEach((response) => {
+          response.data?.forEach((task) => tasksById.set(task.id, task));
+        });
+
+        const tasks = [...tasksById.values()];
+        setState({
+          tasks,
+          loading: false,
+          error: null
+        });
+
+        return tasks;
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Erro ao carregar tarefas.";
+        setState((current) => ({
+          ...current,
+          loading: false,
+          error: message
+        }));
+        throw error;
+      }
+    },
+    []
+  );
+
   const fetchTasks = useCallback(async (month: number, year: number) => {
-    currentMonthRef.current = { month, year };
-    setState((current) => ({ ...current, loading: true, error: null }));
+    return fetchTaskPeriods([{ month, year }]);
+  }, [fetchTaskPeriods]);
 
-    try {
-      const response = await apiFetch<Task[]>(
-        `/tasks?month=${month}&year=${year}`
-      );
-      setState({
-        tasks: response.data ?? [],
-        loading: false,
-        error: null
+  const fetchTasksForRange = useCallback(async (start: Date, end: Date) => {
+    const periods: Array<{ month: number; year: number }> = [];
+    const cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+    const finalMonth = new Date(end.getFullYear(), end.getMonth(), 1);
+
+    while (cursor <= finalMonth) {
+      periods.push({
+        month: cursor.getMonth() + 1,
+        year: cursor.getFullYear()
       });
-
-      return response.data ?? [];
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Erro ao carregar tarefas.";
-      setState((current) => ({
-        ...current,
-        loading: false,
-        error: message
-      }));
-      throw error;
+      cursor.setMonth(cursor.getMonth() + 1);
     }
-  }, []);
+
+    return fetchTaskPeriods(periods);
+  }, [fetchTaskPeriods]);
+
+  const refetchCurrentMonth = useCallback(async () => {
+    await fetchTaskPeriods(currentMonthRef.current.periods);
+  }, [fetchTaskPeriods]);
 
   const fetchTasksByDate = useCallback(
     (date: string) => state.tasks.filter((task) => task.task_date === date),
     [state.tasks]
   );
-
-  const refetchCurrentMonth = useCallback(async () => {
-    const { month, year } = currentMonthRef.current;
-    await fetchTasks(month, year);
-  }, [fetchTasks]);
 
   const createTask = useCallback(
     async (data: CreateTaskInput) => {
@@ -107,6 +142,12 @@ export function useTasks() {
         method: "PATCH"
       });
       const updatedTask = unwrapData(response);
+
+      if (/_\d{4}-\d{2}-\d{2}$/.test(id)) {
+        await refetchCurrentMonth();
+        return updatedTask;
+      }
+
       setState((current) => ({
         ...current,
         tasks: current.tasks.map((task) =>
@@ -118,24 +159,25 @@ export function useTasks() {
       setState((current) => ({ ...current, tasks: previousTasks }));
       throw error;
     }
-  }, []);
+  }, [refetchCurrentMonth]);
 
-  const deleteTask = useCallback(async (id: string) => {
-    await apiFetch<{ deleted: true }>(`/tasks/${id}`, {
+  const deleteTask = useCallback(async (
+    id: string,
+    scope: "this" | "all" = "this"
+  ) => {
+    await apiFetch<{ deleted: true }>(`/tasks/${id}?scope=${scope}`, {
       method: "DELETE"
     });
 
-    setState((current) => ({
-      ...current,
-      tasks: current.tasks.filter((task) => task.id !== id)
-    }));
-  }, []);
+    await refetchCurrentMonth();
+  }, [refetchCurrentMonth]);
 
   return {
     tasks: state.tasks,
     loading: state.loading,
     error: state.error,
     fetchTasks,
+    fetchTasksForRange,
     fetchTasksByDate,
     createTask,
     updateTask,

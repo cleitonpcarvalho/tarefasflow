@@ -1,10 +1,10 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { LockKeyhole, Mail } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { apiFetch, ApiFetchError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { AuthSession } from "@/types";
@@ -47,14 +47,7 @@ export default function LoginPage() {
   return (
     <section className="w-full rounded-lg border border-slate-200 bg-white p-6 shadow-soft">
       <div className="mb-8 flex justify-center">
-        <Image
-          alt="TaskFlow"
-          className="h-auto w-[184px]"
-          height={57}
-          priority
-          src="/logo-light.png"
-          width={184}
-        />
+        <BrandLogo />
       </div>
 
       <form className="space-y-4" onSubmit={handleSubmit}>

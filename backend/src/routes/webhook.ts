@@ -4,7 +4,12 @@ import { processMessage } from "../agents/task-agent";
 import { sql } from "../config/db";
 import { env } from "../config/env";
 import { getAuthorizedNumberByPhones } from "../services/authorized-number.service";
-import { sendTextMessage } from "../services/evolution.service";
+import {
+  findMessageReplyTarget,
+  getMediaMessageBase64,
+  sendTextMessage,
+  type EvolutionSendResult
+} from "../services/evolution.service";
 import { findPublicUserById } from "../services/auth.service";
 import { transcribeAudio } from "../services/whisper.service";
 import { createWhatsappLog } from "../services/whatsapp-log.service";
@@ -15,6 +20,25 @@ import {
 import type { EvolutionConnectionState } from "../services/evolution.service";
 
 type JsonObject = Record<string, unknown>;
+type ExtractedMessage =
+  | {
+      type: "text";
+      content: string;
+      mediaType: null;
+      mimeType: null;
+    }
+  | {
+      type: "audio";
+      content: string | null;
+      mediaType: "audio";
+      mimeType: string;
+    }
+  | {
+      type: "unknown";
+      content: null;
+      mediaType: null;
+      mimeType: null;
+    };
 
 const webhookPayloadSchema = z
   .object({
@@ -26,7 +50,12 @@ const webhookPayloadSchema = z
         instance: z.string().optional(),
         key: z
           .object({
+            id: z.string().optional(),
             remoteJid: z.string().optional(),
+            remoteJidAlt: z.string().optional(),
+            senderPn: z.string().optional(),
+            senderLid: z.string().optional(),
+            addressingMode: z.string().optional(),
             fromMe: z.boolean().optional()
           })
           .passthrough()
@@ -163,12 +192,23 @@ export const webhookRoutes: FastifyPluginAsync = async (app) => {
       const rawPhone = extractRawPhone(payload);
       const phone = rawPhone ? normalizeWhatsappPhone(rawPhone) : null;
       const phoneVariants = phone ? normalizePhone(phone) : [];
-      const extractedMessage = await extractMessageContent(payload);
-      const inboundContent = extractedMessage.text || "[mensagem sem texto]";
+      const replyTarget = await resolveReplyTarget(
+        payload,
+        instance.instance_name,
+        phone
+      );
+      const extractedMessage = extractMessageContent(payload);
+      let inboundContent =
+        extractedMessage.type === "text"
+          ? extractedMessage.content
+          : extractedMessage.type === "audio"
+            ? "[áudio recebido]"
+            : "[mensagem sem texto]";
 
       if (!phone || phoneVariants.length === 0) {
         await createWhatsappLog({
           userId: user.id,
+          phone,
           direction: "inbound",
           content: inboundContent,
           mediaType: extractedMessage.mediaType,
@@ -191,53 +231,103 @@ export const webhookRoutes: FastifyPluginAsync = async (app) => {
 
       if (!authorizedNumber) {
         const response =
-          "Seu numero nao esta autorizado a usar este agente. Entre em contato com o administrador do TaskFlow.";
+          "Seu numero nao esta autorizado a usar este agente. Entre em contato com o administrador do TarefasFlow.";
 
         await createWhatsappLog({
           userId: user.id,
+          phone,
           direction: "inbound",
           content: inboundContent,
           mediaType: extractedMessage.mediaType,
           processed: false
         });
-        await sendTextMessage(instance.instance_name, phone, response);
+        const delivery = await sendAgentResponse(
+          app,
+          instance.instance_name,
+          replyTarget ?? phone,
+          response
+        );
 
         return reply.code(200).send({
           success: true,
-          data: { processed: false, response },
+          data: { processed: false, response, delivery },
           message: "Número não autorizado.",
           error: null
         });
       }
 
-      if (!extractedMessage.text) {
+      let messageText =
+        extractedMessage.type === "text" ? extractedMessage.content : null;
+
+      if (extractedMessage.type === "audio") {
+        app.log.info(
+          {
+            instanceName: instance.instance_name,
+            messageId: payload.data?.key?.id,
+            hasBase64: Boolean(extractedMessage.content),
+            mimeType: extractedMessage.mimeType
+          },
+          "Áudio do WhatsApp detectado"
+        );
+
+        const transcription = await transcribeWhatsappAudio({
+          app,
+          extractedMessage,
+          instanceName: instance.instance_name,
+          messageId: payload.data?.key?.id
+        });
+
+        if (transcription) {
+          messageText = transcription;
+          inboundContent = transcription;
+          app.log.info(
+            {
+              instanceName: instance.instance_name,
+              messageId: payload.data?.key?.id,
+              transcriptionLength: transcription.length
+            },
+            "Áudio do WhatsApp transcrito"
+          );
+        }
+      }
+
+      if (!messageText) {
         const response =
-          "Recebi sua mensagem, mas não consegui identificar texto ou áudio para processar.";
+          extractedMessage.type === "audio"
+            ? "Não consegui entender o áudio. Pode repetir em texto?"
+            : "Recebi sua mensagem, mas não consegui identificar texto ou áudio para processar.";
         await createWhatsappLog({
           userId: user.id,
+          phone,
           direction: "inbound",
           content: inboundContent,
           mediaType: extractedMessage.mediaType,
           processed: false
         });
-        await sendTextMessage(instance.instance_name, phone, response);
+        const delivery = await sendAgentResponse(
+          app,
+          instance.instance_name,
+          replyTarget ?? phone,
+          response
+        );
         await createWhatsappLog({
           userId: user.id,
+          phone,
           direction: "outbound",
           content: response,
-          processed: true
+          processed: delivery.delivered
         });
 
         return reply.code(200).send({
           success: true,
-          data: { processed: false, response },
+          data: { processed: false, response, delivery },
           message: "Mensagem sem conteúdo processável.",
           error: null
         });
       }
 
       const agentResponse = await processMessage({
-        text: extractedMessage.text,
+        text: messageText,
         userId: user.id,
         userPhone: phone,
         userName: user.name,
@@ -251,27 +341,37 @@ export const webhookRoutes: FastifyPluginAsync = async (app) => {
 
       await createWhatsappLog({
         userId: user.id,
+        phone,
         direction: "inbound",
         content: inboundContent,
         mediaType: extractedMessage.mediaType,
         processed: true
       });
-      await sendTextMessage(instance.instance_name, phone, agentResponse);
+      const delivery = await sendAgentResponse(
+        app,
+        instance.instance_name,
+        replyTarget ?? phone,
+        agentResponse
+      );
       await createWhatsappLog({
         userId: user.id,
+        phone,
         direction: "outbound",
         content: agentResponse,
-        processed: true
+        processed: delivery.delivered
       });
 
       return reply.code(200).send({
-        success: true,
+        success: delivery.delivered,
         data: {
-          processed: true,
-          response: agentResponse
+          processed: delivery.delivered,
+          response: agentResponse,
+          delivery
         },
-        message: "Mensagem processada com sucesso.",
-        error: null
+        message: delivery.delivered
+          ? "Mensagem processada e entregue com sucesso."
+          : "Mensagem processada, mas não entregue pelo WhatsApp.",
+        error: delivery.error
       });
     } catch (error) {
       app.log.error({ err: error }, "Erro no webhook WhatsApp");
@@ -286,31 +386,85 @@ export const webhookRoutes: FastifyPluginAsync = async (app) => {
   });
 };
 
-async function extractMessageContent(payload: z.infer<typeof webhookPayloadSchema>) {
+function extractMessageContent(
+  payload: z.infer<typeof webhookPayloadSchema>
+): ExtractedMessage {
   const text = extractText(payload);
 
   if (text) {
     return {
-      text,
-      mediaType: null
+      type: "text",
+      content: text,
+      mediaType: null,
+      mimeType: null
     };
   }
 
-  const audioUrl = extractAudioUrl(payload);
+  const data = asRecord(payload.data);
+  const message = asRecord(payload.data?.message);
+  const audioMessage = asRecord(message?.audioMessage);
 
-  if (!audioUrl) {
+  if (!audioMessage) {
     return {
-      text: null,
-      mediaType: null
+      type: "unknown",
+      content: null,
+      mediaType: null,
+      mimeType: null
     };
   }
 
-  const transcription = await transcribeAudio(audioUrl);
+  const base64 =
+    readString(message, ["base64"]) ??
+    readString(data, ["message", "base64"]);
 
   return {
-    text: transcription.trim() || null,
-    mediaType: "audio"
+    type: "audio",
+    content: normalizeText(base64),
+    mediaType: "audio",
+    mimeType:
+      readString(audioMessage, ["mimetype"])?.split(";")[0]?.trim() ??
+      "audio/ogg"
   };
+}
+
+async function transcribeWhatsappAudio({
+  app,
+  extractedMessage,
+  instanceName,
+  messageId
+}: {
+  app: Parameters<FastifyPluginAsync>[0];
+  extractedMessage: Extract<ExtractedMessage, { type: "audio" }>;
+  instanceName: string;
+  messageId?: string;
+}) {
+  try {
+    let audioInput = extractedMessage.content;
+    let mimeType = extractedMessage.mimeType;
+
+    if (!audioInput && messageId) {
+      const media = await getMediaMessageBase64(instanceName, messageId);
+      audioInput = media?.base64 ?? null;
+      mimeType = media?.mimeType ?? mimeType;
+    }
+
+    if (!audioInput) {
+      app.log.warn(
+        { instanceName, messageId },
+        "Áudio recebido sem base64 e sem mídia recuperável"
+      );
+      return null;
+    }
+
+    const transcription = await transcribeAudio(audioInput, mimeType);
+    return normalizeText(transcription);
+  } catch (error) {
+    app.log.error(
+      { err: error, instanceName, messageId },
+      "Erro ao transcrever áudio do WhatsApp"
+    );
+    return null;
+  }
 }
 
 function extractInstanceName(payload: z.infer<typeof webhookPayloadSchema>) {
@@ -352,12 +506,47 @@ function extractConnectionState(
 
 function extractRawPhone(payload: z.infer<typeof webhookPayloadSchema>) {
   const data = asRecord(payload.data);
+  const remoteJid = readString(data, ["key", "remoteJid"]);
+  const remoteJidAlt = readString(data, ["key", "remoteJidAlt"]);
+  const senderPn = readString(data, ["key", "senderPn"]);
 
   return (
-    readString(data, ["key", "remoteJid"]) ??
+    (isPhoneJid(remoteJid) ? remoteJid : null) ??
+    (isPhoneJid(remoteJidAlt) ? remoteJidAlt : null) ??
+    (isPhoneJid(senderPn) ? senderPn : null) ??
     readString(data, ["sender"]) ??
     readString(asRecord(payload), ["sender"])
   );
+}
+
+async function resolveReplyTarget(
+  payload: z.infer<typeof webhookPayloadSchema>,
+  instanceName: string,
+  fallbackPhone: string | null
+) {
+  const data = asRecord(payload.data);
+  const directCandidates = [
+    readString(data, ["key", "remoteJid"]),
+    readString(data, ["key", "remoteJidAlt"]),
+    readString(data, ["key", "senderLid"])
+  ];
+  const directLid = directCandidates.find(isLidJid);
+
+  if (directLid) {
+    return directLid;
+  }
+
+  const messageId = readString(data, ["key", "id"]);
+
+  if (messageId) {
+    const storedTarget = await findMessageReplyTarget(instanceName, messageId);
+
+    if (storedTarget) {
+      return storedTarget;
+    }
+  }
+
+  return fallbackPhone;
 }
 
 function extractText(payload: z.infer<typeof webhookPayloadSchema>) {
@@ -378,22 +567,6 @@ function extractText(payload: z.infer<typeof webhookPayloadSchema>) {
   ];
 
   return normalizeText(candidates.find(Boolean) ?? null);
-}
-
-function extractAudioUrl(payload: z.infer<typeof webhookPayloadSchema>) {
-  const data = asRecord(payload.data);
-  const message = asRecord(payload.data?.message);
-
-  const candidates = [
-    readString(message, ["audioMessage", "url"]),
-    readString(message, ["audioMessage", "mediaUrl"]),
-    readString(data, ["message", "audioMessage", "url"]),
-    readString(data, ["message", "audioMessage", "mediaUrl"]),
-    readString(data, ["mediaUrl"]),
-    readString(data, ["url"])
-  ];
-
-  return candidates.find(Boolean) ?? null;
 }
 
 function isConnectionUpdateEvent(event: string | undefined) {
@@ -448,7 +621,7 @@ function maskApiKey(apiKey: string) {
 }
 
 function normalizeWhatsappPhone(rawPhone: string) {
-  if (rawPhone.includes("@g.us")) {
+  if (rawPhone.includes("@g.us") || isLidJid(rawPhone)) {
     return null;
   }
 
@@ -480,6 +653,44 @@ function normalizePhone(phone: string) {
   }
 
   return [...variants];
+}
+
+function isPhoneJid(value: string | null) {
+  return Boolean(
+    value &&
+      (value.toLowerCase().endsWith("@s.whatsapp.net") ||
+        value.toLowerCase().endsWith("@c.us"))
+  );
+}
+
+function isLidJid(value: string | null | undefined) {
+  return Boolean(value?.toLowerCase().endsWith("@lid"));
+}
+
+async function sendAgentResponse(
+  app: Parameters<FastifyPluginAsync>[0],
+  instanceName: string,
+  destination: string,
+  content: string
+): Promise<EvolutionSendResult> {
+  const delivery = await sendTextMessage(instanceName, destination, content);
+  const logContext = {
+    instanceName,
+    destination,
+    messageId: delivery.messageId,
+    remoteJid: delivery.remoteJid,
+    deliveryStatus: delivery.status,
+    delivered: delivery.delivered,
+    error: delivery.error
+  };
+
+  if (delivery.delivered) {
+    app.log.info(logContext, "Resposta do agente entregue pelo WhatsApp");
+  } else {
+    app.log.error(logContext, "Falha ao entregar resposta do agente pelo WhatsApp");
+  }
+
+  return delivery;
 }
 
 function normalizeText(value: string | null) {

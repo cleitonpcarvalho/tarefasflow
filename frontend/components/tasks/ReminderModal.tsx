@@ -32,9 +32,9 @@ export function ReminderModal({
   useEffect(() => {
     if (isOpen) {
       setError("");
-      void fetchReminders(task.id);
+      void fetchReminders(task.parent_id ?? task.id);
     }
-  }, [fetchReminders, isOpen, task.id]);
+  }, [fetchReminders, isOpen, task.id, task.parent_id]);
 
   if (!isOpen) {
     return null;
@@ -44,7 +44,7 @@ export function ReminderModal({
     setError("");
 
     try {
-      await createReminder(task.id, minutesBefore);
+      await createReminder(task.parent_id ?? task.id, minutesBefore);
       setAddedValue(minutesBefore);
       window.setTimeout(() => setAddedValue(null), 1000);
     } catch (error) {

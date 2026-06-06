@@ -6,7 +6,13 @@ import { z } from "zod";
 import { openai } from "../config/openai";
 import { sql } from "../config/db";
 import type { AuthorizedNumberPermissions } from "../services/authorized-number.service";
+import {
+  buildRRule,
+  describeRRule,
+  parseDateAtEndOfDay
+} from "../services/recurrence.service";
 import { createReminder } from "../services/reminder.service";
+import { getWhatsappConversationHistory } from "../services/whatsapp-log.service";
 import {
   createTask,
   deleteTask,
@@ -31,6 +37,25 @@ const createTaskSchema = z.object({
   color: z.enum(["purple", "teal", "coral", "amber"]).optional()
 });
 
+const weekdaySchema = z.enum(["MO", "TU", "WE", "TH", "FR", "SA", "SU"]);
+
+const createRecurringTaskSchema = createTaskSchema.extend({
+  frequency: z.enum(["daily", "weekly", "monthly"]),
+  interval: z.number().int().positive().optional(),
+  weekdays: z.array(weekdaySchema).optional(),
+  month_day: z.number().int().min(1).max(31).optional(),
+  month_weekday_week: z.union([
+    z.literal(1),
+    z.literal(2),
+    z.literal(3),
+    z.literal(4),
+    z.literal(-1)
+  ]).optional(),
+  month_weekday_day: weekdaySchema.optional(),
+  recurrence_end: z.string().optional(),
+  count: z.number().int().positive().optional()
+});
+
 const listTasksSchema = z.object({
   date: z.string().optional(),
   month: z.number().optional(),
@@ -38,7 +63,7 @@ const listTasksSchema = z.object({
 });
 
 const taskLookupSchema = z.object({
-  task_id: z.string().uuid().optional(),
+  task_id: z.string().optional(),
   title_hint: z.string().optional()
 });
 
@@ -64,6 +89,57 @@ const tools: ChatCompletionTool[] = [
             type: "string",
             enum: ["purple", "teal", "coral", "amber"]
           }
+        }
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "create_recurring_task",
+      description:
+        "Cria uma tarefa recorrente. Use quando o usuário disser todo dia, toda semana, toda segunda, sempre, repetir, recorrente ou indicar vários dias da semana.",
+      parameters: {
+        type: "object",
+        required: ["title", "task_date", "frequency"],
+        properties: {
+          title: { type: "string" },
+          task_date: {
+            type: "string",
+            description: "Data da primeira ocorrência no formato YYYY-MM-DD"
+          },
+          task_time: { type: "string", description: "Hora no formato HH:MM" },
+          description: { type: "string" },
+          color: {
+            type: "string",
+            enum: ["purple", "teal", "coral", "amber"]
+          },
+          frequency: {
+            type: "string",
+            enum: ["daily", "weekly", "monthly"]
+          },
+          interval: { type: "number", minimum: 1 },
+          weekdays: {
+            type: "array",
+            items: {
+              type: "string",
+              enum: ["MO", "TU", "WE", "TH", "FR", "SA", "SU"]
+            }
+          },
+          month_day: { type: "number", minimum: 1, maximum: 31 },
+          month_weekday_week: {
+            type: "number",
+            enum: [1, 2, 3, 4, -1]
+          },
+          month_weekday_day: {
+            type: "string",
+            enum: ["MO", "TU", "WE", "TH", "FR", "SA", "SU"]
+          },
+          recurrence_end: {
+            type: "string",
+            description: "Data final no formato YYYY-MM-DD"
+          },
+          count: { type: "number", minimum: 1 }
         }
       }
     }
@@ -142,8 +218,16 @@ const tools: ChatCompletionTool[] = [
 
 export async function processMessage(input: ProcessMessageInput): Promise<string> {
   const systemPrompt = buildSystemPrompt(input.userName, input.permissions);
+  const conversationHistory = await getWhatsappConversationHistory({
+    userId: input.userId,
+    phone: input.userPhone
+  });
   const messages: ChatCompletionMessageParam[] = [
     { role: "system", content: systemPrompt },
+    ...conversationHistory.map<ChatCompletionMessageParam>((entry) => ({
+      role: entry.direction === "inbound" ? "user" : "assistant",
+      content: entry.content
+    })),
     { role: "user", content: input.text }
   ];
 
@@ -154,14 +238,45 @@ export async function processMessage(input: ProcessMessageInput): Promise<string
       tools,
       tool_choice: "auto"
     });
-    const message = firstCompletion.choices[0]?.message;
+    let message = firstCompletion.choices[0]?.message;
 
     if (!message) {
       return fallbackResponse(input);
     }
 
     if (!message.tool_calls || message.tool_calls.length === 0) {
-      return message.content ?? fallbackResponse(input);
+      const requiredTool = getRequiredToolForClaim(message.content);
+
+      if (!requiredTool) {
+        return message.content ?? fallbackResponse(input);
+      }
+
+      const repairCompletion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          ...messages,
+          {
+            role: "system",
+            content:
+              `Você não pode afirmar que concluiu uma ação sem executar a ` +
+              `ferramenta correspondente. Execute ${requiredTool} agora usando ` +
+              `todos os dados disponíveis no histórico.`
+          }
+        ],
+        tools,
+        tool_choice: "auto"
+      });
+      message = repairCompletion.choices[0]?.message;
+
+      if (!message) {
+        return fallbackResponse(input);
+      }
+
+      if (!message.tool_calls || message.tool_calls.length === 0) {
+        return getRequiredToolForClaim(message.content)
+          ? "Não consegui concluir essa ação agora. Pode tentar novamente?"
+          : message.content ?? fallbackResponse(input);
+      }
     }
 
     messages.push(message);
@@ -228,6 +343,45 @@ async function executeTool(
         { requesterId: userId }
       );
       return { ok: true, task };
+    }
+    case "create_recurring_task": {
+      const parsed = createRecurringTaskSchema.parse(args);
+      const rrule = buildRRule({
+        frequency: parsed.frequency,
+        interval: parsed.interval,
+        weekdays: parsed.weekdays?.map(toWeekdayIndex),
+        monthDay: parsed.month_day,
+        monthWeekday:
+          parsed.month_weekday_week && parsed.month_weekday_day
+            ? {
+                week: parsed.month_weekday_week,
+                day: toWeekdayIndex(parsed.month_weekday_day)
+              }
+            : undefined,
+        until: parsed.recurrence_end
+          ? parseDateAtEndOfDay(parsed.recurrence_end)
+          : undefined,
+        count: parsed.count
+      });
+      const task = await createTask(
+        {
+          title: parsed.title,
+          task_date: parsed.task_date,
+          task_time: parsed.task_time,
+          description: parsed.description,
+          color: parsed.color as TaskColor | undefined,
+          is_recurring: true,
+          rrule,
+          recurrence_end: parsed.recurrence_end
+        },
+        { requesterId: userId }
+      );
+
+      return {
+        ok: true,
+        task,
+        rrule_human: describeRRule(rrule)
+      };
     }
     case "list_tasks": {
       const parsed = listTasksSchema.parse(args);
@@ -367,7 +521,7 @@ function buildSystemPrompt(
   userName: string,
   permissions: AuthorizedNumberPermissions
 ) {
-  return `Você é o assistente de agenda TaskFlow. Você ajuda o usuário a
+  return `Você é o assistente de agenda TarefasFlow. Você ajuda o usuário a
 gerenciar suas tarefas e compromissos via WhatsApp.
 
 Usuário atual: ${userName}
@@ -379,12 +533,67 @@ adicionar lembretes: ${toSimNao(permissions.can_add_reminder)}
 
 Regras:
 - Responda SEMPRE em português do Brasil, de forma curta e direta
-- Para criar tarefas, confirme os detalhes antes se a data não foi clara
+- Use o histórico da conversa para completar a intenção atual
+- Preserve título, descrição, data e horário já informados em mensagens anteriores
+- Nunca peça novamente uma informação que já aparece no histórico
+- Reunião, compromisso, agendamento e evento sem repetição devem ser criados
+  com create_task
+- Use create_recurring_task quando houver repetição: todo dia, toda semana,
+  toda segunda, toda terça e quinta, sempre, repetir ou recorrente
+- Se título, data e horário estiverem claros, execute create_task imediatamente
+- Para recorrência com título, primeira data, horário e regra claros, execute
+  create_recurring_task e inclua a regra na confirmação
+- Interpretações: "toda terça e quinta" = semanal TU,TH; "todo dia" = diária;
+  "toda semana" sem dias = segunda a sexta; "todo primeiro sábado do mês" =
+  mensal 1SA; "todo dia 15" = mensal no dia 15
+- Pergunte somente pelos dados realmente ausentes para executar a ação
+- Para criar tarefas, peça esclarecimento apenas se a data não estiver clara
+- Nunca diga que criou, alterou, concluiu ou removeu algo sem executar a ferramenta
+  correspondente e receber um resultado de sucesso
 - Se a intenção não for reconhecida, peça esclarecimento gentilmente
 - Ao listar tarefas, formate em lista numerada com horário e título
 - Ao criar uma tarefa, confirme com: "Tarefa criada! [título] em [data] às [hora]"
+- Após criar recorrência, confirme com:
+  "Tarefa recorrente criada! [título] — [descrição humana da regra]"
 - Se não houver tarefas para o período, diga isso de forma amigável
 - Nunca invente dados. Se não encontrar uma tarefa, diga que não encontrou`;
+}
+
+function getRequiredToolForClaim(content: string | null) {
+  const normalized = content?.toLocaleLowerCase("pt-BR") ?? "";
+
+  if (
+    /\b(não|nao|ainda não|ainda nao)\b.{0,50}\b(criad|agendad|conclu[ií]d|finalizad|exclu[ií]d|removid|cancelad|adicionad|configurad)/.test(
+      normalized
+    )
+  ) {
+    return null;
+  }
+
+  const toolClaims: Array<[string, RegExp]> = [
+    [
+      "create_recurring_task",
+      /\b(tarefa|reuni[aã]o|compromisso|evento)\s+recorrente\b.{0,30}\b(criad[ao]|agendad[ao])\b/
+    ],
+    [
+      "create_task",
+      /\b(tarefa|reuni[aã]o|compromisso|evento)\b.{0,30}\b(criad[ao]|agendad[ao])\b|\b(agendei|criei)\b/
+    ],
+    [
+      "complete_task",
+      /\b(tarefa|compromisso)\b.{0,30}\b(conclu[ií]d[ao]|finalizad[ao])\b/
+    ],
+    [
+      "delete_task",
+      /\b(tarefa|reuni[aã]o|compromisso|evento)\b.{0,30}\b(exclu[ií]d[ao]|removid[ao]|cancelad[ao])\b/
+    ],
+    [
+      "add_reminder",
+      /\blembrete\b.{0,30}\b(criad[ao]|adicionad[ao]|configurad[ao])\b/
+    ]
+  ];
+
+  return toolClaims.find(([, pattern]) => pattern.test(normalized))?.[0] ?? null;
 }
 
 function getPermissionDeniedResult(
@@ -393,6 +602,7 @@ function getPermissionDeniedResult(
 ) {
   const permissionMap: Record<string, boolean> = {
     create_task: permissions.can_create_task,
+    create_recurring_task: permissions.can_create_task,
     list_tasks: permissions.can_read_tasks,
     complete_task: permissions.can_read_tasks,
     delete_task: permissions.can_delete_task,
@@ -405,6 +615,20 @@ function getPermissionDeniedResult(
   }
 
   return null;
+}
+
+function toWeekdayIndex(day: z.infer<typeof weekdaySchema>) {
+  const indexes = {
+    MO: 0,
+    TU: 1,
+    WE: 2,
+    TH: 3,
+    FR: 4,
+    SA: 5,
+    SU: 6
+  };
+
+  return indexes[day];
 }
 
 function toSimNao(value: boolean) {

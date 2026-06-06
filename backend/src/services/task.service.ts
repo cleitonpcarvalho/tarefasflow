@@ -1,6 +1,11 @@
 import { sql } from "../config/db";
 import type { UserRole } from "../types/auth";
 import type { Task, TaskColor, TaskRow } from "../types/task";
+import {
+  expandRecurringTask,
+  parseDateAtEndOfDay,
+  parseDateAtStartOfDay
+} from "./recurrence.service";
 
 interface RequesterContext {
   requesterId: string;
@@ -23,6 +28,9 @@ export interface CreateTaskData {
   task_date: string;
   task_time?: string | null;
   color?: TaskColor;
+  rrule?: string | null;
+  is_recurring?: boolean;
+  recurrence_end?: string | null;
 }
 
 export interface UpdateTaskData {
@@ -32,10 +40,14 @@ export interface UpdateTaskData {
   task_time?: string | null;
   color?: TaskColor;
   done?: boolean;
+  rrule?: string | null;
+  is_recurring?: boolean;
+  recurrence_end?: string | null;
 }
 
 const taskSelectColumns = `
   id, user_id, title, description, task_date, task_time, color, done,
+  rrule, is_recurring, parent_id, recurrence_end, excluded_dates,
   created_at, updated_at
 `;
 
@@ -46,25 +58,35 @@ export async function getTasks({
 }: RequesterContext & { filters?: TaskFilters }): Promise<Task[]> {
   const conditions: string[] = [];
   const params: Array<string | number> = [];
+  const range = getTaskRange(filters);
 
   if (requesterRole === "user") {
     params.push(requesterId);
     conditions.push(`user_id = $${params.length}`);
   }
 
-  if (filters.date) {
-    params.push(filters.date);
-    conditions.push(`task_date = $${params.length}`);
-  }
+  conditions.push("parent_id IS NULL");
 
-  if (filters.month) {
-    params.push(filters.month);
-    conditions.push(`EXTRACT(MONTH FROM task_date) = $${params.length}`);
-  }
+  if (range) {
+    params.push(range.startDate);
+    const startParam = `$${params.length}`;
+    params.push(range.endDate);
+    const endParam = `$${params.length}`;
 
-  if (filters.year) {
-    params.push(filters.year);
-    conditions.push(`EXTRACT(YEAR FROM task_date) = $${params.length}`);
+    conditions.push(`
+      (
+        (
+          is_recurring = false
+          AND task_date BETWEEN ${startParam} AND ${endParam}
+        )
+        OR
+        (
+          is_recurring = true
+          AND task_date <= ${endParam}
+          AND (recurrence_end IS NULL OR recurrence_end >= ${startParam})
+        )
+      )
+    `);
   }
 
   const whereClause =
@@ -80,15 +102,26 @@ export async function getTasks({
     params
   );
 
-  return rows.map(toTask);
+  const tasks = rows.map(toTask);
+  const expandedTasks = range
+    ? tasks.flatMap((task) =>
+        task.is_recurring
+          ? expandRecurringTask(task, range.start, range.end)
+          : [task]
+      )
+    : tasks;
+
+  return expandedTasks.sort(compareTasks);
 }
 
 export async function getTaskById(
   taskId: string,
   { requesterId, requesterRole }: RequesterContext
 ): Promise<Task | null> {
+  const occurrence = parseOccurrenceTaskId(taskId);
+  const persistentTaskId = occurrence?.parentId ?? taskId;
   const conditions = ["id = $1"];
-  const params = [taskId, requesterId];
+  const params = [persistentTaskId, requesterId];
 
   if (requesterRole === "user") {
     conditions.push("user_id = $2");
@@ -101,10 +134,22 @@ export async function getTaskById(
       WHERE ${conditions.join(" AND ")}
       LIMIT 1
     `,
-    requesterRole === "user" ? params : [taskId]
+    requesterRole === "user" ? params : [persistentTaskId]
   );
 
-  return rows[0] ? toTask(rows[0]) : null;
+  const task = rows[0] ? toTask(rows[0]) : null;
+
+  if (!task || !occurrence) {
+    return task;
+  }
+
+  return (
+    expandRecurringTask(
+      task,
+      parseDateAtStartOfDay(occurrence.date),
+      parseDateAtEndOfDay(occurrence.date)
+    )[0] ?? null
+  );
 }
 
 export async function createTask(
@@ -113,10 +158,14 @@ export async function createTask(
 ): Promise<Task> {
   const description = normalizeNullableInsertText(data.description);
   const taskTime = normalizeNullableInsertText(data.task_time);
+  const rrule = normalizeNullableInsertText(data.rrule);
+  const isRecurring = Boolean(data.is_recurring && rrule);
+  const recurrenceEnd = normalizeNullableInsertText(data.recurrence_end);
 
   const rows = await sql<TaskRow[]>`
     INSERT INTO tasks (
-      user_id, title, description, task_date, task_time, color
+      user_id, title, description, task_date, task_time, color, rrule,
+      is_recurring, recurrence_end
     )
     VALUES (
       ${requesterId},
@@ -124,10 +173,14 @@ export async function createTask(
       ${description},
       ${data.task_date},
       ${taskTime},
-      ${data.color ?? "purple"}
+      ${data.color ?? "purple"},
+      ${isRecurring ? rrule : null},
+      ${isRecurring},
+      ${isRecurring ? recurrenceEnd : null}
     )
     RETURNING id, user_id, title, description, task_date, task_time, color,
-      done, created_at, updated_at
+      done, rrule, is_recurring, parent_id, recurrence_end, excluded_dates,
+      created_at, updated_at
   `;
 
   return toTask(rows[0]);
@@ -138,7 +191,12 @@ export async function updateTask(
   data: UpdateTaskData,
   { requesterId, requesterRole }: RequesterContext
 ): Promise<Task | null> {
-  const existingTask = await getTaskById(taskId, { requesterId, requesterRole });
+  const occurrence = parseOccurrenceTaskId(taskId);
+  const persistentTaskId = occurrence?.parentId ?? taskId;
+  const existingTask = await getTaskById(persistentTaskId, {
+    requesterId,
+    requesterRole
+  });
 
   if (!existingTask) {
     return null;
@@ -149,10 +207,25 @@ export async function updateTask(
 
   addUpdate(updates, params, "title", data.title?.trim());
   addUpdate(updates, params, "description", normalizeNullableText(data.description));
-  addUpdate(updates, params, "task_date", data.task_date);
+  addUpdate(
+    updates,
+    params,
+    "task_date",
+    occurrence && data.task_date === occurrence.date
+      ? undefined
+      : data.task_date
+  );
   addUpdate(updates, params, "task_time", normalizeNullableText(data.task_time));
   addUpdate(updates, params, "color", data.color);
   addUpdate(updates, params, "done", data.done);
+  addUpdate(updates, params, "rrule", normalizeNullableText(data.rrule));
+  addUpdate(updates, params, "is_recurring", data.is_recurring);
+  addUpdate(
+    updates,
+    params,
+    "recurrence_end",
+    normalizeNullableText(data.recurrence_end)
+  );
 
   if (updates.length === 0) {
     return existingTask;
@@ -160,7 +233,7 @@ export async function updateTask(
 
   updates.push("updated_at = NOW()");
 
-  params.push(taskId);
+  params.push(persistentTaskId);
   const idParam = `$${params.length}`;
 
   let scopeClause = "";
@@ -185,9 +258,42 @@ export async function updateTask(
 
 export async function deleteTask(
   taskId: string,
-  { requesterId, requesterRole }: RequesterContext
-): Promise<{ deleted: true } | null> {
-  const params = [taskId, requesterId];
+  { requesterId, requesterRole }: RequesterContext,
+  scope: "this" | "all" = "this"
+): Promise<{ deleted: true; scope: "this" | "all" } | null> {
+  const occurrence = parseOccurrenceTaskId(taskId);
+  const persistentTaskId = occurrence?.parentId ?? taskId;
+  const task = await getTaskById(persistentTaskId, {
+    requesterId,
+    requesterRole
+  });
+
+  if (!task) {
+    return null;
+  }
+
+  if (task.is_recurring && scope === "this") {
+    const excludedDate = occurrence?.date ?? task.task_date;
+    const params = [excludedDate, persistentTaskId, requesterId];
+    const scopeClause = requesterRole === "user" ? "AND user_id = $3" : "";
+    const rows = await sql.unsafe<{ id: string }[]>(
+      `
+        UPDATE tasks
+        SET excluded_dates = CASE
+          WHEN $1 = ANY(excluded_dates) THEN excluded_dates
+          ELSE array_append(excluded_dates, $1)
+        END,
+        updated_at = NOW()
+        WHERE id = $2 ${scopeClause}
+        RETURNING id
+      `,
+      requesterRole === "user" ? params : params.slice(0, 2)
+    );
+
+    return rows.length > 0 ? { deleted: true, scope: "this" } : null;
+  }
+
+  const params = [persistentTaskId, requesterId];
   const scopeClause = requesterRole === "user" ? "AND user_id = $2" : "";
 
   const rows = await sql.unsafe<{ id: string }[]>(
@@ -196,17 +302,19 @@ export async function deleteTask(
       WHERE id = $1 ${scopeClause}
       RETURNING id
     `,
-    requesterRole === "user" ? params : [taskId]
+    requesterRole === "user" ? params : [persistentTaskId]
   );
 
-  return rows.length > 0 ? { deleted: true } : null;
+  return rows.length > 0 ? { deleted: true, scope: "all" } : null;
 }
 
 export async function toggleTaskDone(
   taskId: string,
   { requesterId, requesterRole }: RequesterContext
 ): Promise<Task | null> {
-  const params = [taskId, requesterId];
+  const occurrence = parseOccurrenceTaskId(taskId);
+  const persistentTaskId = occurrence?.parentId ?? taskId;
+  const params = [persistentTaskId, requesterId];
   const scopeClause = requesterRole === "user" ? "AND user_id = $2" : "";
 
   const rows = await sql.unsafe<TaskRow[]>(
@@ -216,7 +324,7 @@ export async function toggleTaskDone(
       WHERE id = $1 ${scopeClause}
       RETURNING ${taskSelectColumns}
     `,
-    requesterRole === "user" ? params : [taskId]
+    requesterRole === "user" ? params : [persistentTaskId]
   );
 
   return rows[0] ? toTask(rows[0]) : null;
@@ -261,9 +369,74 @@ function toTask(row: TaskRow): Task {
     task_time: formatTimeOnly(row.task_time),
     color: row.color,
     done: row.done,
+    rrule: row.rrule,
+    is_recurring: row.is_recurring,
+    parent_id: row.parent_id,
+    recurrence_end: row.recurrence_end
+      ? formatDateOnly(row.recurrence_end)
+      : null,
+    excluded_dates: row.excluded_dates ?? [],
     created_at: new Date(row.created_at).toISOString(),
     updated_at: new Date(row.updated_at).toISOString()
   };
+}
+
+function getTaskRange(filters: TaskFilters) {
+  if (filters.date) {
+    return {
+      startDate: filters.date,
+      endDate: filters.date,
+      start: parseDateAtStartOfDay(filters.date),
+      end: parseDateAtEndOfDay(filters.date)
+    };
+  }
+
+  if (filters.month && filters.year) {
+    const startDate = `${filters.year}-${String(filters.month).padStart(2, "0")}-01`;
+    const lastDay = new Date(
+      Date.UTC(filters.year, filters.month, 0)
+    ).getUTCDate();
+    const endDate = `${filters.year}-${String(filters.month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+
+    return {
+      startDate,
+      endDate,
+      start: parseDateAtStartOfDay(startDate),
+      end: parseDateAtEndOfDay(endDate)
+    };
+  }
+
+  if (filters.year) {
+    const startDate = `${filters.year}-01-01`;
+    const endDate = `${filters.year}-12-31`;
+
+    return {
+      startDate,
+      endDate,
+      start: parseDateAtStartOfDay(startDate),
+      end: parseDateAtEndOfDay(endDate)
+    };
+  }
+
+  return null;
+}
+
+function parseOccurrenceTaskId(taskId: string) {
+  const match = taskId.match(
+    /^([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})_(\d{4}-\d{2}-\d{2})$/i
+  );
+
+  return match ? { parentId: match[1], date: match[2] } : null;
+}
+
+function compareTasks(left: Task, right: Task) {
+  const dateComparison = left.task_date.localeCompare(right.task_date);
+
+  if (dateComparison !== 0) {
+    return dateComparison;
+  }
+
+  return (left.task_time ?? "99:99").localeCompare(right.task_time ?? "99:99");
 }
 
 function formatDateOnly(value: Date | string) {
