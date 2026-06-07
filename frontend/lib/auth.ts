@@ -37,7 +37,9 @@ export function clearAuthToken() {
 
 export function setAuthCookie(token: string) {
   if (typeof document !== "undefined") {
-    document.cookie = `${tokenKey}=${token}; path=/; max-age=${cookieMaxAge}; samesite=lax`;
+    const isHttps = window.location.protocol === "https:";
+    const secureFlag = isHttps ? "; Secure" : "";
+    document.cookie = `${tokenKey}=${token}; path=/; max-age=${cookieMaxAge}; SameSite=Lax${secureFlag}`;
   }
 }
 
