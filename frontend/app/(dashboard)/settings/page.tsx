@@ -18,6 +18,16 @@ interface ReminderDefaultsResponse {
   reminder_defaults: number[];
 }
 
+interface DailySummaryResponse {
+  enabled: boolean;
+  time: string;
+}
+
+interface WhatsappStatusResponse {
+  connected: boolean;
+  name: string;
+}
+
 export default function SettingsPage() {
   const { user } = useAuth();
   const [timezone, setTimezone] = useState("America/Fortaleza");
@@ -33,6 +43,13 @@ export default function SettingsPage() {
   const [reminderDefaultsFeedback, setReminderDefaultsFeedback] = useState<
     string | null
   >(null);
+  const [dailySummaryEnabled, setDailySummaryEnabled] = useState(false);
+  const [dailySummaryTime, setDailySummaryTime] = useState("06:00");
+  const [loadingDailySummary, setLoadingDailySummary] = useState(true);
+  const [savingDailySummary, setSavingDailySummary] = useState(false);
+  const [dailySummaryFeedback, setDailySummaryFeedback] = useState<string | null>(null);
+  const [dailySummaryError, setDailySummaryError] = useState<string | null>(null);
+  const [whatsappConnected, setWhatsappConnected] = useState(false);
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -83,6 +100,61 @@ export default function SettingsPage() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadDailySummary() {
+      setLoadingDailySummary(true);
+
+      try {
+        const [summaryRes, statusRes] = await Promise.all([
+          apiFetch<DailySummaryResponse>("/profile/daily-summary"),
+          apiFetch<WhatsappStatusResponse>("/whatsapp/status")
+        ]);
+
+        if (active) {
+          setDailySummaryEnabled(summaryRes.data?.enabled ?? false);
+          setDailySummaryTime(summaryRes.data?.time ?? "06:00");
+          setWhatsappConnected(statusRes.data?.connected ?? false);
+        }
+      } catch {
+        // non-critical, leave defaults
+      } finally {
+        if (active) {
+          setLoadingDailySummary(false);
+        }
+      }
+    }
+
+    void loadDailySummary();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function handleSaveDailySummary(enabled: boolean, time: string) {
+    setSavingDailySummary(true);
+    setDailySummaryFeedback(null);
+    setDailySummaryError(null);
+
+    try {
+      const res = await apiFetch<DailySummaryResponse>("/profile/daily-summary", {
+        method: "PATCH",
+        body: JSON.stringify({ enabled, time })
+      });
+
+      setDailySummaryEnabled(res.data?.enabled ?? enabled);
+      setDailySummaryTime(res.data?.time ?? time);
+      setDailySummaryFeedback("Salvo!");
+      window.setTimeout(() => setDailySummaryFeedback(null), 2000);
+    } catch (error) {
+      setDailySummaryError(getErrorMessage(error, "Erro ao salvar resumo diário."));
+    } finally {
+      setSavingDailySummary(false);
+    }
+  }
 
   function handleSaveTimezone(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -358,6 +430,95 @@ export default function SettingsPage() {
             {reminderDefaultsError}
           </p>
         ) : null}
+      </section>
+
+      <section className="max-w-2xl rounded-lg border border-slate-200 bg-white p-4">
+        <div>
+          <h2 className="text-[16px] font-semibold text-slate-950">
+            Resumo diário
+          </h2>
+          <p className="mt-1 text-[13px] text-slate-500">
+            Receba um resumo das suas tarefas do dia via WhatsApp todo dia no horário escolhido
+          </p>
+        </div>
+
+        {loadingDailySummary ? (
+          <p className="mt-4 rounded-md bg-slate-50 px-3 py-2 text-[12px] font-medium text-slate-500">
+            Carregando...
+          </p>
+        ) : (
+          <div className="mt-4 space-y-4">
+            <label className="flex cursor-pointer items-center gap-3">
+              <button
+                aria-checked={dailySummaryEnabled}
+                aria-label="Ativar resumo diário"
+                className={[
+                  "relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#534AB7] focus:ring-offset-2",
+                  dailySummaryEnabled ? "bg-[#534AB7]" : "bg-slate-300"
+                ].join(" ")}
+                disabled={savingDailySummary}
+                onClick={() => {
+                  const next = !dailySummaryEnabled;
+                  setDailySummaryEnabled(next);
+                  void handleSaveDailySummary(next, dailySummaryTime);
+                }}
+                role="switch"
+                type="button"
+              >
+                <span
+                  className={[
+                    "pointer-events-none inline-block h-5 w-5 translate-y-0.5 rounded-full bg-white shadow transition-transform",
+                    dailySummaryEnabled ? "translate-x-5.5" : "translate-x-0.5"
+                  ].join(" ")}
+                />
+              </button>
+              <span className="text-sm font-medium text-slate-700">
+                Ativar resumo diário
+              </span>
+            </label>
+
+            {dailySummaryEnabled ? (
+              <label className="block max-w-xs">
+                <span className="mb-2 block text-sm font-medium text-slate-700">
+                  Horário do resumo
+                </span>
+                <input
+                  className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-[#534AB7] focus:ring-4 focus:ring-[#EEEDFE]"
+                  disabled={savingDailySummary}
+                  onBlur={(e) => void handleSaveDailySummary(dailySummaryEnabled, e.target.value)}
+                  onChange={(e) => setDailySummaryTime(e.target.value)}
+                  type="time"
+                  value={dailySummaryTime}
+                />
+                <p className="mt-1 text-[11px] text-slate-400">
+                  Horário de Brasília (UTC-3)
+                </p>
+              </label>
+            ) : null}
+
+            {dailySummaryEnabled && !whatsappConnected ? (
+              <p className="rounded-md bg-amber-50 px-3 py-2 text-[12px] font-medium text-amber-700">
+                ⚠️ Conecte seu WhatsApp em{" "}
+                <a className="underline" href="/whatsapp">
+                  /whatsapp
+                </a>{" "}
+                para receber o resumo
+              </p>
+            ) : null}
+
+            {dailySummaryFeedback ? (
+              <p className="rounded-md bg-tf-teal-bg px-3 py-2 text-[12px] font-medium text-tf-teal-text">
+                {dailySummaryFeedback}
+              </p>
+            ) : null}
+
+            {dailySummaryError ? (
+              <p className="rounded-md bg-rose-50 px-3 py-2 text-[12px] font-medium text-rose-700">
+                {dailySummaryError}
+              </p>
+            ) : null}
+          </div>
+        )}
       </section>
     </section>
   );

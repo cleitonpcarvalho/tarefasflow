@@ -6,9 +6,11 @@ import {
   changeOwnPassword,
   createUser,
   deleteUser,
+  getDailySummary,
   getReminderDefaults,
   getUserById,
   listUsers,
+  updateDailySummary,
   updateReminderDefaults,
   updateOwnWhatsappPhone,
   updateUser,
@@ -60,6 +62,11 @@ const profilePasswordBodySchema = z.object({
 
 const profileReminderDefaultsBodySchema = z.object({
   reminder_defaults: z.array(z.number().int().positive()).max(5)
+});
+
+const profileDailySummaryBodySchema = z.object({
+  enabled: z.boolean(),
+  time: z.string().regex(/^\d{2}:\d{2}$/, "Horário deve estar no formato HH:MM.")
 });
 
 export const usersRoutes: FastifyPluginAsync = async (app) => {
@@ -277,6 +284,64 @@ export const profileRoutes: FastifyPluginAsync = async (app) => {
       }
     }
   );
+
+  app.get("/daily-summary", { preHandler: authenticate }, async (request, reply) => {
+    try {
+      const result = await getDailySummary(request.user.id);
+
+      return reply.code(200).send({
+        success: true,
+        data: result,
+        message: "Configurações de resumo diário carregadas com sucesso.",
+        error: null
+      });
+    } catch (error) {
+      if (error instanceof UserServiceError) {
+        return reply.code(error.statusCode).send({
+          success: false,
+          data: null,
+          message: "Erro ao carregar resumo diário.",
+          error: error.message
+        });
+      }
+
+      throw error;
+    }
+  });
+
+  app.patch("/daily-summary", { preHandler: authenticate }, async (request, reply) => {
+    const parsedBody = profileDailySummaryBodySchema.safeParse(request.body);
+
+    if (!parsedBody.success) {
+      return sendValidationError(reply, parsedBody.error);
+    }
+
+    try {
+      const result = await updateDailySummary(
+        request.user.id,
+        parsedBody.data.enabled,
+        parsedBody.data.time
+      );
+
+      return reply.code(200).send({
+        success: true,
+        data: result,
+        message: "Resumo diário atualizado com sucesso.",
+        error: null
+      });
+    } catch (error) {
+      if (error instanceof UserServiceError) {
+        return reply.code(error.statusCode).send({
+          success: false,
+          data: null,
+          message: "Erro ao atualizar resumo diário.",
+          error: error.message
+        });
+      }
+
+      throw error;
+    }
+  });
 
   app.patch("/whatsapp", { preHandler: authenticate }, async (request, reply) => {
     const parsedBody = profileWhatsappBodySchema.safeParse(request.body);

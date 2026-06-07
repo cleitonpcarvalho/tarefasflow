@@ -37,6 +37,11 @@ export interface ReminderDefaultsData {
   reminder_defaults: number[];
 }
 
+export interface DailySummaryData {
+  enabled: boolean;
+  time: string;
+}
+
 const userSelectColumns =
   "id, name, email, password, role, active, whatsapp_phone, created_at, updated_at";
 
@@ -283,6 +288,50 @@ export async function updateReminderDefaults(
 
   return {
     reminder_defaults: normalizeReminderDefaults(rows[0].reminder_defaults)
+  };
+}
+
+export async function getDailySummary(userId: string): Promise<DailySummaryData> {
+  const rows = await sql<{ daily_summary_enabled: boolean; daily_summary_time: string | null }[]>`
+    SELECT daily_summary_enabled, daily_summary_time
+    FROM users
+    WHERE id = ${userId}
+      AND active = true
+    LIMIT 1
+  `;
+
+  if (!rows[0]) {
+    throw new UserServiceError("Usuário não encontrado.", 404);
+  }
+
+  return {
+    enabled: rows[0].daily_summary_enabled,
+    time: rows[0].daily_summary_time ?? "06:00"
+  };
+}
+
+export async function updateDailySummary(
+  userId: string,
+  enabled: boolean,
+  time: string
+): Promise<DailySummaryData> {
+  const rows = await sql<{ daily_summary_enabled: boolean; daily_summary_time: string }[]>`
+    UPDATE users
+    SET daily_summary_enabled = ${enabled},
+        daily_summary_time = ${time},
+        updated_at = NOW()
+    WHERE id = ${userId}
+      AND active = true
+    RETURNING daily_summary_enabled, daily_summary_time
+  `;
+
+  if (!rows[0]) {
+    throw new UserServiceError("Usuário não encontrado.", 404);
+  }
+
+  return {
+    enabled: rows[0].daily_summary_enabled,
+    time: rows[0].daily_summary_time
   };
 }
 
