@@ -1,17 +1,38 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { KeyRound, Loader2, Save, X } from "lucide-react";
+import { Bell, KeyRound, Loader2, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { apiFetch, ApiFetchError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
 const timezoneStorageKey = "taskflow:timezone";
+const reminderDefaultOptions = [
+  { label: "15 min antes", value: 15 },
+  { label: "30 min antes", value: 30 },
+  { label: "1 hora antes", value: 60 },
+  { label: "1 dia antes", value: 1440 }
+];
+
+interface ReminderDefaultsResponse {
+  reminder_defaults: number[];
+}
 
 export default function SettingsPage() {
   const { user } = useAuth();
   const [timezone, setTimezone] = useState("America/Fortaleza");
   const [timezoneFeedback, setTimezoneFeedback] = useState<string | null>(null);
+  const [reminderDefaults, setReminderDefaults] = useState<number[]>([]);
+  const [loadingReminderDefaults, setLoadingReminderDefaults] = useState(true);
+  const [savingReminderDefault, setSavingReminderDefault] = useState<
+    number | null
+  >(null);
+  const [reminderDefaultsError, setReminderDefaultsError] = useState<
+    string | null
+  >(null);
+  const [reminderDefaultsFeedback, setReminderDefaultsFeedback] = useState<
+    string | null
+  >(null);
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -28,10 +49,78 @@ export default function SettingsPage() {
     }
   }, []);
 
+  useEffect(() => {
+    let active = true;
+
+    async function loadReminderDefaults() {
+      setLoadingReminderDefaults(true);
+      setReminderDefaultsError(null);
+
+      try {
+        const response = await apiFetch<ReminderDefaultsResponse>(
+          "/profile/reminder-defaults"
+        );
+
+        if (active) {
+          setReminderDefaults(response.data?.reminder_defaults ?? []);
+        }
+      } catch (error) {
+        if (active) {
+          setReminderDefaultsError(
+            getErrorMessage(error, "Erro ao carregar lembretes padrão.")
+          );
+        }
+      } finally {
+        if (active) {
+          setLoadingReminderDefaults(false);
+        }
+      }
+    }
+
+    void loadReminderDefaults();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   function handleSaveTimezone(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     window.localStorage.setItem(timezoneStorageKey, timezone);
     setTimezoneFeedback("Ajustes salvos com sucesso.");
+  }
+
+  async function handleToggleReminderDefault(minutesBefore: number) {
+    const enabled = reminderDefaults.includes(minutesBefore);
+    const nextDefaults = enabled
+      ? reminderDefaults.filter((value) => value !== minutesBefore)
+      : [...reminderDefaults, minutesBefore];
+
+    setSavingReminderDefault(minutesBefore);
+    setReminderDefaultsError(null);
+    setReminderDefaultsFeedback(null);
+
+    try {
+      const response = await apiFetch<ReminderDefaultsResponse>(
+        "/profile/reminder-defaults",
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            reminder_defaults: nextDefaults
+          })
+        }
+      );
+
+      setReminderDefaults(response.data?.reminder_defaults ?? nextDefaults);
+      setReminderDefaultsFeedback("Salvo!");
+      window.setTimeout(() => setReminderDefaultsFeedback(null), 2000);
+    } catch (error) {
+      setReminderDefaultsError(
+        getErrorMessage(error, "Erro ao salvar lembretes padrão.")
+      );
+    } finally {
+      setSavingReminderDefault(null);
+    }
   }
 
   async function handleChangePassword(event: FormEvent<HTMLFormElement>) {
@@ -215,6 +304,59 @@ export default function SettingsPage() {
               </div>
             </form>
           </div>
+        ) : null}
+      </section>
+
+      <section className="max-w-2xl rounded-lg border border-slate-200 bg-white p-4">
+        <div>
+          <h2 className="text-[16px] font-semibold text-slate-950">
+            Lembretes padrão
+          </h2>
+          <p className="mt-1 text-[13px] text-slate-500">
+            Toda nova tarefa criada receberá automaticamente estes lembretes
+          </p>
+        </div>
+
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          {reminderDefaultOptions.map((option) => {
+            const active = reminderDefaults.includes(option.value);
+
+            return (
+              <Button
+                className="h-10 justify-start"
+                disabled={loadingReminderDefaults || savingReminderDefault !== null}
+                key={option.value}
+                onClick={() => handleToggleReminderDefault(option.value)}
+                type="button"
+                variant={active ? "primary" : "secondary"}
+              >
+                {savingReminderDefault === option.value ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Bell className="h-3.5 w-3.5" />
+                )}
+                {option.label}
+              </Button>
+            );
+          })}
+        </div>
+
+        {loadingReminderDefaults ? (
+          <p className="mt-3 rounded-md bg-slate-50 px-3 py-2 text-[12px] font-medium text-slate-500">
+            Carregando lembretes padrão...
+          </p>
+        ) : null}
+
+        {reminderDefaultsFeedback ? (
+          <p className="mt-3 rounded-md bg-tf-teal-bg px-3 py-2 text-[12px] font-medium text-tf-teal-text">
+            {reminderDefaultsFeedback}
+          </p>
+        ) : null}
+
+        {reminderDefaultsError ? (
+          <p className="mt-3 rounded-md bg-rose-50 px-3 py-2 text-[12px] font-medium text-rose-700">
+            {reminderDefaultsError}
+          </p>
         ) : null}
       </section>
     </section>

@@ -6,8 +6,10 @@ import {
   changeOwnPassword,
   createUser,
   deleteUser,
+  getReminderDefaults,
   getUserById,
   listUsers,
+  updateReminderDefaults,
   updateOwnWhatsappPhone,
   updateUser,
   UserServiceError
@@ -54,6 +56,10 @@ const profileWhatsappBodySchema = z.object({
 const profilePasswordBodySchema = z.object({
   currentPassword: z.string().min(1, "Senha atual é obrigatória."),
   newPassword: z.string().min(8, "Nova senha deve ter pelo menos 8 caracteres.")
+});
+
+const profileReminderDefaultsBodySchema = z.object({
+  reminder_defaults: z.array(z.number().int().positive()).max(5)
 });
 
 export const usersRoutes: FastifyPluginAsync = async (app) => {
@@ -207,6 +213,71 @@ export const usersRoutes: FastifyPluginAsync = async (app) => {
 };
 
 export const profileRoutes: FastifyPluginAsync = async (app) => {
+  app.get(
+    "/reminder-defaults",
+    { preHandler: authenticate },
+    async (request, reply) => {
+      try {
+        const result = await getReminderDefaults(request.user.id);
+
+        return reply.code(200).send({
+          success: true,
+          data: result,
+          message: "Lembretes padrão carregados com sucesso.",
+          error: null
+        });
+      } catch (error) {
+        if (error instanceof UserServiceError) {
+          return reply.code(error.statusCode).send({
+            success: false,
+            data: null,
+            message: "Erro ao carregar lembretes padrão.",
+            error: error.message
+          });
+        }
+
+        throw error;
+      }
+    }
+  );
+
+  app.patch(
+    "/reminder-defaults",
+    { preHandler: authenticate },
+    async (request, reply) => {
+      const parsedBody = profileReminderDefaultsBodySchema.safeParse(request.body);
+
+      if (!parsedBody.success) {
+        return sendValidationError(reply, parsedBody.error);
+      }
+
+      try {
+        const result = await updateReminderDefaults(
+          request.user.id,
+          parsedBody.data.reminder_defaults
+        );
+
+        return reply.code(200).send({
+          success: true,
+          data: result,
+          message: "Lembretes padrão salvos com sucesso.",
+          error: null
+        });
+      } catch (error) {
+        if (error instanceof UserServiceError) {
+          return reply.code(error.statusCode).send({
+            success: false,
+            data: null,
+            message: "Erro ao salvar lembretes padrão.",
+            error: error.message
+          });
+        }
+
+        throw error;
+      }
+    }
+  );
+
   app.patch("/whatsapp", { preHandler: authenticate }, async (request, reply) => {
     const parsedBody = profileWhatsappBodySchema.safeParse(request.body);
 

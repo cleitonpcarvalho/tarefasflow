@@ -183,7 +183,10 @@ export async function createTask(
       created_at, updated_at
   `;
 
-  return toTask(rows[0]);
+  const task = toTask(rows[0]);
+  void applyDefaultReminders(task.id, requesterId);
+
+  return task;
 }
 
 export async function updateTask(
@@ -357,6 +360,36 @@ function normalizeNullableText(value: string | null | undefined) {
 
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
+}
+
+async function applyDefaultReminders(taskId: string, requesterId: string) {
+  try {
+    const rows = await sql<{ reminder_defaults: number[] | null }[]>`
+      SELECT COALESCE(reminder_defaults, '{}'::INTEGER[]) AS reminder_defaults
+      FROM users
+      WHERE id = ${requesterId}
+      LIMIT 1
+    `;
+    const reminderDefaults = [...new Set(rows[0]?.reminder_defaults ?? [])]
+      .filter((value) => Number.isInteger(value) && value > 0)
+      .slice(0, 5);
+
+    if (reminderDefaults.length === 0) {
+      return;
+    }
+
+    const { createReminder } = await import("./reminder.service");
+    await Promise.all(
+      reminderDefaults.map((minutesBefore) =>
+        createReminder(
+          { task_id: taskId, minutes_before: minutesBefore },
+          { requesterId }
+        )
+      )
+    );
+  } catch (error) {
+    console.error("Erro ao aplicar lembretes padrão:", error);
+  }
 }
 
 function toTask(row: TaskRow): Task {

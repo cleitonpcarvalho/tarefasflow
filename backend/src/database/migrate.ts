@@ -1,9 +1,15 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { sql } from "../config/db";
 
-async function migrate() {
-  const migrationsDir = join(process.cwd(), "src", "database", "migrations");
+interface RunMigrationsOptions {
+  closeConnection?: boolean;
+}
+
+export async function runMigrations({
+  closeConnection = false
+}: RunMigrationsOptions = {}) {
+  const migrationsDir = resolveMigrationsDir();
 
   try {
     await sql`
@@ -49,13 +55,37 @@ async function migrate() {
     }
   } catch (error) {
     console.error("Erro ao executar migrations:", error);
-    process.exitCode = 1;
+    throw error;
   } finally {
-    await sql.end();
+    if (closeConnection) {
+      await sql.end();
+    }
   }
 }
 
-void migrate();
+if (require.main === module) {
+  void runMigrations({ closeConnection: true }).catch(() => {
+    process.exitCode = 1;
+  });
+}
+
+function resolveMigrationsDir() {
+  const candidates = [
+    join(__dirname, "migrations"),
+    join(process.cwd(), "src", "database", "migrations"),
+    join(process.cwd(), "dist", "database", "migrations")
+  ];
+
+  const migrationsDir = candidates.find((candidate) => existsSync(candidate));
+
+  if (!migrationsDir) {
+    throw new Error(
+      `Diretorio de migrations nao encontrado. Tentativas: ${candidates.join(", ")}`
+    );
+  }
+
+  return migrationsDir;
+}
 
 async function isMigrationApplied(filename: string) {
   const rows = await sql<{ filename: string }[]>`

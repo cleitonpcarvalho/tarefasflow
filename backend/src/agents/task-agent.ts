@@ -12,7 +12,6 @@ import {
   parseDateAtEndOfDay
 } from "../services/recurrence.service";
 import { createReminder } from "../services/reminder.service";
-import { getWhatsappConversationHistory } from "../services/whatsapp-log.service";
 import {
   createTask,
   deleteTask,
@@ -27,6 +26,13 @@ interface ProcessMessageInput {
   userPhone: string;
   userName: string;
   permissions: AuthorizedNumberPermissions;
+}
+
+type ConversationContextRole = "user" | "assistant";
+
+interface ConversationContextRow {
+  role: ConversationContextRole;
+  content: string;
 }
 
 const createTaskSchema = z.object({
@@ -218,20 +224,20 @@ const tools: ChatCompletionTool[] = [
 
 export async function processMessage(input: ProcessMessageInput): Promise<string> {
   const systemPrompt = buildSystemPrompt(input.userName, input.permissions);
-  const conversationHistory = await getWhatsappConversationHistory({
-    userId: input.userId,
-    phone: input.userPhone
-  });
-  const messages: ChatCompletionMessageParam[] = [
-    { role: "system", content: systemPrompt },
-    ...conversationHistory.map<ChatCompletionMessageParam>((entry) => ({
-      role: entry.direction === "inbound" ? "user" : "assistant",
-      content: entry.content
-    })),
-    { role: "user", content: input.text }
-  ];
 
   try {
+    const conversationHistory = await getConversationContext(input.userId);
+    await saveConversationContextMessage(input.userId, "user", input.text);
+
+    const messages: ChatCompletionMessageParam[] = [
+      { role: "system", content: systemPrompt },
+      ...conversationHistory.reverse().map<ChatCompletionMessageParam>((entry) => ({
+        role: entry.role,
+        content: entry.content
+      })),
+      { role: "user", content: input.text }
+    ];
+
     const firstCompletion = await openai.chat.completions.create({
       model: "gpt-4o",
       messages,
@@ -241,14 +247,16 @@ export async function processMessage(input: ProcessMessageInput): Promise<string
     let message = firstCompletion.choices[0]?.message;
 
     if (!message) {
-      return fallbackResponse(input);
+      const response = await fallbackResponse(input);
+      return saveAssistantResponse(input.userId, response);
     }
 
     if (!message.tool_calls || message.tool_calls.length === 0) {
       const requiredTool = getRequiredToolForClaim(message.content);
 
       if (!requiredTool) {
-        return message.content ?? fallbackResponse(input);
+        const response = message.content ?? (await fallbackResponse(input));
+        return saveAssistantResponse(input.userId, response);
       }
 
       const repairCompletion = await openai.chat.completions.create({
@@ -269,13 +277,15 @@ export async function processMessage(input: ProcessMessageInput): Promise<string
       message = repairCompletion.choices[0]?.message;
 
       if (!message) {
-        return fallbackResponse(input);
+        const response = await fallbackResponse(input);
+        return saveAssistantResponse(input.userId, response);
       }
 
       if (!message.tool_calls || message.tool_calls.length === 0) {
-        return getRequiredToolForClaim(message.content)
+        const response = getRequiredToolForClaim(message.content)
           ? "Não consegui concluir essa ação agora. Pode tentar novamente?"
           : message.content ?? fallbackResponse(input);
+        return saveAssistantResponse(input.userId, await response);
       }
     }
 
@@ -305,14 +315,62 @@ export async function processMessage(input: ProcessMessageInput): Promise<string
       messages
     });
 
-    return (
+    const response =
       finalCompletion.choices[0]?.message.content ??
-      "Pronto! Atualizei sua agenda."
-    );
+      "Pronto! Atualizei sua agenda.";
+
+    return saveAssistantResponse(input.userId, response);
   } catch (error) {
     console.error("Erro no agente GPT-4o:", error);
-    return fallbackResponse(input);
+    const response = await fallbackResponse(input);
+    return saveAssistantResponse(input.userId, response);
   }
+}
+
+async function getConversationContext(userId: string) {
+  return sql<ConversationContextRow[]>`
+    SELECT role, content
+    FROM whatsapp_conversation_context
+    WHERE user_id = ${userId}
+    ORDER BY created_at DESC
+    LIMIT 10
+  `;
+}
+
+async function saveConversationContextMessage(
+  userId: string,
+  role: ConversationContextRole,
+  content: string
+) {
+  await sql`
+    INSERT INTO whatsapp_conversation_context (user_id, role, content)
+    VALUES (${userId}, ${role}, ${content})
+  `;
+}
+
+async function saveAssistantResponse(userId: string, response: string) {
+  try {
+    await saveConversationContextMessage(userId, "assistant", response);
+    await trimConversationContext(userId);
+  } catch (error) {
+    console.error("Erro ao salvar contexto da resposta:", error);
+  }
+
+  return response;
+}
+
+async function trimConversationContext(userId: string) {
+  await sql`
+    DELETE FROM whatsapp_conversation_context
+    WHERE user_id = ${userId}
+      AND id NOT IN (
+        SELECT id
+        FROM whatsapp_conversation_context
+        WHERE user_id = ${userId}
+        ORDER BY created_at DESC
+        LIMIT 50
+      )
+  `;
 }
 
 async function executeTool(

@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import type { FastifyError } from "fastify";
 import { env } from "./config/env";
+import { runMigrations } from "./database/migrate";
 import { startJobs } from "./jobs";
 import { corsPlugin } from "./plugins/cors";
 import { jwtPlugin } from "./plugins/jwt";
@@ -40,16 +41,18 @@ export function buildServer() {
 }
 
 async function start() {
-  const app = buildServer();
-
   try {
+    await runMigrations();
+
+    const app = buildServer();
+
     await app.listen({
       port: env.PORT,
       host: "0.0.0.0"
     });
     startJobs();
   } catch (error) {
-    app.log.error(error);
+    console.error(error);
     process.exit(1);
   }
 }

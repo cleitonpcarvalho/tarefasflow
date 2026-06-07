@@ -33,6 +33,10 @@ export interface UpdateUserData {
   whatsapp_phone?: string | null;
 }
 
+export interface ReminderDefaultsData {
+  reminder_defaults: number[];
+}
+
 const userSelectColumns =
   "id, name, email, password, role, active, whatsapp_phone, created_at, updated_at";
 
@@ -239,6 +243,49 @@ export async function changeOwnPassword(
   return { updated: true };
 }
 
+export async function getReminderDefaults(
+  userId: string
+): Promise<ReminderDefaultsData> {
+  const rows = await sql<{ reminder_defaults: number[] | null }[]>`
+    SELECT COALESCE(reminder_defaults, '{}'::INTEGER[]) AS reminder_defaults
+    FROM users
+    WHERE id = ${userId}
+      AND active = true
+    LIMIT 1
+  `;
+
+  if (!rows[0]) {
+    throw new UserServiceError("Usuário não encontrado.", 404);
+  }
+
+  return {
+    reminder_defaults: normalizeReminderDefaults(rows[0].reminder_defaults)
+  };
+}
+
+export async function updateReminderDefaults(
+  userId: string,
+  reminderDefaults: number[]
+): Promise<ReminderDefaultsData> {
+  const normalizedDefaults = normalizeReminderDefaults(reminderDefaults);
+  const rows = await sql<{ reminder_defaults: number[] | null }[]>`
+    UPDATE users
+    SET reminder_defaults = ${sql.array(normalizedDefaults, 23)},
+      updated_at = NOW()
+    WHERE id = ${userId}
+      AND active = true
+    RETURNING reminder_defaults
+  `;
+
+  if (!rows[0]) {
+    throw new UserServiceError("Usuário não encontrado.", 404);
+  }
+
+  return {
+    reminder_defaults: normalizeReminderDefaults(rows[0].reminder_defaults)
+  };
+}
+
 export async function deleteUser(
   id: string,
   requesterId: string
@@ -279,6 +326,14 @@ function toPublicUser(user: UserRow): PublicUser {
     createdAt: new Date(user.created_at).toISOString(),
     updatedAt: new Date(user.updated_at).toISOString()
   };
+}
+
+function normalizeReminderDefaults(reminderDefaults: number[] | null) {
+  const values = reminderDefaults ?? [];
+
+  return [...new Set(values)]
+    .filter((value) => Number.isInteger(value) && value > 0)
+    .slice(0, 5);
 }
 
 function isUniqueViolation(error: unknown) {
