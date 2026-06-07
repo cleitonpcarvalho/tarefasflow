@@ -27,12 +27,12 @@ const mainLinks = [
   { href: "/calendar", label: "Calendário", icon: Calendar },
   { href: "/tasks", label: "Tarefas", icon: CheckSquare, showBadge: true },
   { href: "/reminders", label: "Lembretes", icon: Bell },
-  { href: "/whatsapp", label: "WhatsApp", icon: MessageCircle }
+  { href: "/whatsapp", label: "WhatsApp", icon: MessageCircle },
+  { href: "/settings", label: "Configurações", icon: Settings }
 ];
 
 const adminLinks = [
-  { href: "/admin/users", label: "Usuários", icon: Users },
-  { href: "/settings", label: "Configurações", icon: Settings }
+  { href: "/admin/users", label: "Usuários", icon: Users }
 ];
 
 export function Sidebar({ open, onClose }: SidebarProps) {

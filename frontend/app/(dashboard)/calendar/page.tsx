@@ -8,6 +8,7 @@ import {
 import { CalendarGrid } from "@/components/calendar/CalendarGrid";
 import { DayView } from "@/components/calendar/DayView";
 import { DayPanel } from "@/components/calendar/DayPanel";
+import { MobileDaySheet } from "@/components/calendar/MobileDaySheet";
 import { WeekView } from "@/components/calendar/WeekView";
 import { ReminderModal } from "@/components/tasks/ReminderModal";
 import { RecurringDeleteModal } from "@/components/tasks/RecurringDeleteModal";
@@ -35,6 +36,8 @@ export default function CalendarPage() {
   const [modalInitialTime, setModalInitialTime] = useState<string | null>(null);
   const [dayPanelOpen, setDayPanelOpen] = useState(true);
   const [dayPanelWidth, setDayPanelWidth] = useState(240);
+  const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
+  const isMobile = useMediaQuery("(max-width: 767px)");
   const [resizingDayPanel, setResizingDayPanel] = useState(false);
   const [taskPendingDelete, setTaskPendingDelete] = useState<Task | null>(null);
   const {
@@ -192,6 +195,10 @@ export default function CalendarPage() {
   function handleSelectDate(date: string) {
     setSelectedDate(date);
     setViewDate(parseDateKey(date));
+
+    if (isMobile) {
+      setIsMobileSheetOpen(true);
+    }
   }
 
   function handleChangeView(view: CalendarView) {
@@ -273,6 +280,23 @@ export default function CalendarPage() {
         </div>
       ) : null}
 
+      {isMobile ? (
+        <MobileDaySheet
+          date={selectedDate}
+          isOpen={isMobileSheetOpen}
+          onAddReminder={handleAddReminder}
+          onClose={() => setIsMobileSheetOpen(false)}
+          onCreateTask={() => {
+            setIsMobileSheetOpen(false);
+            setIsTaskModalOpen(true);
+          }}
+          onDeleteTask={handleDeleteTask}
+          onEditTask={handleEditTask}
+          onToggleDone={toggleDone}
+          tasks={selectedTasks}
+        />
+      ) : null}
+
       <TaskModal
         initialDate={modalInitialDate ?? undefined}
         initialTime={modalInitialTime ?? undefined}
@@ -307,6 +331,22 @@ function getWeekRange(date: Date): [Date, Date] {
   end.setDate(start.getDate() + 6);
 
   return [start, end];
+}
+
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia(query);
+    setMatches(mql.matches);
+
+    const handler = (event: MediaQueryListEvent) => setMatches(event.matches);
+    mql.addEventListener("change", handler);
+
+    return () => mql.removeEventListener("change", handler);
+  }, [query]);
+
+  return matches;
 }
 
 function getCalendarTitle(view: CalendarView, date: Date) {

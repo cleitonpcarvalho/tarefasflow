@@ -87,24 +87,56 @@ async function markReminderSent(reminderId: string) {
 }
 
 function buildReminderMessage(reminder: PendingReminderRow) {
-  return [
-    `Lembrete TarefasFlow: ${reminder.title}`,
-    `Data: ${formatDate(reminder.task_date)} as ${formatTime(reminder.task_time)}`,
-    `${reminder.minutes_before} min antes do compromisso.`
-  ].join("\n");
+  return formatReminderMessage(
+    reminder.user_name,
+    reminder.title,
+    reminder.task_date,
+    reminder.task_time,
+    reminder.minutes_before
+  );
 }
 
-function formatDate(value: Date | string) {
-  const dateKey = value instanceof Date ? value.toISOString().slice(0, 10) : value;
-  const [year, month, day] = dateKey.split("-");
+function formatReminderMessage(
+  userName: string,
+  taskTitle: string,
+  taskDate: Date | string,
+  taskTime: string | null,
+  minutesBefore: number
+): string {
+  const dateStr =
+    taskDate instanceof Date ? taskDate.toISOString().slice(0, 10) : taskDate;
+  const dateFormatted = new Date(`${dateStr}T12:00:00`).toLocaleDateString(
+    "pt-BR",
+    { day: "2-digit", month: "2-digit" }
+  );
 
-  if (!year || !month || !day) {
-    return dateKey;
+  const timeFormatted = taskTime ? taskTime.substring(0, 5) : null;
+
+  let whenText: string;
+
+  if (minutesBefore === 1440) {
+    whenText = "1 dia antes";
+  } else if (minutesBefore === 60) {
+    whenText = "1 hora antes";
+  } else if (minutesBefore === 30) {
+    whenText = "30 minutos antes";
+  } else if (minutesBefore === 15) {
+    whenText = "15 minutos antes";
+  } else {
+    whenText = `${minutesBefore} minutos antes`;
   }
 
-  return `${day}/${month}`;
-}
+  const timeStr = timeFormatted ? ` às ${timeFormatted}` : "";
 
-function formatTime(value: string | null) {
-  return (value ?? "08:00:00").slice(0, 5);
+  return [
+    `⏰ *Lembrete TarefasFlow*`,
+    ``,
+    `Olá, ${userName}! Você tem um compromisso chegando:`,
+    ``,
+    `📌 *${taskTitle}*`,
+    `📅 ${dateFormatted}${timeStr}`,
+    `🔔 Este lembrete é ${whenText}`,
+    ``,
+    `Boa sorte! 💪`
+  ].join("\n");
 }
