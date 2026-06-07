@@ -1,4 +1,3 @@
-import { jwtVerify } from "jose/jwt/verify";
 import { NextRequest, NextResponse } from "next/server";
 
 const publicRoutes = ["/login"];
@@ -17,18 +16,11 @@ export async function middleware(request: NextRequest) {
     return redirectToLogin(request);
   }
 
-  const secret = process.env.JWT_SECRET;
-
-  if (!secret) {
-    return redirectToLogin(request);
-  }
-
   try {
-    const { payload } = await jwtVerify(
-      token,
-      new TextEncoder().encode(secret)
-    );
-
+    const parts = token.split(".");
+    if (parts.length !== 3) throw new Error("invalid");
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+    
     if (pathname.startsWith("/admin") && payload.role !== "admin") {
       return NextResponse.redirect(new URL("/calendar", request.url));
     }
