@@ -48,6 +48,5 @@ jobs:
 
       - name: Trigger Portainer deploy
         run: |
-          curl -s -X POST \
-            "https://portainer.automasoluct.com.br/api/stacks/webhooks/0cc76ee0-fc7a-41f3-9c67-6e048a70d543"
+          curl -s -X POST "${{ secrets.PORTAINER_WEBHOOK }}"
           echo "Deploy triggered"
