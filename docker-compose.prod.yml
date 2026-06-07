@@ -9,42 +9,45 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       EVOLUTION_API_URL: ${EVOLUTION_API_URL}
       EVOLUTION_API_KEY: ${EVOLUTION_API_KEY}
-      EVOLUTION_INSTANCE_APIKEY: ${EVOLUTION_INSTANCE_APIKEY}
       SUPABASE_URL: ${SUPABASE_URL}
       SUPABASE_SERVICE_ROLE: ${SUPABASE_SERVICE_ROLE}
       WEBHOOK_BASE_URL: https://api.tarefasflow.com.br
     restart: unless-stopped
     networks:
       - AutomaNet
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=AutomaNet"
-      - "traefik.http.routers.tarefasflow-api.rule=Host(`api.tarefasflow.com.br`)"
-      - "traefik.http.routers.tarefasflow-api.entrypoints=websecure"
-      - "traefik.http.routers.tarefasflow-api.tls=true"
-      - "traefik.http.routers.tarefasflow-api.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.tarefasflow-api.service=tarefasflow-api"
-      - "traefik.http.routers.tarefasflow-api.middlewares=tarefasflow-cors"
-      - "traefik.http.services.tarefasflow-api.loadbalancer.server.port=3002"
-      - "traefik.http.middlewares.tarefasflow-cors.headers.accesscontrolalloworiginlist=https://app.tarefasflow.com.br"
-      - "traefik.http.middlewares.tarefasflow-cors.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH"
-      - "traefik.http.middlewares.tarefasflow-cors.headers.accesscontrolallowheaders=Authorization,Content-Type"
-      - "traefik.http.middlewares.tarefasflow-cors.headers.accesscontrolmaxage=100"
-      - "traefik.http.middlewares.tarefasflow-cors.headers.addvaryheader=true"
+    deploy:
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=AutomaNet"
+        - "traefik.http.routers.tarefasflow-api.rule=Host(`api.tarefasflow.com.br`)"
+        - "traefik.http.routers.tarefasflow-api.entrypoints=websecure"
+        - "traefik.http.routers.tarefasflow-api.tls=true"
+        - "traefik.http.routers.tarefasflow-api.tls.certresolver=letsencrypt"
+        - "traefik.http.routers.tarefasflow-api.service=tarefasflow-api"
+        - "traefik.http.routers.tarefasflow-api.middlewares=tarefasflow-cors"
+        - "traefik.http.services.tarefasflow-api.loadbalancer.server.port=3002"
+        - "traefik.http.middlewares.tarefasflow-cors.headers.accesscontrolalloworiginlist=https://app.tarefasflow.com.br"
+        - "traefik.http.middlewares.tarefasflow-cors.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH"
+        - "traefik.http.middlewares.tarefasflow-cors.headers.accesscontrolallowheaders=Authorization,Content-Type"
+        - "traefik.http.middlewares.tarefasflow-cors.headers.accesscontrolmaxage=100"
+        - "traefik.http.middlewares.tarefasflow-cors.headers.addvaryheader=true"
 
   frontend:
     image: ghcr.io/cleitonpcarvalho/tarefasflow/frontend:latest
     restart: unless-stopped
     networks:
       - AutomaNet
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=AutomaNet"
-      - "traefik.http.routers.tarefasflow-frontend.rule=Host(`app.tarefasflow.com.br`)"
-      - "traefik.http.routers.tarefasflow-frontend.entrypoints=websecure"
-      - "traefik.http.routers.tarefasflow-frontend.tls=true"
-      - "traefik.http.routers.tarefasflow-frontend.tls.certresolver=letsencrypt"
-      - "traefik.http.services.tarefasflow-frontend.loadbalancer.server.port=3000"
+    deploy:
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=AutomaNet"
+        - "traefik.http.routers.tarefasflow-frontend.rule=Host(`app.tarefasflow.com.br`)"
+        - "traefik.http.routers.tarefasflow-frontend.entrypoints=websecure"
+        - "traefik.http.routers.tarefasflow-frontend.tls=true"
+        - "traefik.http.routers.tarefasflow-frontend.tls.certresolver=letsencrypt"
+        - "traefik.http.services.tarefasflow-frontend.loadbalancer.server.port=3000"
 
 networks:
   AutomaNet:
