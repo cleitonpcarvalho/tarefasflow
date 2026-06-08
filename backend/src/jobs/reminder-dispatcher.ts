@@ -33,6 +33,7 @@ export async function dispatchPendingReminders(): Promise<void> {
       AND r.sent_at IS NULL
     ORDER BY r.scheduled_for ASC NULLS LAST
     LIMIT 50
+    FOR UPDATE OF r SKIP LOCKED
   `;
 
   for (const reminder of reminders) {
@@ -73,8 +74,10 @@ async function dispatchReminder(reminder: PendingReminderRow) {
     }
 
     console.error(`Erro ao enviar lembrete: ${reminder.title}`, delivery);
+    await markReminderSent(reminder.id);
   } catch (error) {
     console.error("Erro ao processar lembrete pendente:", error);
+    await markReminderSent(reminder.id);
   }
 }
 

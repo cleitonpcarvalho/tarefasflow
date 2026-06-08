@@ -77,6 +77,14 @@ const addReminderSchema = taskLookupSchema.extend({
   minutes_before: z.number().int().positive()
 });
 
+const updateTaskSchema = taskLookupSchema.extend({
+  title: z.string().optional(),
+  task_date: z.string().optional(),
+  task_time: z.string().optional(),
+  description: z.string().optional(),
+  color: z.enum(["purple", "teal", "coral", "amber"]).optional()
+});
+
 const tools: ChatCompletionTool[] = [
   {
     type: "function",
@@ -189,6 +197,31 @@ const tools: ChatCompletionTool[] = [
         properties: {
           task_id: { type: "string" },
           title_hint: { type: "string" }
+        }
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "update_task",
+      description:
+        "Edita dados de uma tarefa existente: título, data, horário, descrição ou cor. " +
+        "Use sempre que o usuário quiser alterar, editar, mover ou corrigir uma tarefa já criada. " +
+        "Nunca use delete_task + create_task para editar.",
+      parameters: {
+        type: "object",
+        properties: {
+          task_id: { type: "string" },
+          title_hint: { type: "string" },
+          title: { type: "string" },
+          task_date: { type: "string", description: "Data no formato YYYY-MM-DD" },
+          task_time: { type: "string", description: "Hora no formato HH:MM" },
+          description: { type: "string" },
+          color: {
+            type: "string",
+            enum: ["purple", "teal", "coral", "amber"]
+          }
         }
       }
     }
@@ -465,6 +498,28 @@ async function executeTool(
       );
       return { ok: true, task };
     }
+    case "update_task": {
+      const parsed = updateTaskSchema.parse(args);
+      const taskId = await resolveTaskId(userId, parsed.task_id, parsed.title_hint);
+
+      if (!taskId) {
+        return { ok: false, error: "Tarefa não encontrada" };
+      }
+
+      const updates: Record<string, unknown> = {};
+      if (parsed.title !== undefined) updates.title = parsed.title;
+      if (parsed.task_date !== undefined) updates.task_date = parsed.task_date;
+      if (parsed.task_time !== undefined) updates.task_time = parsed.task_time;
+      if (parsed.description !== undefined) updates.description = parsed.description;
+      if (parsed.color !== undefined) updates.color = parsed.color;
+
+      const task = await updateTask(
+        taskId,
+        updates,
+        { requesterId: userId, requesterRole: "user" }
+      );
+      return { ok: true, task };
+    }
     case "delete_task": {
       const parsed = taskLookupSchema.parse(args);
       const taskId = await resolveTaskId(userId, parsed.task_id, parsed.title_hint);
@@ -606,6 +661,8 @@ Regras:
   mensal 1SA; "todo dia 15" = mensal no dia 15
 - Pergunte somente pelos dados realmente ausentes para executar a ação
 - Para criar tarefas, peça esclarecimento apenas se a data não estiver clara
+- Para editar título, data, horário, descrição ou cor de uma tarefa já existente, use
+  update_task — NUNCA use delete_task seguido de create_task para editar
 - Nunca diga que criou, alterou, concluiu ou removeu algo sem executar a ferramenta
   correspondente e receber um resultado de sucesso
 - Se a intenção não for reconhecida, peça esclarecimento gentilmente
@@ -638,6 +695,10 @@ function getRequiredToolForClaim(content: string | null) {
       /\b(tarefa|reuni[aã]o|compromisso|evento)\b.{0,30}\b(criad[ao]|agendad[ao])\b|\b(agendei|criei)\b/
     ],
     [
+      "update_task",
+      /\b(tarefa|reuni[aã]o|compromisso|evento)\b.{0,30}\b(atualizad[ao]|alterad[ao]|editad[ao]|modificad[ao]|movid[ao]|mudad[ao])\b/
+    ],
+    [
       "complete_task",
       /\b(tarefa|compromisso)\b.{0,30}\b(conclu[ií]d[ao]|finalizad[ao])\b/
     ],
@@ -661,6 +722,7 @@ function getPermissionDeniedResult(
   const permissionMap: Record<string, boolean> = {
     create_task: permissions.can_create_task,
     create_recurring_task: permissions.can_create_task,
+    update_task: permissions.can_create_task,
     list_tasks: permissions.can_read_tasks,
     complete_task: permissions.can_read_tasks,
     delete_task: permissions.can_delete_task,
