@@ -47,7 +47,7 @@ export interface UpdateTaskData {
 
 const taskSelectColumns = `
   id, user_id, title, description, task_date, task_time, color, done,
-  rrule, is_recurring, parent_id, recurrence_end, excluded_dates,
+  rrule, is_recurring, parent_id, recurrence_end, excluded_dates, done_dates,
   created_at, updated_at
 `;
 
@@ -179,7 +179,7 @@ export async function createTask(
       ${isRecurring ? recurrenceEnd : null}
     )
     RETURNING id, user_id, title, description, task_date, task_time, color,
-      done, rrule, is_recurring, parent_id, recurrence_end, excluded_dates,
+      done, rrule, is_recurring, parent_id, recurrence_end, excluded_dates, done_dates,
       created_at, updated_at
   `;
 
@@ -325,9 +325,9 @@ export async function toggleTaskDone(
     const rows = await sql.unsafe<TaskRow[]>(
       `
         UPDATE tasks
-        SET excluded_dates = CASE
-          WHEN $1 = ANY(excluded_dates) THEN array_remove(excluded_dates, $1)
-          ELSE array_append(excluded_dates, $1)
+        SET done_dates = CASE
+          WHEN $1 = ANY(done_dates) THEN array_remove(done_dates, $1)
+          ELSE array_append(done_dates, $1)
         END,
         updated_at = NOW()
         WHERE id = $2 ${scopeClause}
@@ -338,7 +338,7 @@ export async function toggleTaskDone(
 
     if (!rows[0]) return null;
     const parent = toTask(rows[0]);
-    const isDone = parent.excluded_dates.includes(date);
+    const isDone = parent.done_dates.includes(date);
 
     return { ...parent, id: taskId, task_date: date, done: isDone };
   }
@@ -435,6 +435,7 @@ function toTask(row: TaskRow): Task {
       ? formatDateOnly(row.recurrence_end)
       : null,
     excluded_dates: row.excluded_dates ?? [],
+    done_dates: row.done_dates ?? [],
     created_at: new Date(row.created_at).toISOString(),
     updated_at: new Date(row.updated_at).toISOString()
   };

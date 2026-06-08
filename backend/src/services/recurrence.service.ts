@@ -62,6 +62,7 @@ export function expandRecurringTask(
     until: recurrenceEnd ?? parsedRule.origOptions.until ?? null
   });
   const excludedDates = new Set(task.excluded_dates);
+  const doneDates = new Set(task.done_dates ?? []);
 
   return rule
     .between(rangeStart, effectiveEnd, true)
@@ -72,7 +73,8 @@ export function expandRecurringTask(
       id: `${task.id}_${date}`,
       task_date: date,
       parent_id: task.id,
-      is_virtual: true
+      is_virtual: true,
+      done: doneDates.has(date)
     }));
 }
 

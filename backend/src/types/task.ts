@@ -14,6 +14,7 @@ export interface Task {
   parent_id: string | null;
   recurrence_end: string | null;
   excluded_dates: string[];
+  done_dates: string[];
   is_virtual?: boolean;
   created_at: string;
   updated_at: string;
@@ -33,6 +34,7 @@ export interface TaskRow {
   parent_id: string | null;
   recurrence_end: Date | string | null;
   excluded_dates: string[];
+  done_dates: string[];
   created_at: Date | string;
   updated_at: Date | string;
 }

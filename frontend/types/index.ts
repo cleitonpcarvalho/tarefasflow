@@ -25,6 +25,7 @@ export interface Task {
   parent_id: string | null;
   recurrence_end: string | null;
   excluded_dates: string[];
+  done_dates: string[];
   is_virtual?: boolean;
   created_at: string;
   updated_at: string;
