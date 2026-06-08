@@ -1,0 +1,613 @@
+"use client";
+
+import { useEffect, useId, useRef, useState } from "react";
+import { Gift, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { useSpecialDates } from "@/hooks/useSpecialDates";
+import { cn } from "@/lib/cn";
+import type { SpecialDate } from "@/types";
+
+const MONTHS = [
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro"
+];
+
+const NOTIFY_OPTIONS: { field: keyof NotifySettings; label: string }[] = [
+  { field: "notify_on_day", label: "No dia" },
+  { field: "notify_1_day_before", label: "1 dia antes" },
+  { field: "notify_1_week_before", label: "1 semana antes" },
+  { field: "notify_1_month_before", label: "1 mês antes" }
+];
+
+interface NotifySettings {
+  notify_on_day: boolean;
+  notify_1_day_before: boolean;
+  notify_1_week_before: boolean;
+  notify_1_month_before: boolean;
+}
+
+interface ModalForm extends NotifySettings {
+  name: string;
+  month: number;
+  day: number;
+}
+
+const DEFAULT_FORM: ModalForm = {
+  name: "",
+  month: 1,
+  day: 1,
+  notify_on_day: true,
+  notify_1_day_before: false,
+  notify_1_week_before: false,
+  notify_1_month_before: false
+};
+
+export default function SpecialDatesPage() {
+  const {
+    specialDates,
+    loading,
+    error,
+    fetchSpecialDates,
+    createSpecialDate,
+    updateSpecialDate,
+    deleteSpecialDate
+  } = useSpecialDates();
+
+  const [savedId, setSavedId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingDate, setEditingDate] = useState<SpecialDate | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [pageError, setPageError] = useState<string | null>(null);
+
+  useEffect(() => {
+    void fetchSpecialDates();
+  }, [fetchSpecialDates]);
+
+  const nationalDates = specialDates.filter((d) => d.is_national);
+  const personalDates = specialDates.filter((d) => !d.is_national);
+
+  async function handleUpdate(
+    id: string,
+    data: Partial<SpecialDate>
+  ): Promise<void> {
+    try {
+      await updateSpecialDate(id, data);
+      setSavedId(id);
+      setTimeout(
+        () => setSavedId((curr) => (curr === id ? null : curr)),
+        2000
+      );
+    } catch {
+      setPageError("Erro ao salvar alterações. Tente novamente.");
+    }
+  }
+
+  async function handleSave(form: ModalForm): Promise<void> {
+    try {
+      if (editingDate) {
+        await updateSpecialDate(editingDate.id, form);
+      } else {
+        await createSpecialDate(form);
+      }
+      setIsModalOpen(false);
+      setEditingDate(null);
+    } catch {
+      setPageError("Erro ao salvar data especial. Tente novamente.");
+    }
+  }
+
+  async function handleDelete(): Promise<void> {
+    if (!deleteConfirm) return;
+    setDeleting(true);
+
+    try {
+      await deleteSpecialDate(deleteConfirm.id);
+      setDeleteConfirm(null);
+    } catch {
+      setPageError("Erro ao excluir data especial. Tente novamente.");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  function openEdit(date: SpecialDate): void {
+    setEditingDate(date);
+    setIsModalOpen(true);
+  }
+
+  function closeModal(): void {
+    setIsModalOpen(false);
+    setEditingDate(null);
+  }
+
+  return (
+    <section className="space-y-6 p-5">
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-[#111827]">
+            Datas Especiais
+          </h1>
+          <p className="mt-1 text-sm text-[#6B7280]">
+            Gerencie aniversários e datas comemorativas
+          </p>
+        </div>
+        <Button onClick={() => setIsModalOpen(true)} type="button">
+          <Plus className="h-3.5 w-3.5" />
+          Adicionar data
+        </Button>
+      </header>
+
+      {(error ?? pageError) ? (
+        <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">
+          {error ?? pageError}
+        </p>
+      ) : null}
+
+      {/* Datas nacionais */}
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-base font-semibold text-[#111827]">
+            Datas nacionais
+          </h2>
+          <p className="text-xs text-[#6B7280]">
+            Ative as que deseja receber lembretes
+          </p>
+        </div>
+
+        {loading ? (
+          <p className="text-sm text-[#6B7280]">Carregando...</p>
+        ) : (
+          <div className="space-y-2">
+            {nationalDates.map((date) => (
+              <NationalDateCard
+                date={date}
+                key={date.id}
+                onUpdate={handleUpdate}
+                savedId={savedId}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Minhas datas */}
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-base font-semibold text-[#111827]">
+            Minhas datas
+          </h2>
+          <p className="text-xs text-[#6B7280]">
+            Aniversários e datas pessoais
+          </p>
+        </div>
+
+        {loading ? (
+          <p className="text-sm text-[#6B7280]">Carregando...</p>
+        ) : personalDates.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center">
+            <Gift className="mx-auto mb-3 h-8 w-8 text-[#9CA3AF]" />
+            <p className="text-sm font-medium text-[#374151]">
+              Nenhuma data cadastrada ainda
+            </p>
+            <p className="mt-1 text-xs text-[#6B7280]">
+              Adicione aniversários, datas de casamento e comemorações pessoais.
+            </p>
+            <Button
+              className="mt-4"
+              onClick={() => setIsModalOpen(true)}
+              type="button"
+              variant="outline"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Adicionar primeira data
+            </Button>
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+            {personalDates.map((date, idx) => (
+              <PersonalDateRow
+                date={date}
+                isLast={idx === personalDates.length - 1}
+                key={date.id}
+                onDelete={(id, name) => setDeleteConfirm({ id, name })}
+                onEdit={openEdit}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Modal criar/editar */}
+      {isModalOpen ? (
+        <SpecialDateModal
+          date={editingDate}
+          onClose={closeModal}
+          onSave={handleSave}
+        />
+      ) : null}
+
+      {/* Confirm delete */}
+      <ConfirmModal
+        confirmLabel="Excluir"
+        isOpen={Boolean(deleteConfirm)}
+        loading={deleting}
+        message={`"${deleteConfirm?.name}" será excluída permanentemente.`}
+        onCancel={() => setDeleteConfirm(null)}
+        onConfirm={() => void handleDelete()}
+        title="Excluir data especial?"
+        variant="danger"
+      />
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* National date card                                                   */
+/* ------------------------------------------------------------------ */
+
+function NationalDateCard({
+  date,
+  onUpdate,
+  savedId
+}: {
+  date: SpecialDate;
+  onUpdate: (id: string, data: Partial<SpecialDate>) => Promise<void>;
+  savedId: string | null;
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-lg border border-slate-200 bg-[#F9FAFB] p-4 transition-opacity",
+        !date.active && "opacity-60"
+      )}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          <span className="text-sm font-medium text-[#111827]">{date.name}</span>
+          <span className="rounded-full bg-[#EEEDFE] px-2 py-0.5 text-[10px] font-semibold text-[#534AB7]">
+            Nacional
+          </span>
+          <span className="text-xs text-[#6B7280]">
+            {String(date.day).padStart(2, "0")}/
+            {String(date.month).padStart(2, "0")}
+          </span>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          {savedId === date.id ? (
+            <span className="text-[11px] font-medium text-emerald-600">
+              Salvo!
+            </span>
+          ) : null}
+          <Toggle
+            checked={date.active}
+            onChange={(checked) => void onUpdate(date.id, { active: checked })}
+          />
+        </div>
+      </div>
+
+      {date.active ? (
+        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+          {NOTIFY_OPTIONS.map((opt) => (
+            <label
+              className="flex cursor-pointer items-center gap-1.5 text-xs text-[#374151]"
+              key={opt.field}
+            >
+              <input
+                checked={date[opt.field]}
+                className="h-3.5 w-3.5 cursor-pointer rounded accent-[#534AB7]"
+                onChange={(e) =>
+                  void onUpdate(date.id, { [opt.field]: e.target.checked })
+                }
+                type="checkbox"
+              />
+              {opt.label}
+            </label>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Personal date row                                                    */
+/* ------------------------------------------------------------------ */
+
+function PersonalDateRow({
+  date,
+  isLast,
+  onEdit,
+  onDelete
+}: {
+  date: SpecialDate;
+  isLast: boolean;
+  onEdit: (date: SpecialDate) => void;
+  onDelete: (id: string, name: string) => void;
+}) {
+  const activeBadges = NOTIFY_OPTIONS.filter((opt) => date[opt.field]);
+
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-3 px-4 py-3",
+        !isLast && "border-b border-slate-100"
+      )}
+    >
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium text-[#111827]">{date.name}</span>
+          <span className="text-xs text-[#6B7280]">
+            {String(date.day).padStart(2, "0")}/
+            {String(date.month).padStart(2, "0")}
+          </span>
+        </div>
+        {activeBadges.length > 0 ? (
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {activeBadges.map((opt) => (
+              <span
+                className="rounded-full bg-[#EEEDFE] px-2 py-0.5 text-[10px] font-medium text-[#534AB7]"
+                key={opt.field}
+              >
+                {opt.label}
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </div>
+      <div className="flex shrink-0 items-center gap-1">
+        <button
+          aria-label={`Editar ${date.name}`}
+          className="flex h-8 w-8 items-center justify-center rounded-md text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#111827]"
+          onClick={() => onEdit(date)}
+          type="button"
+        >
+          <Pencil className="h-4 w-4" />
+        </button>
+        <button
+          aria-label={`Excluir ${date.name}`}
+          className="flex h-8 w-8 items-center justify-center rounded-md text-[#6B7280] hover:bg-rose-50 hover:text-rose-600"
+          onClick={() => onDelete(date.id, date.name)}
+          type="button"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Toggle switch                                                        */
+/* ------------------------------------------------------------------ */
+
+function Toggle({
+  checked,
+  onChange
+}: {
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <button
+      aria-checked={checked}
+      className={cn(
+        "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#534AB7] focus:ring-offset-2",
+        checked ? "bg-[#534AB7]" : "bg-slate-200"
+      )}
+      onClick={() => onChange(!checked)}
+      role="switch"
+      type="button"
+    >
+      <span
+        className={cn(
+          "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200",
+          checked ? "translate-x-4" : "translate-x-0"
+        )}
+      />
+    </button>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Create / edit modal                                                  */
+/* ------------------------------------------------------------------ */
+
+function SpecialDateModal({
+  date,
+  onClose,
+  onSave
+}: {
+  date: SpecialDate | null;
+  onClose: () => void;
+  onSave: (form: ModalForm) => Promise<void>;
+}) {
+  const titleId = useId();
+  const firstInputRef = useRef<HTMLInputElement>(null);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState<ModalForm>(
+    date
+      ? {
+          name: date.name,
+          month: date.month,
+          day: date.day,
+          notify_on_day: date.notify_on_day,
+          notify_1_day_before: date.notify_1_day_before,
+          notify_1_week_before: date.notify_1_week_before,
+          notify_1_month_before: date.notify_1_month_before
+        }
+      : DEFAULT_FORM
+  );
+
+  useEffect(() => {
+    firstInputRef.current?.focus();
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  const days = Array.from({ length: 31 }, (_, i) => i + 1);
+
+  async function handleSubmit(e: React.FormEvent): Promise<void> {
+    e.preventDefault();
+    if (!form.name.trim()) return;
+    setSaving(true);
+
+    try {
+      await onSave(form);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function setNotify(field: keyof NotifySettings, value: boolean): void {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <section
+        aria-labelledby={titleId}
+        aria-modal="true"
+        className="w-full max-w-[440px] rounded-xl bg-white p-6 shadow-xl"
+        role="dialog"
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="text-[15px] font-semibold text-[#111827]" id={titleId}>
+            {date ? "Editar data especial" : "Nova data especial"}
+          </h2>
+          <button
+            aria-label="Fechar"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-[#6B7280] hover:bg-[#F3F4F6]"
+            onClick={onClose}
+            type="button"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <form className="mt-5 space-y-4" onSubmit={(e) => void handleSubmit(e)}>
+          {/* Nome */}
+          <div>
+            <label
+              className="mb-1 block text-xs font-medium text-[#374151]"
+              htmlFor="sd-name"
+            >
+              Nome
+            </label>
+            <input
+              className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm text-[#111827] placeholder-[#9CA3AF] outline-none focus:border-[#534AB7] focus:ring-2 focus:ring-[#EEEDFE]"
+              id="sd-name"
+              onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+              placeholder="Ex: Aniversário da mãe, Casamento…"
+              ref={firstInputRef}
+              required
+              type="text"
+              value={form.name}
+            />
+          </div>
+
+          {/* Data */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-[#374151]">
+              Data
+            </label>
+            <div className="flex gap-2">
+              <select
+                className="w-24 rounded-md border border-slate-200 px-3 py-2 text-sm text-[#111827] outline-none focus:border-[#534AB7] focus:ring-2 focus:ring-[#EEEDFE]"
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, day: Number(e.target.value) }))
+                }
+                value={form.day}
+              >
+                {days.map((d) => (
+                  <option key={d} value={d}>
+                    {String(d).padStart(2, "0")}
+                  </option>
+                ))}
+              </select>
+              <select
+                className="flex-1 rounded-md border border-slate-200 px-3 py-2 text-sm text-[#111827] outline-none focus:border-[#534AB7] focus:ring-2 focus:ring-[#EEEDFE]"
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, month: Number(e.target.value) }))
+                }
+                value={form.month}
+              >
+                {MONTHS.map((name, idx) => (
+                  <option key={idx + 1} value={idx + 1}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Quando avisar */}
+          <div>
+            <p className="mb-2 text-xs font-medium text-[#374151]">
+              Quando avisar
+            </p>
+            <div className="space-y-2">
+              {NOTIFY_OPTIONS.map((opt) => (
+                <label
+                  className="flex cursor-pointer items-center gap-2 text-sm text-[#374151]"
+                  key={opt.field}
+                >
+                  <input
+                    checked={form[opt.field]}
+                    className="h-4 w-4 cursor-pointer rounded accent-[#534AB7]"
+                    onChange={(e) => setNotify(opt.field, e.target.checked)}
+                    type="checkbox"
+                  />
+                  {opt.label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Ações */}
+          <div className="flex gap-3 pt-1">
+            <Button
+              className="flex-1"
+              onClick={onClose}
+              type="button"
+              variant="outline"
+            >
+              Cancelar
+            </Button>
+            <button
+              className="inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-md border border-[#534AB7] bg-[#534AB7] px-3 text-[12px] font-medium text-white transition hover:bg-[#4540A3] disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={saving || !form.name.trim()}
+              type="submit"
+            >
+              {saving ? "Salvando…" : "Salvar"}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  );
+}

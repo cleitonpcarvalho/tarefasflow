@@ -12,6 +12,7 @@ import {
   parseDateAtEndOfDay
 } from "../services/recurrence.service";
 import { createReminder } from "../services/reminder.service";
+import { createSpecialDate } from "../services/special-date.service";
 import {
   createTask,
   deleteTask,
@@ -83,6 +84,16 @@ const updateTaskSchema = taskLookupSchema.extend({
   task_time: z.string().optional(),
   description: z.string().optional(),
   color: z.enum(["purple", "teal", "coral", "amber"]).optional()
+});
+
+const addSpecialDateSchema = z.object({
+  name: z.string(),
+  month: z.number().int().min(1).max(12),
+  day: z.number().int().min(1).max(31),
+  notify_on_day: z.boolean().default(true),
+  notify_1_day_before: z.boolean().default(false),
+  notify_1_week_before: z.boolean().default(true),
+  notify_1_month_before: z.boolean().default(false)
 });
 
 const tools: ChatCompletionTool[] = [
@@ -250,6 +261,32 @@ const tools: ChatCompletionTool[] = [
       parameters: {
         type: "object",
         properties: {}
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "add_special_date",
+      description:
+        "Cadastra uma data especial como aniversário ou data comemorativa pessoal. " +
+        "Use quando o usuário mencionar: aniversário, data especial, comemoração, " +
+        "lembrar de, não esquecer de, aniversário de casamento.",
+      parameters: {
+        type: "object",
+        required: ["name", "month", "day"],
+        properties: {
+          name: {
+            type: "string",
+            description: "Ex: 'Aniversário da mãe', 'Casamento'"
+          },
+          month: { type: "number", minimum: 1, maximum: 12 },
+          day: { type: "number", minimum: 1, maximum: 31 },
+          notify_on_day: { type: "boolean" },
+          notify_1_day_before: { type: "boolean" },
+          notify_1_week_before: { type: "boolean" },
+          notify_1_month_before: { type: "boolean" }
+        }
       }
     }
   }
@@ -559,6 +596,29 @@ async function executeTool(
       });
       return { ok: true, tasks };
     }
+    case "add_special_date": {
+      const parsed = addSpecialDateSchema.parse(args);
+      const specialDate = await createSpecialDate(
+        {
+          name: parsed.name,
+          month: parsed.month,
+          day: parsed.day,
+          notify_on_day: parsed.notify_on_day,
+          notify_1_day_before: parsed.notify_1_day_before,
+          notify_1_week_before: parsed.notify_1_week_before,
+          notify_1_month_before: parsed.notify_1_month_before
+        },
+        userId
+      );
+
+      const notifyLabels: string[] = [];
+      if (parsed.notify_on_day) notifyLabels.push("no dia");
+      if (parsed.notify_1_day_before) notifyLabels.push("1 dia antes");
+      if (parsed.notify_1_week_before) notifyLabels.push("1 semana antes");
+      if (parsed.notify_1_month_before) notifyLabels.push("1 mês antes");
+
+      return { ok: true, specialDate, notifications: notifyLabels };
+    }
     default:
       return { ok: false, error: `Tool desconhecida: ${name}` };
   }
@@ -663,6 +723,7 @@ Regras:
 - Para criar tarefas, peça esclarecimento apenas se a data não estiver clara
 - Para editar título, data, horário, descrição ou cor de uma tarefa já existente, use
   update_task — NUNCA use delete_task seguido de create_task para editar
+- Para cadastrar aniversários ou datas comemorativas pessoais, use add_special_date
 - Nunca diga que criou, alterou, concluiu ou removeu algo sem executar a ferramenta
   correspondente e receber um resultado de sucesso
 - Se a intenção não for reconhecida, peça esclarecimento gentilmente
@@ -709,6 +770,10 @@ function getRequiredToolForClaim(content: string | null) {
     [
       "add_reminder",
       /\blembrete\b.{0,30}\b(criad[ao]|adicionad[ao]|configurad[ao])\b/
+    ],
+    [
+      "add_special_date",
+      /\b(data\s+especial|anivers[aá]rio|comemora[çc][aã]o)\b.{0,30}\b(cadastrad[ao]|adicionad[ao]|criad[ao]|salv[ao])\b/
     ]
   ];
 
@@ -727,7 +792,8 @@ function getPermissionDeniedResult(
     complete_task: permissions.can_read_tasks,
     delete_task: permissions.can_delete_task,
     add_reminder: permissions.can_add_reminder,
-    get_today_summary: permissions.can_read_tasks
+    get_today_summary: permissions.can_read_tasks,
+    add_special_date: permissions.can_create_task
   };
 
   if (toolName in permissionMap && !permissionMap[toolName]) {

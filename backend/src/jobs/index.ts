@@ -1,5 +1,6 @@
 import { sendDailySummaries } from "./daily-summary";
 import { dispatchPendingReminders } from "./reminder-dispatcher";
+import { dispatchSpecialDateNotifications } from "./special-dates-dispatcher";
 
 export function startJobs() {
   console.log("[JOBS] Reminder dispatcher iniciado");
@@ -19,6 +20,16 @@ export function startJobs() {
       await sendDailySummaries();
     } catch (err) {
       console.error("[JOBS] Erro no resumo diario:", err);
+    }
+  }, 60_000);
+
+  console.log("[JOBS] Special dates dispatcher iniciado");
+
+  setInterval(async () => {
+    try {
+      await dispatchSpecialDateNotifications();
+    } catch (err) {
+      console.error("[JOBS] Erro no special dates:", err);
     }
   }, 60_000);
 }

@@ -7,6 +7,7 @@ import {
   Bell,
   Calendar,
   CheckSquare,
+  Gift,
   MessageCircle,
   Settings,
   Users,
@@ -27,6 +28,7 @@ const mainLinks = [
   { href: "/calendar", label: "Calendário", icon: Calendar },
   { href: "/tasks", label: "Tarefas", icon: CheckSquare, showBadge: true },
   { href: "/reminders", label: "Lembretes", icon: Bell },
+  { href: "/special-dates", label: "Datas Especiais", icon: Gift },
   { href: "/whatsapp", label: "WhatsApp", icon: MessageCircle },
   { href: "/settings", label: "Configurações", icon: Settings }
 ];

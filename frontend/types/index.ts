@@ -140,6 +140,22 @@ export interface AuthorizedNumberPermissions {
   can_add_reminder: boolean;
 }
 
+export interface SpecialDate {
+  id: string;
+  user_id: string;
+  name: string;
+  month: number;
+  day: number;
+  is_national: boolean;
+  active: boolean;
+  notify_on_day: boolean;
+  notify_1_day_before: boolean;
+  notify_1_week_before: boolean;
+  notify_1_month_before: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AuthorizedNumber extends AuthorizedNumberPermissions {
   id: string;
   instance_id: string;
