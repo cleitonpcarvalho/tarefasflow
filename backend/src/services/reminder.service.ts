@@ -138,7 +138,8 @@ function calculateScheduledFor(
   const dateKey =
     taskDate instanceof Date ? taskDate.toISOString().slice(0, 10) : taskDate;
   const timeKey = taskTime ?? "08:00:00";
-  const scheduledFor = new Date(`${dateKey}T${timeKey}`);
+  // Fortaleza é UTC-3; sem o offset explícito o Node interpreta como UTC em servidores com TZ=UTC
+  const scheduledFor = new Date(`${dateKey}T${timeKey}-03:00`);
   scheduledFor.setMinutes(scheduledFor.getMinutes() - minutesBefore);
 
   return scheduledFor;
