@@ -86,6 +86,10 @@ const updateTaskSchema = taskLookupSchema.extend({
   color: z.enum(["purple", "teal", "coral", "amber"]).optional()
 });
 
+const deleteTaskSchema = taskLookupSchema.extend({
+  scope: z.enum(["this", "all"]).default("all")
+});
+
 const addSpecialDateSchema = z.object({
   name: z.string(),
   month: z.number().int().min(1).max(12),
@@ -202,12 +206,21 @@ const tools: ChatCompletionTool[] = [
     type: "function",
     function: {
       name: "delete_task",
-      description: "Cancela ou deleta uma tarefa da agenda",
+      description:
+        "Cancela ou deleta uma tarefa da agenda. " +
+        "Para tarefas recorrentes, use scope='all' para apagar todas as ocorrências " +
+        "ou scope='this' para apagar apenas a do dia especificado. " +
+        "Quando o usuário pedir para apagar uma tarefa sem especificar, use scope='all'.",
       parameters: {
         type: "object",
         properties: {
           task_id: { type: "string" },
-          title_hint: { type: "string" }
+          title_hint: { type: "string" },
+          scope: {
+            type: "string",
+            enum: ["this", "all"],
+            description: "'all' apaga todas as ocorrências (padrão), 'this' apaga só uma específica"
+          }
         }
       }
     }
@@ -558,7 +571,7 @@ async function executeTool(
       return { ok: true, task };
     }
     case "delete_task": {
-      const parsed = taskLookupSchema.parse(args);
+      const parsed = deleteTaskSchema.parse(args);
       const taskId = await resolveTaskId(userId, parsed.task_id, parsed.title_hint);
 
       if (!taskId) {
@@ -568,7 +581,8 @@ async function executeTool(
       const result = await deleteTask(taskId, {
         requesterId: userId,
         requesterRole: "user"
-      });
+      }, parsed.scope);
+
       return { ok: Boolean(result), result };
     }
     case "add_reminder": {
