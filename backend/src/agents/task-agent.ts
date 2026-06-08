@@ -83,7 +83,10 @@ const updateTaskSchema = taskLookupSchema.extend({
   task_date: z.string().optional(),
   task_time: z.string().optional(),
   description: z.string().optional(),
-  color: z.enum(["purple", "teal", "coral", "amber"]).optional()
+  color: z.enum(["purple", "teal", "coral", "amber"]).optional(),
+  rrule: z.string().optional(),
+  is_recurring: z.boolean().optional(),
+  recurrence_end: z.string().optional()
 });
 
 const deleteTaskSchema = taskLookupSchema.extend({
@@ -127,7 +130,10 @@ const tools: ChatCompletionTool[] = [
     function: {
       name: "create_recurring_task",
       description:
-        "Cria uma tarefa recorrente. Use quando o usuário disser todo dia, toda semana, toda segunda, sempre, repetir, recorrente ou indicar vários dias da semana.",
+        "Cria uma tarefa NOVA e recorrente. Use apenas quando o usuário quiser criar uma " +
+        "tarefa nova com recorrência. Se a tarefa já existe e o usuário quer torná-la " +
+        "recorrente, use update_task com rrule. " +
+        "Sinais de uso: todo dia, toda semana, toda segunda, sempre, repetir, recorrente.",
       parameters: {
         type: "object",
         required: ["title", "task_date", "frequency"],
@@ -230,9 +236,13 @@ const tools: ChatCompletionTool[] = [
     function: {
       name: "update_task",
       description:
-        "Edita dados de uma tarefa existente: título, data, horário, descrição ou cor. " +
-        "Use sempre que o usuário quiser alterar, editar, mover ou corrigir uma tarefa já criada. " +
-        "Nunca use delete_task + create_task para editar.",
+        "Edita dados de uma tarefa existente: título, data, horário, descrição, cor " +
+        "ou regra de recorrência. " +
+        "Use sempre que o usuário quiser alterar, editar, mover, corrigir ou " +
+        "tornar recorrente uma tarefa já criada. " +
+        "Nunca use delete_task + create_task para editar. " +
+        "Se a tarefa já existe e o usuário quer adicionar recorrência (toda semana, " +
+        "todo dia, etc.), use update_task com rrule — não crie uma nova tarefa.",
       parameters: {
         type: "object",
         properties: {
@@ -245,6 +255,12 @@ const tools: ChatCompletionTool[] = [
           color: {
             type: "string",
             enum: ["purple", "teal", "coral", "amber"]
+          },
+          rrule: { type: "string", description: "Regra de recorrência no formato RRULE" },
+          is_recurring: { type: "boolean" },
+          recurrence_end: {
+            type: "string",
+            description: "Data final da recorrência no formato YYYY-MM-DD"
           }
         }
       }
@@ -562,6 +578,9 @@ async function executeTool(
       if (parsed.task_time !== undefined) updates.task_time = parsed.task_time;
       if (parsed.description !== undefined) updates.description = parsed.description;
       if (parsed.color !== undefined) updates.color = parsed.color;
+      if (parsed.rrule !== undefined) updates.rrule = parsed.rrule;
+      if (parsed.is_recurring !== undefined) updates.is_recurring = parsed.is_recurring;
+      if (parsed.recurrence_end !== undefined) updates.recurrence_end = parsed.recurrence_end;
 
       const task = await updateTask(
         taskId,
@@ -690,6 +709,7 @@ async function resolveTaskId(
     FROM tasks
     WHERE user_id = ${userId}
       AND title ILIKE ${`%${titleHint}%`}
+    ORDER BY created_at DESC
     LIMIT 1
   `;
 
