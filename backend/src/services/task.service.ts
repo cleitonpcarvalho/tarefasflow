@@ -316,8 +316,34 @@ export async function toggleTaskDone(
   { requesterId, requesterRole }: RequesterContext
 ): Promise<Task | null> {
   const occurrence = parseOccurrenceTaskId(taskId);
-  const persistentTaskId = occurrence?.parentId ?? taskId;
-  const params = [persistentTaskId, requesterId];
+
+  if (occurrence) {
+    const { parentId, date } = occurrence;
+    const params = [date, parentId, requesterId];
+    const scopeClause = requesterRole === "user" ? "AND user_id = $3" : "";
+
+    const rows = await sql.unsafe<TaskRow[]>(
+      `
+        UPDATE tasks
+        SET excluded_dates = CASE
+          WHEN $1 = ANY(excluded_dates) THEN array_remove(excluded_dates, $1)
+          ELSE array_append(excluded_dates, $1)
+        END,
+        updated_at = NOW()
+        WHERE id = $2 ${scopeClause}
+        RETURNING ${taskSelectColumns}
+      `,
+      requesterRole === "user" ? params : params.slice(0, 2)
+    );
+
+    if (!rows[0]) return null;
+    const parent = toTask(rows[0]);
+    const isDone = parent.excluded_dates.includes(date);
+
+    return { ...parent, id: taskId, task_date: date, done: isDone };
+  }
+
+  const params = [taskId, requesterId];
   const scopeClause = requesterRole === "user" ? "AND user_id = $2" : "";
 
   const rows = await sql.unsafe<TaskRow[]>(
@@ -327,7 +353,7 @@ export async function toggleTaskDone(
       WHERE id = $1 ${scopeClause}
       RETURNING ${taskSelectColumns}
     `,
-    requesterRole === "user" ? params : [persistentTaskId]
+    requesterRole === "user" ? params : [taskId]
   );
 
   return rows[0] ? toTask(rows[0]) : null;
