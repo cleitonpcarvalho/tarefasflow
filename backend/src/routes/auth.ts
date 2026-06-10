@@ -64,17 +64,19 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
-async function createInstanceForUser(userId: string, name: string): Promise<void> {
-  const normalize = (part: string) =>
-    part
-      .normalize("NFD")
-      .replace(/[̀-ͯ]/g, "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, "");
+const PARTICLES = new Set(["de","da","do","dos","das","e","em","no","na"]);
 
-  const parts = name.trim().split(/\s+/).slice(0, 2).map(normalize).filter(Boolean);
-  const baseName = (parts.length > 0 ? parts.join("-") : "user").slice(0, 28);
-  const instanceName = `${baseName}-${userId.slice(0, 8)}`;
+async function createInstanceForUser(userId: string, name: string): Promise<void> {
+  const parts = name
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((p) => p.length > 0 && !PARTICLES.has(p))
+    .map((p) => p.replace(/[^a-z0-9]/g, ""))
+    .filter((p) => p.length > 0);
+  const namePart = parts.slice(0, 2).join("-") || "user";
+  const instanceName = `${namePart}-${userId.slice(0, 8)}`;
   const webhookUrl = `${env.WEBHOOK_BASE_URL.replace(/\/$/, "")}/webhook/whatsapp`;
   const created = await createInstance(instanceName, webhookUrl);
   await createWhatsappInstance({

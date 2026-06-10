@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   CalendarHeader,
   type CalendarView
 } from "@/components/calendar/CalendarHeader";
+import { apiFetch } from "@/lib/api";
 import { CalendarGrid } from "@/components/calendar/CalendarGrid";
 import { DayView } from "@/components/calendar/DayView";
 import { DayPanel } from "@/components/calendar/DayPanel";
@@ -52,6 +54,27 @@ export default function CalendarPage() {
     toggleDone,
     deleteTask
   } = useTasks();
+
+  const [onboardingStatus, setOnboardingStatus] = useState<{
+    onboarding_completed: boolean;
+    instance_status: string | null;
+  } | null>(null);
+  const [dismissedOnboarding, setDismissedOnboarding] = useState(false);
+
+  useEffect(() => {
+    apiFetch<{ onboarding_completed: boolean; instance_status: string | null }>(
+      "/profile/onboarding-status"
+    )
+      .then((res) => { if (res.data) setOnboardingStatus(res.data); })
+      .catch(() => {});
+  }, []);
+
+  async function handleDismissOnboarding() {
+    setDismissedOnboarding(true);
+    try {
+      await apiFetch("/profile/complete-onboarding", { method: "POST" });
+    } catch {}
+  }
 
   const effectiveSelectedDate = selectedDate ?? todayKey();
   const currentMonth = viewDate.getMonth() + 1;
@@ -213,6 +236,52 @@ export default function CalendarPage() {
           <p className="mb-3 rounded-md bg-rose-50 px-3 py-2 text-[12px] font-medium text-rose-700">
             {error}
           </p>
+        ) : null}
+
+        {onboardingStatus && !onboardingStatus.onboarding_completed && !dismissedOnboarding ? (
+          onboardingStatus.instance_status !== "open" ? (
+            <div
+              className="mb-3 flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+              style={{ background: "#FFF8E7", border: "1px solid #F59E0B", borderRadius: 12 }}
+            >
+              <span className="text-sm font-medium" style={{ color: "#92400E" }}>
+                ⚠️ Seu agente ainda não está conectado. Conecte seu WhatsApp para começar a receber lembretes.
+              </span>
+              <Link
+                className="shrink-0 rounded-lg px-4 py-2 text-sm font-semibold text-white"
+                href="/onboarding"
+                style={{ background: "#534AB7", borderRadius: 8 }}
+              >
+                Conectar WhatsApp
+              </Link>
+            </div>
+          ) : (
+            <div
+              className="mb-3 flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+              style={{ background: "#FFF8E7", border: "1px solid #F59E0B", borderRadius: 12 }}
+            >
+              <span className="text-sm font-medium" style={{ color: "#92400E" }}>
+                🚀 Complete a configuração do TarefasFlow para aproveitar todos os recursos.
+              </span>
+              <div className="flex shrink-0 items-center gap-3">
+                <Link
+                  className="rounded-lg px-4 py-2 text-sm font-semibold text-white"
+                  href="/onboarding"
+                  style={{ background: "#534AB7", borderRadius: 8 }}
+                >
+                  Continuar configuração
+                </Link>
+                <button
+                  className="text-sm font-medium hover:underline"
+                  onClick={() => void handleDismissOnboarding()}
+                  style={{ color: "#92400E" }}
+                  type="button"
+                >
+                  Dispensar
+                </button>
+              </div>
+            </div>
+          )
         ) : null}
 
         <div className={loading ? "space-y-3 opacity-60" : "space-y-3"}>
