@@ -22,7 +22,8 @@ const envSchema = z.object({
   SUPABASE_URL: z.string().url("SUPABASE_URL deve ser uma URL valida"),
   SUPABASE_SERVICE_ROLE: z
     .string()
-    .min(1, "SUPABASE_SERVICE_ROLE e obrigatoria")
+    .min(1, "SUPABASE_SERVICE_ROLE e obrigatoria"),
+  RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY e obrigatoria")
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
