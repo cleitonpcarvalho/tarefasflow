@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const publicRoutes = ["/login"];
+const publicRoutes = ["/login", "/signup", "/verify-email", "/forgot-password"];
 const tokenCookieName = "taskflow_token";
 
 export async function middleware(request: NextRequest) {
