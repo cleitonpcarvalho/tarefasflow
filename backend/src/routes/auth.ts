@@ -65,14 +65,16 @@ function normalizeEmail(email: string): string {
 }
 
 async function createInstanceForUser(userId: string, name: string): Promise<void> {
-  const firstName = name
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .split(" ")[0]
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "")
-    .slice(0, 20);
-  const instanceName = `${firstName || "user"}-${userId.slice(0, 8)}`;
+  const normalize = (part: string) =>
+    part
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
+
+  const parts = name.trim().split(/\s+/).slice(0, 2).map(normalize).filter(Boolean);
+  const baseName = (parts.length > 0 ? parts.join("-") : "user").slice(0, 28);
+  const instanceName = `${baseName}-${userId.slice(0, 8)}`;
   const webhookUrl = `${env.WEBHOOK_BASE_URL.replace(/\/$/, "")}/webhook/whatsapp`;
   const created = await createInstance(instanceName, webhookUrl);
   await createWhatsappInstance({
