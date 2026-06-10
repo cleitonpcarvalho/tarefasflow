@@ -83,6 +83,17 @@ function LoginPageContent() {
       }
 
       login(response.data.user, response.data.token);
+
+      try {
+        const status = await apiFetch<{ onboarding_completed: boolean }>("/profile/onboarding-status");
+        if (!status.data?.onboarding_completed) {
+          router.replace("/onboarding");
+          return;
+        }
+      } catch {
+        // fail-safe: se não conseguir checar, vai para o calendar
+      }
+
       router.replace("/calendar");
     } catch {
       setError("E-mail ou senha inválidos");

@@ -2,6 +2,7 @@ import type { FastifyPluginAsync, FastifyReply } from "fastify";
 import bcrypt from "bcrypt";
 import { z } from "zod";
 import { sql } from "../config/db";
+import { env } from "../config/env";
 import { authenticate } from "../middlewares/authenticate";
 import {
   AuthServiceError,
@@ -10,6 +11,8 @@ import {
   registerUser
 } from "../services/auth.service";
 import { sendVerificationCode } from "../services/email.service";
+import { createInstance } from "../services/evolution.service";
+import { createWhatsappInstance } from "../services/whatsapp-instance.service";
 
 const registerSchema = z.object({
   name: z.string().trim().min(2, "Nome deve ter pelo menos 2 caracteres."),
@@ -59,6 +62,26 @@ function generateOTP(): string {
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
+}
+
+async function createInstanceForUser(userId: string, name: string): Promise<void> {
+  const firstName = name
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .split(" ")[0]
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "")
+    .slice(0, 20);
+  const instanceName = `${firstName || "user"}-${userId.slice(0, 8)}`;
+  const webhookUrl = `${env.WEBHOOK_BASE_URL.replace(/\/$/, "")}/webhook/whatsapp`;
+  const created = await createInstance(instanceName, webhookUrl);
+  await createWhatsappInstance({
+    userId,
+    instanceName: created.instanceName,
+    instanceToken: created.instanceToken,
+    status: created.status === "close" ? "created" : created.status,
+    webhookSet: true
+  });
 }
 
 export const authRoutes: FastifyPluginAsync = async (app) => {
@@ -215,6 +238,10 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     `;
 
     await sendVerificationCode(normalizedEmail, name.trim(), code, "signup");
+
+    void createInstanceForUser(userId, name.trim()).catch((err) => {
+      console.error("[SIGNUP] Falha ao criar instância WhatsApp:", err);
+    });
 
     return reply.code(201).send({
       success: true,

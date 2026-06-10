@@ -1,7 +1,16 @@
 import type { FastifyPluginAsync, FastifyReply } from "fastify";
 import { z } from "zod";
+import { sql } from "../config/db";
 import { authenticate } from "../middlewares/authenticate";
 import { authorize } from "../middlewares/authorize";
+import {
+  EvolutionServiceError,
+  getQRCode
+} from "../services/evolution.service";
+import {
+  getWhatsappInstanceByUserId,
+  updateWhatsappInstanceStatus
+} from "../services/whatsapp-instance.service";
 import {
   changeOwnPassword,
   createUser,
@@ -402,6 +411,91 @@ export const profileRoutes: FastifyPluginAsync = async (app) => {
           success: false,
           data: null,
           message: "Erro ao alterar senha.",
+          error: error.message
+        });
+      }
+
+      throw error;
+    }
+  });
+
+  app.get("/onboarding-status", { preHandler: authenticate }, async (request, reply) => {
+    const rows = await sql<{ onboarding_completed: boolean; whatsapp_phone: string | null }[]>`
+      SELECT onboarding_completed, whatsapp_phone
+      FROM users
+      WHERE id = ${request.user.id}
+      LIMIT 1
+    `;
+
+    if (rows.length === 0) {
+      return reply.code(404).send({
+        success: false,
+        data: null,
+        message: "Usuário não encontrado.",
+        error: "Usuário não encontrado."
+      });
+    }
+
+    const instance = await getWhatsappInstanceByUserId(request.user.id);
+
+    return reply.code(200).send({
+      success: true,
+      data: {
+        onboarding_completed: rows[0].onboarding_completed,
+        whatsapp_phone: rows[0].whatsapp_phone,
+        instance_status: instance?.status ?? null,
+        instance_name: instance?.instance_name ?? null
+      },
+      message: "Status do onboarding carregado.",
+      error: null
+    });
+  });
+
+  app.post("/complete-onboarding", { preHandler: authenticate }, async (request, reply) => {
+    await sql`
+      UPDATE users SET onboarding_completed = true WHERE id = ${request.user.id}
+    `;
+
+    return reply.code(200).send({
+      success: true,
+      data: null,
+      message: "Onboarding concluído.",
+      error: null
+    });
+  });
+
+  app.get("/instance-qrcode", { preHandler: authenticate }, async (request, reply) => {
+    const instance = await getWhatsappInstanceByUserId(request.user.id);
+
+    if (!instance) {
+      return reply.code(404).send({
+        success: false,
+        data: null,
+        message: "Instância WhatsApp não encontrada.",
+        error: "Instância não encontrada."
+      });
+    }
+
+    try {
+      const qr = await getQRCode(instance.instance_name);
+      await updateWhatsappInstanceStatus(instance.instance_name, "connecting");
+
+      return reply.code(200).send({
+        success: true,
+        data: {
+          code: qr.code,
+          pairingCode: qr.pairingCode,
+          instance_status: "connecting"
+        },
+        message: "QR Code gerado com sucesso.",
+        error: null
+      });
+    } catch (error) {
+      if (error instanceof EvolutionServiceError) {
+        return reply.code(error.statusCode).send({
+          success: false,
+          data: null,
+          message: "Erro ao gerar QR Code.",
           error: error.message
         });
       }
