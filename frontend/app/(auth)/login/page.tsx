@@ -18,11 +18,11 @@ const bullets = [
 function LeftPanel() {
   return (
     <div
-      className="hidden lg:flex lg:w-[45%] flex-col justify-between p-12"
+      className="hidden lg:flex lg:w-[45%] flex-col justify-center items-center p-12 gap-8"
       style={{ background: "linear-gradient(135deg, #534AB7 0%, #7C6FD4 100%)" }}
     >
       <div className="flex flex-col gap-6">
-        <Image src="/logo-light.png" width={160} height={48} alt="TarefasFlow" priority />
+        <Image src="/logo-dark.png" width={160} height={48} alt="TarefasFlow" priority />
         <div className="mt-4 flex flex-col gap-4">
           <h1 style={{ color: "white", fontSize: 28, fontWeight: 700, lineHeight: 1.3, margin: 0 }}>
             Organize sua vida com inteligência
@@ -98,7 +98,7 @@ function LoginPageContent() {
       <div className="flex w-full lg:w-[55%] items-center justify-center bg-white p-6">
         <div className="w-full max-w-[400px] py-12">
           <div className="mb-8 flex justify-center lg:hidden">
-            <Image src="/logo-light.png" width={120} height={36} alt="TarefasFlow" priority />
+            <Image src="/logo-dark.png" width={120} height={36} alt="TarefasFlow" priority />
           </div>
 
           <h2 className="mb-1 text-2xl font-bold" style={{ color: "#1A1A2E" }}>
