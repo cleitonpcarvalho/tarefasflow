@@ -311,7 +311,7 @@ export default function OnboardingPage() {
                   <img
                     alt="QR Code WhatsApp"
                     className="h-[200px] w-[200px] rounded-xl"
-                    src={`data:image/png;base64,${qrCode}`}
+                    src={qrCode.startsWith('data:') ? qrCode : `data:image/png;base64,${qrCode}`}
                   />
                 )}
                 {!instanceName && !qrLoading && (
