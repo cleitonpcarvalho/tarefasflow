@@ -127,7 +127,7 @@ export default function OnboardingPage() {
     setQrLoading(true);
     setQrError("");
     try {
-      const res = await apiFetch<QrCodeData>("/profile/instance-qrcode");
+      const res = await apiFetch<QrCodeData>(`/whatsapp/instances/${instanceName}/qrcode`);
       if (res.data) {
         setQrCode(res.data.code);
         setPairingCode(res.data.pairingCode);
@@ -310,11 +310,7 @@ export default function OnboardingPage() {
                   </div>
                 )}
                 {qrCode && (
-                  <img
-                    alt="QR Code WhatsApp"
-                    className="h-[200px] w-[200px] rounded-xl"
-                    src={qrCode.startsWith('data:') ? qrCode : `data:image/png;base64,${qrCode}`}
-                  />
+                  <QRCodeSVG bgColor="#FFFFFF" fgColor="#111827" size={180} value={qrCode} />
                 )}
                 {!instanceName && !qrLoading && (
                   <div className="flex flex-col items-center gap-2 p-4 text-center">
