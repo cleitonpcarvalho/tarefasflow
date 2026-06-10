@@ -20,7 +20,7 @@ function LeftPanel() {
       style={{ background: "linear-gradient(135deg, #534AB7 0%, #7C6FD4 100%)" }}
     >
       <div className="flex flex-col gap-6">
-        <Image src="/logo-light.png" width={160} height={48} alt="TarefasFlow" priority />
+        <Image src="/logo-dark.png" width={160} height={48} alt="TarefasFlow" priority />
         <div className="mt-4 flex flex-col gap-4">
           <h1 style={{ color: "white", fontSize: 28, fontWeight: 700, lineHeight: 1.3, margin: 0 }}>
             Organize sua vida com inteligência
