@@ -17,6 +17,7 @@ import {
   createTask,
   deleteTask,
   getTasks,
+  TaskServiceError,
   updateTask
 } from "../services/task.service";
 import type { TaskColor } from "../types/task";
@@ -108,7 +109,11 @@ const tools: ChatCompletionTool[] = [
     type: "function",
     function: {
       name: "create_task",
-      description: "Cria uma nova tarefa ou evento na agenda do usuário",
+      description:
+        "Cria uma nova tarefa ou evento na agenda do usuário. " +
+        "Se o backend retornar erro de horário ocupado (409), informe o usuário " +
+        "que o horário está ocupado e sugira os horários mais próximos disponíveis " +
+        "(30 minutos antes ou depois).",
       parameters: {
         type: "object",
         required: ["title", "task_date"],
@@ -133,7 +138,10 @@ const tools: ChatCompletionTool[] = [
         "Cria uma tarefa NOVA e recorrente. Use apenas quando o usuário quiser criar uma " +
         "tarefa nova com recorrência. Se a tarefa já existe e o usuário quer torná-la " +
         "recorrente, use update_task com rrule. " +
-        "Sinais de uso: todo dia, toda semana, toda segunda, sempre, repetir, recorrente.",
+        "Sinais de uso: todo dia, toda semana, toda segunda, sempre, repetir, recorrente. " +
+        "Se o backend retornar erro de horário ocupado (409), informe o usuário " +
+        "que o horário está ocupado e sugira os horários mais próximos disponíveis " +
+        "(30 minutos antes ou depois).",
       parameters: {
         type: "object",
         required: ["title", "task_date", "frequency"],
@@ -488,57 +496,71 @@ async function executeTool(
 
   switch (name) {
     case "create_task": {
-      const parsed = createTaskSchema.parse(args);
-      const task = await createTask(
-        {
-          title: parsed.title,
-          task_date: parsed.task_date,
-          task_time: parsed.task_time,
-          description: parsed.description,
-          color: parsed.color as TaskColor | undefined
-        },
-        { requesterId: userId }
-      );
-      return { ok: true, task };
+      try {
+        const parsed = createTaskSchema.parse(args);
+        const task = await createTask(
+          {
+            title: parsed.title,
+            task_date: parsed.task_date,
+            task_time: parsed.task_time,
+            description: parsed.description,
+            color: parsed.color as TaskColor | undefined
+          },
+          { requesterId: userId }
+        );
+        return { ok: true, task };
+      } catch (error) {
+        if (error instanceof TaskServiceError) {
+          return { ok: false, error: error.message, statusCode: error.statusCode };
+        }
+        throw error;
+      }
     }
     case "create_recurring_task": {
-      const parsed = createRecurringTaskSchema.parse(args);
-      const rrule = buildRRule({
-        frequency: parsed.frequency,
-        interval: parsed.interval,
-        weekdays: parsed.weekdays?.map(toWeekdayIndex),
-        monthDay: parsed.month_day,
-        monthWeekday:
-          parsed.month_weekday_week && parsed.month_weekday_day
-            ? {
-                week: parsed.month_weekday_week,
-                day: toWeekdayIndex(parsed.month_weekday_day)
-              }
+      try {
+        const parsed = createRecurringTaskSchema.parse(args);
+        const rrule = buildRRule({
+          frequency: parsed.frequency,
+          interval: parsed.interval,
+          weekdays: parsed.weekdays?.map(toWeekdayIndex),
+          monthDay: parsed.month_day,
+          monthWeekday:
+            parsed.month_weekday_week && parsed.month_weekday_day
+              ? {
+                  week: parsed.month_weekday_week,
+                  day: toWeekdayIndex(parsed.month_weekday_day)
+                }
+              : undefined,
+          until: parsed.recurrence_end
+            ? parseDateAtEndOfDay(parsed.recurrence_end)
             : undefined,
-        until: parsed.recurrence_end
-          ? parseDateAtEndOfDay(parsed.recurrence_end)
-          : undefined,
-        count: parsed.count
-      });
-      const task = await createTask(
-        {
-          title: parsed.title,
-          task_date: parsed.task_date,
-          task_time: parsed.task_time,
-          description: parsed.description,
-          color: parsed.color as TaskColor | undefined,
-          is_recurring: true,
-          rrule,
-          recurrence_end: parsed.recurrence_end
-        },
-        { requesterId: userId }
-      );
+          count: parsed.count
+        });
+        const task = await createTask(
+          {
+            title: parsed.title,
+            task_date: parsed.task_date,
+            task_time: parsed.task_time,
+            description: parsed.description,
+            color: parsed.color as TaskColor | undefined,
+            is_recurring: true,
+            rrule,
+            recurrence_end: parsed.recurrence_end
+          },
+          { requesterId: userId }
+        );
 
-      return {
-        ok: true,
-        task,
-        rrule_human: describeRRule(rrule)
-      };
+        return {
+          ok: true,
+          task,
+          rrule_human: describeRRule(rrule)
+        };
+      } catch (error) {
+        if (error instanceof TaskServiceError) {
+          return { ok: false, error: error.message, statusCode: error.statusCode };
+        }
+        throw error;
+      }
     }
     case "list_tasks": {
       const parsed = listTasksSchema.parse(args);
@@ -766,7 +788,9 @@ Regras:
 - Após criar recorrência, confirme com:
   "Tarefa recorrente criada! [título] — [descrição humana da regra]"
 - Se não houver tarefas para o período, diga isso de forma amigável
-- Nunca invente dados. Se não encontrar uma tarefa, diga que não encontrou`;
+- Nunca invente dados. Se não encontrar uma tarefa, diga que não encontrou
+- Se ao criar uma tarefa o sistema retornar erro de horário ocupado, informe o usuário
+  qual horário está ocupado e sugira alternativas como 30 minutos antes ou depois`;
 }
 
 function getRequiredToolForClaim(content: string | null) {

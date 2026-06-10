@@ -31,6 +31,7 @@ export async function dispatchPendingReminders(): Promise<void> {
     LEFT JOIN whatsapp_instances wi ON wi.user_id = u.id
     WHERE r.pending_send = true
       AND r.sent_at IS NULL
+      AND t.done = false
     ORDER BY r.scheduled_for ASC NULLS LAST
     LIMIT 50
     FOR UPDATE OF r SKIP LOCKED

@@ -7,6 +7,16 @@ import {
   parseDateAtStartOfDay
 } from "./recurrence.service";
 
+export class TaskServiceError extends Error {
+  statusCode: number;
+
+  constructor(message: string, statusCode: number) {
+    super(message);
+    this.name = "TaskServiceError";
+    this.statusCode = statusCode;
+  }
+}
+
 interface RequesterContext {
   requesterId: string;
   requesterRole: UserRole;
@@ -162,6 +172,23 @@ export async function createTask(
   const isRecurring = Boolean(data.is_recurring && rrule);
   const recurrenceEnd = normalizeNullableInsertText(data.recurrence_end);
 
+  if (taskTime) {
+    const conflict = await sql<{ id: string }[]>`
+      SELECT id FROM tasks
+      WHERE user_id = ${requesterId}
+        AND task_date = ${data.task_date}
+        AND task_time = ${taskTime}
+        AND done = false
+      LIMIT 1
+    `;
+    if (conflict.length > 0) {
+      throw new TaskServiceError(
+        `Já existe uma tarefa agendada para ${data.task_date} às ${taskTime}. Escolha outro horário.`,
+        409
+      );
+    }
+  }
+
   const rows = await sql<TaskRow[]>`
     INSERT INTO tasks (
       user_id, title, description, task_date, task_time, color, rrule,
@@ -203,6 +230,32 @@ export async function updateTask(
 
   if (!existingTask) {
     return null;
+  }
+
+  if (data.task_date !== undefined || data.task_time !== undefined) {
+    const newDate = data.task_date ?? existingTask.task_date;
+    const newTime =
+      data.task_time !== undefined
+        ? normalizeNullableText(data.task_time)
+        : existingTask.task_time;
+
+    if (newTime) {
+      const conflict = await sql<{ id: string }[]>`
+        SELECT id FROM tasks
+        WHERE user_id = ${requesterId}
+          AND task_date = ${newDate}
+          AND task_time = ${newTime}
+          AND done = false
+          AND id != ${persistentTaskId}
+        LIMIT 1
+      `;
+      if (conflict.length > 0) {
+        throw new TaskServiceError(
+          `Já existe uma tarefa agendada para ${newDate} às ${newTime}. Escolha outro horário.`,
+          409
+        );
+      }
+    }
   }
 
   const updates: string[] = [];
@@ -357,6 +410,21 @@ export async function toggleTaskDone(
   );
 
   return rows[0] ? toTask(rows[0]) : null;
+}
+
+export async function getTasksForDate(
+  userId: string,
+  date: string
+): Promise<Array<{ title: string; task_time: string | null }>> {
+  const tasks = await getTasks({
+    requesterId: userId,
+    requesterRole: "user",
+    filters: { date }
+  });
+
+  return tasks
+    .filter((task) => !task.done)
+    .map((task) => ({ title: task.title, task_time: task.task_time }));
 }
 
 function addUpdate(

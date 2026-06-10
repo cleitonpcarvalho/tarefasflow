@@ -11,6 +11,7 @@ import {
   deleteTask,
   getTaskById,
   getTasks,
+  TaskServiceError,
   toggleTaskDone,
   updateTask
 } from "../services/task.service";
@@ -131,16 +132,29 @@ export const tasksRoutes: FastifyPluginAsync = async (app) => {
       return sendValidationError(reply, parsedBody.error);
     }
 
-    const task = await createTask(parsedBody.data, {
-      requesterId: request.user.id
-    });
+    try {
+      const task = await createTask(parsedBody.data, {
+        requesterId: request.user.id
+      });
 
-    return reply.code(201).send({
-      success: true,
-      data: task,
-      message: "Tarefa criada com sucesso.",
-      error: null
-    });
+      return reply.code(201).send({
+        success: true,
+        data: task,
+        message: "Tarefa criada com sucesso.",
+        error: null
+      });
+    } catch (error) {
+      if (error instanceof TaskServiceError) {
+        return reply.code(error.statusCode).send({
+          success: false,
+          data: null,
+          message: error.message,
+          error: error.message
+        });
+      }
+
+      throw error;
+    }
   });
 
   app.get("/:taskId/reminders", async (request, reply) => {
@@ -268,21 +282,34 @@ export const tasksRoutes: FastifyPluginAsync = async (app) => {
       return sendValidationError(reply, parsedBody.error);
     }
 
-    const task = await updateTask(parsedParams.data.id, parsedBody.data, {
-      requesterId: request.user.id,
-      requesterRole: request.user.role
-    });
+    try {
+      const task = await updateTask(parsedParams.data.id, parsedBody.data, {
+        requesterId: request.user.id,
+        requesterRole: request.user.role
+      });
 
-    if (!task) {
-      return sendNotFound(reply, "Tarefa não encontrada");
+      if (!task) {
+        return sendNotFound(reply, "Tarefa não encontrada");
+      }
+
+      return reply.code(200).send({
+        success: true,
+        data: task,
+        message: "Tarefa atualizada com sucesso.",
+        error: null
+      });
+    } catch (error) {
+      if (error instanceof TaskServiceError) {
+        return reply.code(error.statusCode).send({
+          success: false,
+          data: null,
+          message: error.message,
+          error: error.message
+        });
+      }
+
+      throw error;
     }
-
-    return reply.code(200).send({
-      success: true,
-      data: task,
-      message: "Tarefa atualizada com sucesso.",
-      error: null
-    });
   });
 
   app.delete("/:id", async (request, reply) => {

@@ -1,6 +1,7 @@
-import { sql } from "../config/db";
 import { getFirstActiveAuthorizedNumberForUser } from "../services/authorized-number.service";
 import { sendTextMessage } from "../services/evolution.service";
+import { sql } from "../config/db";
+import { getTasksForDate } from "../services/task.service";
 
 interface DailySummaryUserRow {
   id: string;
@@ -9,11 +10,6 @@ interface DailySummaryUserRow {
   instance_name: string;
   status: string;
   phone_number: string | null;
-}
-
-interface TaskRow {
-  title: string;
-  task_time: string | null;
 }
 
 export async function sendDailySummaries(): Promise<void> {
@@ -44,13 +40,10 @@ export async function sendDailySummaries(): Promise<void> {
 }
 
 async function dispatchSummaryForUser(user: DailySummaryUserRow): Promise<void> {
-  const tasks = await sql<TaskRow[]>`
-    SELECT title, task_time FROM tasks
-    WHERE user_id = ${user.id}
-      AND task_date = CURRENT_DATE
-      AND done = false
-    ORDER BY task_time ASC NULLS LAST
-  `;
+  const today = new Date().toLocaleDateString("en-CA", {
+    timeZone: "America/Fortaleza"
+  });
+  const tasks = await getTasksForDate(user.id, today);
 
   const authorizedNumber = await getFirstActiveAuthorizedNumberForUser(user.id);
   const phone = authorizedNumber?.phone ?? user.phone_number;
@@ -70,7 +63,10 @@ async function dispatchSummaryForUser(user: DailySummaryUserRow): Promise<void> 
   }
 }
 
-function buildSummaryMessage(name: string, tasks: TaskRow[]): string {
+function buildSummaryMessage(
+  name: string,
+  tasks: Array<{ title: string; task_time: string | null }>
+): string {
   const hoje = new Date().toLocaleDateString("pt-BR", {
     timeZone: "America/Fortaleza",
     day: "2-digit",
