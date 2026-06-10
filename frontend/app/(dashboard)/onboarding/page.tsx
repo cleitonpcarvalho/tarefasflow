@@ -4,6 +4,8 @@ import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Loader2, QrCode, Shield, Sparkles } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { QRCodeSVG } from "qrcode.react";
+
 
 interface OnboardingStatus {
   onboarding_completed: boolean;
