@@ -5,6 +5,7 @@ import { authenticate } from "../middlewares/authenticate";
 import { authorize } from "../middlewares/authorize";
 import {
   EvolutionServiceError,
+  getConnectionState,
   getQRCode
 } from "../services/evolution.service";
 import {
@@ -420,8 +421,12 @@ export const profileRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.get("/onboarding-status", { preHandler: authenticate }, async (request, reply) => {
-    const rows = await sql<{ onboarding_completed: boolean; whatsapp_phone: string | null }[]>`
-      SELECT onboarding_completed, whatsapp_phone
+    const rows = await sql<{
+      onboarding_completed: boolean;
+      onboarding_skipped: boolean;
+      whatsapp_phone: string | null;
+    }[]>`
+      SELECT onboarding_completed, onboarding_skipped, whatsapp_phone
       FROM users
       WHERE id = ${request.user.id}
       LIMIT 1
@@ -437,16 +442,44 @@ export const profileRoutes: FastifyPluginAsync = async (app) => {
     }
 
     const instance = await getWhatsappInstanceByUserId(request.user.id);
+    let instanceStatus = instance?.status ?? null;
+
+    if (instance) {
+      try {
+        const connection = await getConnectionState(instance.instance_name);
+        instanceStatus = connection.state;
+        await updateWhatsappInstanceStatus(instance.instance_name, connection.state);
+      } catch (error) {
+        request.log.warn(
+          { error, instanceName: instance.instance_name },
+          "Falha ao confirmar status da instância na Evolution; usando status persistido."
+        );
+      }
+    }
 
     return reply.code(200).send({
       success: true,
       data: {
         onboarding_completed: rows[0].onboarding_completed,
+        onboarding_skipped: rows[0].onboarding_skipped,
         whatsapp_phone: rows[0].whatsapp_phone,
-        instance_status: instance?.status ?? null,
+        instance_status: instanceStatus,
         instance_name: instance?.instance_name ?? null
       },
       message: "Status do onboarding carregado.",
+      error: null
+    });
+  });
+
+  app.post("/skip-onboarding", { preHandler: authenticate }, async (request, reply) => {
+    await sql`
+      UPDATE users SET onboarding_skipped = true WHERE id = ${request.user.id}
+    `;
+
+    return reply.code(200).send({
+      success: true,
+      data: null,
+      message: "Onboarding dispensado.",
       error: null
     });
   });

@@ -9,6 +9,7 @@ import { QRCodeSVG } from "qrcode.react";
 
 interface OnboardingStatus {
   onboarding_completed: boolean;
+  onboarding_skipped: boolean;
   whatsapp_phone: string | null;
   instance_status: string | null;
   instance_name: string | null;
@@ -103,7 +104,10 @@ export default function OnboardingPage() {
     async function fetchStatus() {
       try {
         const res = await apiFetch<OnboardingStatus>("/profile/onboarding-status");
-        if (res.data?.onboarding_completed) {
+        if (
+          res.data?.onboarding_completed &&
+          res.data.instance_status === "open"
+        ) {
           router.replace("/calendar");
           return;
         }

@@ -85,8 +85,14 @@ function LoginPageContent() {
       login(response.data.user, response.data.token);
 
       try {
-        const status = await apiFetch<{ onboarding_completed: boolean }>("/profile/onboarding-status");
-        if (!status.data?.onboarding_completed) {
+        const status = await apiFetch<{
+          onboarding_completed: boolean;
+          onboarding_skipped: boolean;
+        }>("/profile/onboarding-status");
+        if (
+          status.data?.onboarding_completed === false &&
+          status.data.onboarding_skipped === false
+        ) {
           router.replace("/onboarding");
           return;
         }

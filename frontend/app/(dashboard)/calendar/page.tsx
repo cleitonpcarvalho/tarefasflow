@@ -57,28 +57,56 @@ export default function CalendarPage() {
 
   const [onboardingStatus, setOnboardingStatus] = useState<{
     onboarding_completed: boolean;
+    onboarding_skipped: boolean;
     instance_status: string | null;
   } | null>(null);
   const [dismissedOnboarding, setDismissedOnboarding] = useState(false);
+  const [onboardingStatusError, setOnboardingStatusError] = useState("");
 
   useEffect(() => {
-    apiFetch<{ onboarding_completed: boolean; instance_status: string | null }>(
+    apiFetch<{
+      onboarding_completed: boolean;
+      onboarding_skipped: boolean;
+      instance_status: string | null;
+    }>(
       "/profile/onboarding-status"
     )
-      .then((res) => { if (res.data) setOnboardingStatus(res.data); })
-      .catch(() => {});
+      .then((res) => {
+        if (res.data) {
+          setOnboardingStatus(res.data);
+          setOnboardingStatusError("");
+        }
+      })
+      .catch((fetchError) => {
+        console.error("Erro ao carregar status do onboarding.", fetchError);
+        setOnboardingStatusError(
+          "Não foi possível carregar o status da configuração. Tente novamente mais tarde."
+        );
+      });
   }, []);
 
   async function handleDismissOnboarding() {
     setDismissedOnboarding(true);
     try {
-      await apiFetch("/profile/complete-onboarding", { method: "POST" });
-    } catch {}
+      await apiFetch("/profile/skip-onboarding", { method: "POST" });
+    } catch (dismissError) {
+      console.error("Erro ao dispensar aviso do onboarding.", dismissError);
+      setDismissedOnboarding(false);
+      setOnboardingStatusError(
+        "Não foi possível dispensar o aviso de configuração. Tente novamente."
+      );
+    }
   }
 
   const effectiveSelectedDate = selectedDate ?? todayKey();
   const currentMonth = viewDate.getMonth() + 1;
   const currentYear = viewDate.getFullYear();
+  const whatsappDisconnected =
+    onboardingStatus?.instance_status !== "open";
+  const showOnboardingReminder =
+    !onboardingStatus?.onboarding_completed &&
+    !onboardingStatus?.onboarding_skipped &&
+    !dismissedOnboarding;
   const selectedTasks = useMemo(
     () => fetchTasksByDate(effectiveSelectedDate),
     [effectiveSelectedDate, fetchTasksByDate]
@@ -238,8 +266,14 @@ export default function CalendarPage() {
           </p>
         ) : null}
 
-        {onboardingStatus && !onboardingStatus.onboarding_completed && !dismissedOnboarding ? (
-          onboardingStatus.instance_status !== "open" ? (
+        {onboardingStatusError ? (
+          <p className="mb-3 rounded-md bg-rose-50 px-3 py-2 text-[12px] font-medium text-rose-700">
+            {onboardingStatusError}
+          </p>
+        ) : null}
+
+        {onboardingStatus ? (
+          whatsappDisconnected ? (
             <div
               className="mb-3 flex flex-wrap items-center justify-between gap-3 px-4 py-3"
               style={{ background: "#FFF8E7", border: "1px solid #F59E0B", borderRadius: 12 }}
@@ -255,7 +289,7 @@ export default function CalendarPage() {
                 Conectar WhatsApp
               </Link>
             </div>
-          ) : (
+          ) : showOnboardingReminder ? (
             <div
               className="mb-3 flex flex-wrap items-center justify-between gap-3 px-4 py-3"
               style={{ background: "#FFF8E7", border: "1px solid #F59E0B", borderRadius: 12 }}
@@ -281,7 +315,7 @@ export default function CalendarPage() {
                 </button>
               </div>
             </div>
-          )
+          ) : null
         ) : null}
 
         <div className={loading ? "space-y-3 opacity-60" : "space-y-3"}>
