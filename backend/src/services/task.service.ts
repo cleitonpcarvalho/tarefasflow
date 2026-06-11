@@ -63,17 +63,11 @@ const taskSelectColumns = `
 
 export async function getTasks({
   requesterId,
-  requesterRole,
   filters = {}
 }: RequesterContext & { filters?: TaskFilters }): Promise<Task[]> {
-  const conditions: string[] = [];
-  const params: Array<string | number> = [];
+  const conditions = ["user_id = $1"];
+  const params: Array<string | number> = [requesterId];
   const range = getTaskRange(filters);
-
-  if (requesterRole === "user") {
-    params.push(requesterId);
-    conditions.push(`user_id = $${params.length}`);
-  }
 
   conditions.push("parent_id IS NULL");
 
@@ -126,25 +120,20 @@ export async function getTasks({
 
 export async function getTaskById(
   taskId: string,
-  { requesterId, requesterRole }: RequesterContext
+  { requesterId }: RequesterContext
 ): Promise<Task | null> {
   const occurrence = parseOccurrenceTaskId(taskId);
   const persistentTaskId = occurrence?.parentId ?? taskId;
-  const conditions = ["id = $1"];
   const params = [persistentTaskId, requesterId];
-
-  if (requesterRole === "user") {
-    conditions.push("user_id = $2");
-  }
 
   const rows = await sql.unsafe<TaskRow[]>(
     `
       SELECT ${taskSelectColumns}
       FROM tasks
-      WHERE ${conditions.join(" AND ")}
+      WHERE id = $1 AND user_id = $2
       LIMIT 1
     `,
-    requesterRole === "user" ? params : [persistentTaskId]
+    params
   );
 
   const task = rows[0] ? toTask(rows[0]) : null;
@@ -292,18 +281,14 @@ export async function updateTask(
   params.push(persistentTaskId);
   const idParam = `$${params.length}`;
 
-  let scopeClause = "";
-
-  if (requesterRole === "user") {
-    params.push(requesterId);
-    scopeClause = `AND user_id = $${params.length}`;
-  }
+  params.push(requesterId);
+  const userIdParam = `$${params.length}`;
 
   const rows = await sql.unsafe<TaskRow[]>(
     `
       UPDATE tasks
       SET ${updates.join(", ")}
-      WHERE id = ${idParam} ${scopeClause}
+      WHERE id = ${idParam} AND user_id = ${userIdParam}
       RETURNING ${taskSelectColumns}
     `,
     params
@@ -331,7 +316,6 @@ export async function deleteTask(
   if (task.is_recurring && scope === "this") {
     const excludedDate = occurrence?.date ?? task.task_date;
     const params = [excludedDate, persistentTaskId, requesterId];
-    const scopeClause = requesterRole === "user" ? "AND user_id = $3" : "";
     const rows = await sql.unsafe<{ id: string }[]>(
       `
         UPDATE tasks
@@ -340,25 +324,24 @@ export async function deleteTask(
           ELSE array_append(excluded_dates, $1)
         END,
         updated_at = NOW()
-        WHERE id = $2 ${scopeClause}
+        WHERE id = $2 AND user_id = $3
         RETURNING id
       `,
-      requesterRole === "user" ? params : params.slice(0, 2)
+      params
     );
 
     return rows.length > 0 ? { deleted: true, scope: "this" } : null;
   }
 
   const params = [persistentTaskId, requesterId];
-  const scopeClause = requesterRole === "user" ? "AND user_id = $2" : "";
 
   const rows = await sql.unsafe<{ id: string }[]>(
     `
       DELETE FROM tasks
-      WHERE id = $1 ${scopeClause}
+      WHERE id = $1 AND user_id = $2
       RETURNING id
     `,
-    requesterRole === "user" ? params : [persistentTaskId]
+    params
   );
 
   return rows.length > 0 ? { deleted: true, scope: "all" } : null;
@@ -373,7 +356,6 @@ export async function toggleTaskDone(
   if (occurrence) {
     const { parentId, date } = occurrence;
     const params = [date, parentId, requesterId];
-    const scopeClause = requesterRole === "user" ? "AND user_id = $3" : "";
 
     const rows = await sql.unsafe<TaskRow[]>(
       `
@@ -383,10 +365,10 @@ export async function toggleTaskDone(
           ELSE array_append(done_dates, $1)
         END,
         updated_at = NOW()
-        WHERE id = $2 ${scopeClause}
+        WHERE id = $2 AND user_id = $3
         RETURNING ${taskSelectColumns}
       `,
-      requesterRole === "user" ? params : params.slice(0, 2)
+      params
     );
 
     if (!rows[0]) return null;
@@ -397,16 +379,15 @@ export async function toggleTaskDone(
   }
 
   const params = [taskId, requesterId];
-  const scopeClause = requesterRole === "user" ? "AND user_id = $2" : "";
 
   const rows = await sql.unsafe<TaskRow[]>(
     `
       UPDATE tasks
       SET done = NOT done, updated_at = NOW()
-      WHERE id = $1 ${scopeClause}
+      WHERE id = $1 AND user_id = $2
       RETURNING ${taskSelectColumns}
     `,
-    requesterRole === "user" ? params : [taskId]
+    params
   );
 
   return rows[0] ? toTask(rows[0]) : null;

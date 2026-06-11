@@ -20,25 +20,25 @@ export class ReminderServiceError extends Error {
 
 export async function getRemindersByTask(
   taskId: string,
-  { requesterId, requesterRole }: RequesterContext
+  context: RequesterContext
 ): Promise<Reminder[] | null> {
-  const task = await getTaskById(taskId, { requesterId, requesterRole });
+  const task = await getTaskById(taskId, context);
 
   if (!task) {
     return null;
   }
 
+  const { requesterId } = context;
   const params = [taskId, requesterId];
-  const scopeClause = requesterRole === "user" ? "AND user_id = $2" : "";
 
   const rows = await sql.unsafe<ReminderRow[]>(
     `
       SELECT id, task_id, user_id, minutes_before, sent_at, created_at
       FROM reminders
-      WHERE task_id = $1 ${scopeClause}
+      WHERE task_id = $1 AND user_id = $2
       ORDER BY minutes_before ASC
     `,
-    requesterRole === "user" ? params : [taskId]
+    params
   );
 
   return rows.map(toReminder);
@@ -102,18 +102,17 @@ export async function createReminder(
 
 export async function deleteReminder(
   reminderId: string,
-  { requesterId, requesterRole }: RequesterContext
+  { requesterId }: RequesterContext
 ): Promise<{ deleted: true } | null> {
   const params = [reminderId, requesterId];
-  const scopeClause = requesterRole === "user" ? "AND user_id = $2" : "";
 
   const rows = await sql.unsafe<{ id: string }[]>(
     `
       DELETE FROM reminders
-      WHERE id = $1 ${scopeClause}
+      WHERE id = $1 AND user_id = $2
       RETURNING id
     `,
-    requesterRole === "user" ? params : [reminderId]
+    params
   );
 
   return rows.length > 0 ? { deleted: true } : null;

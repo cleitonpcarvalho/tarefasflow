@@ -24,7 +24,14 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-const mainLinks = [
+interface SidebarLink {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  showBadge?: boolean;
+}
+
+const mainLinks: SidebarLink[] = [
   { href: "/calendar", label: "Calendário", icon: Calendar },
   { href: "/tasks", label: "Tarefas", icon: CheckSquare, showBadge: true },
   { href: "/reminders", label: "Lembretes", icon: Bell },
@@ -33,18 +40,29 @@ const mainLinks = [
   { href: "/settings", label: "Configurações", icon: Settings }
 ];
 
-const adminLinks = [
+const adminLinks: SidebarLink[] = [
   { href: "/admin/users", label: "Usuários", icon: Users }
+];
+
+const adminMainLinks: SidebarLink[] = [
+  { href: "/whatsapp", label: "WhatsApp", icon: MessageCircle }
 ];
 
 export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useAuth();
   const [pendingTasks, setPendingTasks] = useState(0);
+  const visibleMainLinks = !user
+    ? []
+    : user.role === "admin"
+      ? adminMainLinks
+      : mainLinks;
   const visibleAdminLinks = user?.role === "admin" ? adminLinks : [];
+  const homeHref = user?.role === "admin" ? "/admin/users" : "/calendar";
 
   useEffect(() => {
-    if (!user) {
+    if (!user || user.role === "admin") {
+      setPendingTasks(0);
       return;
     }
 
@@ -90,7 +108,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       >
         <div className="px-5 pb-6 pt-5">
           <div className="flex items-center justify-between gap-3">
-            <Link className="flex items-center" href="/calendar">
+            <Link className="flex items-center" href={homeHref}>
               <BrandLogo compact />
             </Link>
             <button
@@ -108,7 +126,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
         <nav className="flex-1 overflow-y-auto px-3">
           <NavSection label="Menu">
-            {mainLinks.map((item) => (
+            {visibleMainLinks.map((item) => (
               <NavItem
                 active={pathname === item.href}
                 badge={item.showBadge && pendingTasks > 0 ? pendingTasks : null}
