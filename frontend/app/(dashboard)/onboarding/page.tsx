@@ -2,10 +2,20 @@
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Loader2, QrCode, Shield, Sparkles } from "lucide-react";
+import {
+  Calendar,
+  CheckCircle2,
+  Loader2,
+  Phone,
+  QrCode,
+  Sparkles
+} from "lucide-react";
+import {
+  SpecialDateForm,
+  type SpecialDateFormValues
+} from "@/components/special-dates/SpecialDateForm";
 import { apiFetch } from "@/lib/api";
 import { QRCodeSVG } from "qrcode.react";
-
 
 interface OnboardingStatus {
   onboarding_completed: boolean;
@@ -21,10 +31,15 @@ interface QrCodeData {
   instance_status: string;
 }
 
+interface AgentNumberData {
+  phone_number: string | null;
+}
+
 const STEPS = [
-  { label: "Conectar", icon: QrCode },
-  { label: "Autorizar", icon: Shield },
   { label: "Primeira tarefa", icon: Sparkles },
+  { label: "Datas especiais", icon: Calendar },
+  { label: "Seu WhatsApp", icon: Phone },
+  { label: "Conectar agente", icon: QrCode },
   { label: "Concluir", icon: CheckCircle2 }
 ];
 
@@ -85,6 +100,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(1);
   const [instanceName, setInstanceName] = useState<string | null>(null);
   const [whatsappPhone, setWhatsappPhone] = useState<string | null>(null);
+  const [agentPhone, setAgentPhone] = useState<string | null>(null);
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [pairingCode, setPairingCode] = useState<string | null>(null);
   const [qrLoading, setQrLoading] = useState(false);
@@ -99,31 +115,28 @@ export default function OnboardingPage() {
   const statusPollRef = useRef<NodeJS.Timeout | null>(null);
   const qrPollRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Fetch initial onboarding status
   useEffect(() => {
     async function fetchStatus() {
       try {
-        const res = await apiFetch<OnboardingStatus>("/profile/onboarding-status");
-        if (
-          res.data?.onboarding_completed &&
-          res.data.instance_status === "open"
-        ) {
-          router.replace("/calendar");
-          return;
-        }
-        setInstanceName(res.data?.instance_name ?? null);
-        setWhatsappPhone(res.data?.whatsapp_phone ?? null);
-        setPhoneInput(res.data?.whatsapp_phone ?? "");
-        if (res.data?.instance_status === "open") {
-          setStep(2);
-        }
+        const [statusResponse, agentResponse] = await Promise.all([
+          apiFetch<OnboardingStatus>("/profile/onboarding-status"),
+          apiFetch<AgentNumberData>("/profile/agent-number")
+        ]);
+        const status = statusResponse.data;
+
+        setInstanceName(status?.instance_name ?? null);
+        setWhatsappPhone(status?.whatsapp_phone ?? null);
+        setPhoneInput(status?.whatsapp_phone ?? "");
+        setAgentPhone(agentResponse.data?.phone_number ?? null);
+        setStep(status?.instance_status === "open" ? 5 : 1);
       } catch {
-        // proceed
+        // O onboarding continua disponível mesmo se o status inicial falhar.
       } finally {
         setInitialLoading(false);
       }
     }
-    fetchStatus();
+
+    void fetchStatus();
   }, [router]);
 
   const fetchQrCode = useCallback(async () => {
@@ -131,7 +144,9 @@ export default function OnboardingPage() {
     setQrLoading(true);
     setQrError("");
     try {
-      const res = await apiFetch<QrCodeData>(`/whatsapp/instances/${instanceName}/qrcode`);
+      const res = await apiFetch<QrCodeData>(
+        `/whatsapp/instances/${instanceName}/qrcode`
+      );
       if (res.data) {
         setQrCode(res.data.code);
         setPairingCode(res.data.pairingCode);
@@ -143,24 +158,24 @@ export default function OnboardingPage() {
     }
   }, [instanceName]);
 
-  // QR code fetch and auto-refresh in step 1
   useEffect(() => {
-    if (step !== 1 || !instanceName) return;
-    fetchQrCode();
+    if (step !== 4 || !instanceName) return;
+    void fetchQrCode();
     qrPollRef.current = setInterval(fetchQrCode, 20000);
     return () => {
       if (qrPollRef.current) clearInterval(qrPollRef.current);
     };
   }, [step, instanceName, fetchQrCode]);
 
-  // Connection status polling in step 1
   useEffect(() => {
-    if (step !== 1) return;
+    if (step !== 4) return;
     statusPollRef.current = setInterval(async () => {
       try {
-        const res = await apiFetch<OnboardingStatus>("/profile/onboarding-status");
+        const res = await apiFetch<OnboardingStatus>(
+          "/profile/onboarding-status"
+        );
         if (res.data?.instance_status === "open") {
-          setStep(2);
+          setStep(5);
         }
       } catch {}
     }, 3000);
@@ -168,50 +183,6 @@ export default function OnboardingPage() {
       if (statusPollRef.current) clearInterval(statusPollRef.current);
     };
   }, [step]);
-
-  async function handleCheckConnection() {
-    setError("");
-    setLoading(true);
-    try {
-      const res = await apiFetch<OnboardingStatus>("/profile/onboarding-status");
-      if (res.data?.instance_status === "open") {
-        setStep(2);
-      } else {
-        setError("WhatsApp ainda não conectado. Escaneie o QR Code e tente novamente.");
-      }
-    } catch {
-      setError("Erro ao verificar conexão. Tente novamente.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleAuthorizePhone(e: FormEvent) {
-    e.preventDefault();
-    setError("");
-    if (!instanceName) {
-      setStep(3);
-      return;
-    }
-    const rawPhone = phoneInput.replace(/\D/g, "");
-    setLoading(true);
-    try {
-      await apiFetch(`/whatsapp/instances/${instanceName}/numbers`, {
-        method: "POST",
-        body: JSON.stringify({ phone: rawPhone, label: "Meu WhatsApp" })
-      });
-      setStep(3);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "";
-      if (msg.toLowerCase().includes("já") || msg.toLowerCase().includes("duplicat") || msg.includes("409")) {
-        setStep(3);
-      } else {
-        setError(msg || "Erro ao autorizar número. Tente novamente.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function handleCreateTask(e: FormEvent) {
     e.preventDefault();
@@ -230,12 +201,91 @@ export default function OnboardingPage() {
           task_time: taskTime || null
         })
       });
-      setStep(4);
+      setStep(2);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao criar tarefa.");
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleCreateSpecialDate(form: SpecialDateFormValues) {
+    setError("");
+    try {
+      await apiFetch("/special-dates", {
+        method: "POST",
+        body: JSON.stringify(form)
+      });
+      setStep(3);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Erro ao salvar data especial."
+      );
+    }
+  }
+
+  async function handleConfirmPhone(e: FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (!instanceName) {
+      setError("Instância do WhatsApp não encontrada. Tente novamente.");
+      return;
+    }
+    const rawPhone = phoneInput.replace(/\D/g, "");
+    setLoading(true);
+    try {
+      await apiFetch(`/whatsapp/instances/${instanceName}/numbers`, {
+        method: "POST",
+        body: JSON.stringify({ phone: rawPhone, label: "Meu WhatsApp" })
+      });
+      setStep(4);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "";
+      if (
+        message.toLowerCase().includes("já") ||
+        message.toLowerCase().includes("duplicat") ||
+        message.includes("409")
+      ) {
+        setStep(4);
+      } else {
+        setError(message || "Erro ao confirmar número. Tente novamente.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleCheckConnection() {
+    setError("");
+    setLoading(true);
+    try {
+      const res = await apiFetch<OnboardingStatus>(
+        "/profile/onboarding-status"
+      );
+      if (res.data?.instance_status === "open") {
+        setStep(5);
+      } else {
+        setError(
+          "WhatsApp ainda não conectado. Escaneie o QR Code e tente novamente."
+        );
+      }
+    } catch {
+      setError("Erro ao verificar conexão. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleOpenAgent() {
+    if (!agentPhone) return;
+    const phone = agentPhone.replace(/\D/g, "");
+    const text =
+      "Olá! Acabei de configurar meu TarefasFlow. Me mostra as tarefas que cadastrei!";
+    window.open(
+      `https://wa.me/${phone}?text=${encodeURIComponent(text)}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
   }
 
   async function handleCompleteOnboarding() {
@@ -249,7 +299,10 @@ export default function OnboardingPage() {
   if (initialLoading) {
     return (
       <div className="flex min-h-[calc(100vh-64px)] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#534AB7" }} />
+        <Loader2
+          className="h-8 w-8 animate-spin"
+          style={{ color: "#534AB7" }}
+        />
       </div>
     );
   }
@@ -275,198 +328,50 @@ export default function OnboardingPage() {
           className="rounded-[20px] bg-white p-8"
           style={{ boxShadow: "0 8px 32px rgba(15,23,42,0.08)" }}
         >
-          {/* Step 1: Connect WhatsApp */}
           {step === 1 && (
-            <div className="flex flex-col items-center gap-5">
-              <div
-                className="flex h-14 w-14 items-center justify-center rounded-full"
-                style={{ background: "#F0EFFE" }}
-              >
-                <QrCode className="h-7 w-7" style={{ color: "#534AB7" }} />
-              </div>
-              <div className="text-center">
-                <h2 className="text-xl font-bold" style={{ color: "#1A1A2E" }}>
-                  Conecte seu WhatsApp
-                </h2>
-                <p className="mt-1 text-sm" style={{ color: "#6B7280" }}>
-                  Escaneie o QR Code abaixo com o WhatsApp do seu celular
-                </p>
-              </div>
-
-              <div
-                className="flex h-[220px] w-[220px] items-center justify-center rounded-2xl"
-                style={{ border: "2px solid #E5E7EB", background: "#FAFAFA" }}
-              >
-                {qrLoading && !qrCode && (
-                  <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#534AB7" }} />
-                )}
-                {!qrLoading && qrError && !qrCode && (
-                  <div className="flex flex-col items-center gap-2 p-4 text-center">
-                    <p className="text-xs" style={{ color: "#9CA3AF" }}>{qrError}</p>
-                    <button
-                      className="text-xs font-medium hover:underline"
-                      onClick={fetchQrCode}
-                      style={{ color: "#534AB7" }}
-                      type="button"
-                    >
-                      Tentar novamente
-                    </button>
-                  </div>
-                )}
-                {qrCode && (
-                  <QRCodeSVG bgColor="#FFFFFF" fgColor="#111827" size={180} value={qrCode} />
-                )}
-                {!instanceName && !qrLoading && (
-                  <div className="flex flex-col items-center gap-2 p-4 text-center">
-                    <Loader2 className="h-6 w-6 animate-spin" style={{ color: "#534AB7" }} />
-                    <p className="text-xs" style={{ color: "#9CA3AF" }}>
-                      Preparando sua instância...
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {pairingCode && (
-                <div className="text-center">
-                  <p className="text-xs" style={{ color: "#9CA3AF" }}>Código de pareamento</p>
-                  <p className="mt-1 font-mono text-lg font-bold" style={{ color: "#534AB7" }}>
-                    {pairingCode}
-                  </p>
-                </div>
-              )}
-
-              {error && (
-                <p className="w-full rounded-lg bg-rose-50 px-3 py-2 text-center text-sm font-medium text-rose-700">
-                  {error}
-                </p>
-              )}
-
-              <div className="flex w-full flex-col gap-3 pt-2">
-                <button
-                  className="h-12 w-full rounded-[10px] text-sm font-semibold text-white transition-colors disabled:opacity-60"
-                  disabled={loading}
-                  onClick={handleCheckConnection}
-                  style={{ background: "#534AB7" }}
-                  onMouseEnter={(e) => { if (!loading) (e.currentTarget.style.background = "#4339A0"); }}
-                  onMouseLeave={(e) => { if (!loading) (e.currentTarget.style.background = "#534AB7"); }}
-                  type="button"
-                >
-                  {loading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" /> Verificando...
-                    </span>
-                  ) : "Já escaneei"}
-                </button>
-                <button
-                  className="text-sm font-medium hover:underline"
-                  onClick={() => setStep(2)}
-                  style={{ color: "#9CA3AF" }}
-                  type="button"
-                >
-                  Conectar depois
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 2: Authorize phone */}
-          {step === 2 && (
-            <form className="flex flex-col gap-5" onSubmit={handleAuthorizePhone}>
-              <div className="flex flex-col items-center gap-4">
-                <div
-                  className="flex h-14 w-14 items-center justify-center rounded-full"
-                  style={{ background: "#F0EFFE" }}
-                >
-                  <Shield className="h-7 w-7" style={{ color: "#534AB7" }} />
-                </div>
-                <div className="text-center">
-                  <h2 className="text-xl font-bold" style={{ color: "#1A1A2E" }}>
-                    Autorize seu número
-                  </h2>
-                  <p className="mt-1 text-sm" style={{ color: "#6B7280" }}>
-                    Confirme o número que receberá os lembretes do agente
-                  </p>
-                </div>
-              </div>
-
-              <label className="flex flex-col gap-1.5">
-                <span className="text-sm font-medium" style={{ color: "#1A1A2E" }}>
-                  Número de WhatsApp
-                </span>
-                <input
-                  className={inputClass}
-                  onChange={(e) => setPhoneInput(e.target.value.replace(/\D/g, ""))}
-                  placeholder="55119999999999"
-                  required
-                  type="text"
-                  value={phoneInput ? formatPhoneDisplay(phoneInput) || phoneInput : ""}
-                />
-                <span className="text-xs" style={{ color: "#9CA3AF" }}>
-                  Apenas dígitos (DDD + número), ex: {formatPhoneDisplay(whatsappPhone) || "55119999999"}
-                </span>
-              </label>
-
-              {error && (
-                <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">
-                  {error}
-                </p>
-              )}
-
-              <button
-                className="h-12 w-full rounded-[10px] text-sm font-semibold text-white transition-colors disabled:opacity-60"
-                disabled={loading}
-                style={{ background: "#534AB7" }}
-                onMouseEnter={(e) => { if (!loading) (e.currentTarget.style.background = "#4339A0"); }}
-                onMouseLeave={(e) => { if (!loading) (e.currentTarget.style.background = "#534AB7"); }}
-                type="submit"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Autorizando...
-                  </span>
-                ) : "Autorizar número"}
-              </button>
-              <button
-                className="text-sm font-medium hover:underline"
-                onClick={() => setStep(3)}
-                style={{ color: "#9CA3AF" }}
-                type="button"
-              >
-                Pular por agora
-              </button>
-            </form>
-          )}
-
-          {/* Step 3: Create first task */}
-          {step === 3 && (
             <form className="flex flex-col gap-5" onSubmit={handleCreateTask}>
               <div className="flex flex-col items-center gap-4">
                 <div
                   className="flex h-14 w-14 items-center justify-center rounded-full"
                   style={{ background: "#F0EFFE" }}
                 >
-                  <Sparkles className="h-7 w-7" style={{ color: "#534AB7" }} />
+                  <Sparkles
+                    className="h-7 w-7"
+                    style={{ color: "#534AB7" }}
+                  />
                 </div>
                 <div className="text-center">
-                  <h2 className="text-xl font-bold" style={{ color: "#1A1A2E" }}>
-                    Crie sua primeira tarefa
+                  <h2
+                    className="text-xl font-bold"
+                    style={{ color: "#1A1A2E" }}
+                  >
+                    Qual é a primeira coisa importante que você não quer
+                    esquecer?
                   </h2>
-                  <p className="mt-1 text-sm" style={{ color: "#6B7280" }}>
-                    Adicione uma tarefa para começar a organizar sua agenda
+                  <p
+                    className="mt-2 text-sm leading-relaxed"
+                    style={{ color: "#6B7280" }}
+                  >
+                    Pode ser uma reunião, um compromisso, um prazo — qualquer
+                    coisa que merece um lugar garantido na sua agenda.
                   </p>
                 </div>
               </div>
 
               <label className="flex flex-col gap-1.5">
-                <span className="text-sm font-medium" style={{ color: "#1A1A2E" }}>
-                  O que você quer fazer?
+                <span
+                  className="text-sm font-medium"
+                  style={{ color: "#1A1A2E" }}
+                >
+                  Título da tarefa
                 </span>
                 <input
                   autoFocus
                   className={inputClass}
                   maxLength={255}
                   onChange={(e) => setTaskTitle(e.target.value)}
-                  placeholder="ex: Reunião com o time, Consulta médica..."
+                  placeholder="Ex: Reunião com o time, consulta médica..."
+                  required
                   type="text"
                   value={taskTitle}
                 />
@@ -474,7 +379,12 @@ export default function OnboardingPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <label className="flex flex-col gap-1.5">
-                  <span className="text-sm font-medium" style={{ color: "#1A1A2E" }}>Data</span>
+                  <span
+                    className="text-sm font-medium"
+                    style={{ color: "#1A1A2E" }}
+                  >
+                    Data
+                  </span>
                   <input
                     className={inputClass}
                     onChange={(e) => setTaskDate(e.target.value)}
@@ -484,8 +394,14 @@ export default function OnboardingPage() {
                   />
                 </label>
                 <label className="flex flex-col gap-1.5">
-                  <span className="text-sm font-medium" style={{ color: "#1A1A2E" }}>
-                    Horário <span style={{ color: "#9CA3AF", fontWeight: 400 }}>(opcional)</span>
+                  <span
+                    className="text-sm font-medium"
+                    style={{ color: "#1A1A2E" }}
+                  >
+                    Horário{" "}
+                    <span style={{ color: "#9CA3AF", fontWeight: 400 }}>
+                      (opcional)
+                    </span>
                   </span>
                   <input
                     className={inputClass}
@@ -506,72 +422,308 @@ export default function OnboardingPage() {
                 className="h-12 w-full rounded-[10px] text-sm font-semibold text-white transition-colors disabled:opacity-60"
                 disabled={loading}
                 style={{ background: "#534AB7" }}
-                onMouseEnter={(e) => { if (!loading) (e.currentTarget.style.background = "#4339A0"); }}
-                onMouseLeave={(e) => { if (!loading) (e.currentTarget.style.background = "#534AB7"); }}
                 type="submit"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Criando tarefa...
+                    <Loader2 className="h-4 w-4 animate-spin" /> Criando
+                    tarefa...
                   </span>
-                ) : "Criar tarefa"}
-              </button>
-              <button
-                className="text-sm font-medium hover:underline"
-                onClick={() => setStep(4)}
-                style={{ color: "#9CA3AF" }}
-                type="button"
-              >
-                Pular por agora
+                ) : (
+                  "Continuar"
+                )}
               </button>
             </form>
           )}
 
-          {/* Step 4: Complete */}
+          {step === 2 && (
+            <div className="flex flex-col gap-5">
+              <div className="flex flex-col items-center gap-4">
+                <div
+                  className="flex h-14 w-14 items-center justify-center rounded-full"
+                  style={{ background: "#F0EFFE" }}
+                >
+                  <Calendar
+                    className="h-7 w-7"
+                    style={{ color: "#534AB7" }}
+                  />
+                </div>
+                <div className="text-center">
+                  <h2
+                    className="text-xl font-bold"
+                    style={{ color: "#1A1A2E" }}
+                  >
+                    Existe alguém importante que você nunca quer esquecer de
+                    parabenizar?
+                  </h2>
+                  <p className="mt-2 text-sm" style={{ color: "#6B7280" }}>
+                    Cadastre uma data especial e seu agente vai te lembrar na
+                    hora certa.
+                  </p>
+                </div>
+              </div>
+
+              <SpecialDateForm
+                onSave={handleCreateSpecialDate}
+                onSkip={() => {
+                  setError("");
+                  setStep(3);
+                }}
+                submitLabel="Continuar"
+              />
+
+              <p className="text-center text-xs" style={{ color: "#9CA3AF" }}>
+                Você pode cadastrar mais datas especiais depois, no menu Datas
+                Especiais.
+              </p>
+
+              {error && (
+                <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">
+                  {error}
+                </p>
+              )}
+            </div>
+          )}
+
+          {step === 3 && (
+            <form className="flex flex-col gap-5" onSubmit={handleConfirmPhone}>
+              <div className="flex flex-col items-center gap-4">
+                <div
+                  className="flex h-14 w-14 items-center justify-center rounded-full"
+                  style={{ background: "#F0EFFE" }}
+                >
+                  <Phone className="h-7 w-7" style={{ color: "#534AB7" }} />
+                </div>
+                <div className="text-center">
+                  <h2
+                    className="text-xl font-bold"
+                    style={{ color: "#1A1A2E" }}
+                  >
+                    Seu WhatsApp pessoal
+                  </h2>
+                  <p className="mt-1 text-sm" style={{ color: "#6B7280" }}>
+                    Este é o número que poderá conversar com seu agente.
+                  </p>
+                </div>
+              </div>
+
+              <label className="flex flex-col gap-1.5">
+                <span
+                  className="text-sm font-medium"
+                  style={{ color: "#1A1A2E" }}
+                >
+                  Número de WhatsApp
+                </span>
+                <input
+                  className={inputClass}
+                  onChange={(e) =>
+                    setPhoneInput(e.target.value.replace(/\D/g, ""))
+                  }
+                  placeholder="55119999999999"
+                  required
+                  type="text"
+                  value={
+                    phoneInput
+                      ? formatPhoneDisplay(phoneInput) || phoneInput
+                      : ""
+                  }
+                />
+                <span className="text-xs" style={{ color: "#9CA3AF" }}>
+                  Apenas dígitos (DDD + número), ex:{" "}
+                  {formatPhoneDisplay(whatsappPhone) || "55119999999"}
+                </span>
+                <span className="text-xs" style={{ color: "#9CA3AF" }}>
+                  Este não é o número do agente — é o seu número pessoal.
+                </span>
+              </label>
+
+              {error && (
+                <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">
+                  {error}
+                </p>
+              )}
+
+              <button
+                className="h-12 w-full rounded-[10px] text-sm font-semibold text-white transition-colors disabled:opacity-60"
+                disabled={loading}
+                style={{ background: "#534AB7" }}
+                type="submit"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Confirmando...
+                  </span>
+                ) : (
+                  "Confirmar"
+                )}
+              </button>
+            </form>
+          )}
+
           {step === 4 && (
+            <div className="flex flex-col items-center gap-5">
+              <div
+                className="flex h-14 w-14 items-center justify-center rounded-full"
+                style={{ background: "#F0EFFE" }}
+              >
+                <QrCode className="h-7 w-7" style={{ color: "#534AB7" }} />
+              </div>
+              <div className="text-center">
+                <h2
+                  className="text-xl font-bold"
+                  style={{ color: "#1A1A2E" }}
+                >
+                  Agora vamos conectar seu agente pessoal
+                </h2>
+                <p className="mt-2 text-sm" style={{ color: "#6B7280" }}>
+                  Abra o WhatsApp no celular, toque em Dispositivos conectados
+                  e escaneie o QR Code abaixo.
+                </p>
+              </div>
+
+              <div
+                className="flex h-[220px] w-[220px] items-center justify-center rounded-2xl"
+                style={{
+                  border: "2px solid #E5E7EB",
+                  background: "#FAFAFA"
+                }}
+              >
+                {qrLoading && !qrCode && (
+                  <Loader2
+                    className="h-8 w-8 animate-spin"
+                    style={{ color: "#534AB7" }}
+                  />
+                )}
+                {!qrLoading && qrError && !qrCode && (
+                  <div className="flex flex-col items-center gap-2 p-4 text-center">
+                    <p className="text-xs" style={{ color: "#9CA3AF" }}>
+                      {qrError}
+                    </p>
+                    <button
+                      className="text-xs font-medium hover:underline"
+                      onClick={fetchQrCode}
+                      style={{ color: "#534AB7" }}
+                      type="button"
+                    >
+                      Tentar novamente
+                    </button>
+                  </div>
+                )}
+                {qrCode && (
+                  <QRCodeSVG
+                    bgColor="#FFFFFF"
+                    fgColor="#111827"
+                    size={180}
+                    value={qrCode}
+                  />
+                )}
+                {!instanceName && !qrLoading && (
+                  <div className="flex flex-col items-center gap-2 p-4 text-center">
+                    <Loader2
+                      className="h-6 w-6 animate-spin"
+                      style={{ color: "#534AB7" }}
+                    />
+                    <p className="text-xs" style={{ color: "#9CA3AF" }}>
+                      Preparando sua instância...
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {pairingCode && (
+                <div className="text-center">
+                  <p className="text-xs" style={{ color: "#9CA3AF" }}>
+                    Código de pareamento
+                  </p>
+                  <p
+                    className="mt-1 font-mono text-lg font-bold"
+                    style={{ color: "#534AB7" }}
+                  >
+                    {pairingCode}
+                  </p>
+                </div>
+              )}
+
+              {error && (
+                <p className="w-full rounded-lg bg-rose-50 px-3 py-2 text-center text-sm font-medium text-rose-700">
+                  {error}
+                </p>
+              )}
+
+              <button
+                className="h-12 w-full rounded-[10px] text-sm font-semibold text-white transition-colors disabled:opacity-60"
+                disabled={loading}
+                onClick={handleCheckConnection}
+                style={{ background: "#534AB7" }}
+                type="button"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Verificando...
+                  </span>
+                ) : (
+                  "Já escaneei"
+                )}
+              </button>
+            </div>
+          )}
+
+          {step === 5 && (
             <div className="flex flex-col items-center gap-5 py-2">
               <div
                 className="flex h-20 w-20 items-center justify-center rounded-full"
                 style={{ background: "#F0EFFE" }}
               >
-                <CheckCircle2 className="h-10 w-10" style={{ color: "#534AB7" }} />
+                <CheckCircle2
+                  className="h-10 w-10"
+                  style={{ color: "#534AB7" }}
+                />
               </div>
 
               <div className="text-center">
-                <h2 className="text-2xl font-bold" style={{ color: "#1A1A2E" }}>
-                  Tudo pronto!
+                <h2
+                  className="text-2xl font-bold"
+                  style={{ color: "#1A1A2E" }}
+                >
+                  Seu agente está pronto 🎉
                 </h2>
-                <p className="mt-2 text-sm leading-relaxed" style={{ color: "#6B7280" }}>
-                  Seu TarefasFlow está configurado. Acesse seu painel para gerenciar tarefas e
-                  conversar com seu agente no WhatsApp.
+                <p
+                  className="mt-2 text-sm leading-relaxed"
+                  style={{ color: "#6B7280" }}
+                >
+                  Agora é só conversar. Seu agente já conhece sua primeira
+                  tarefa e está esperando por você.
                 </p>
               </div>
 
-              <div
-                className="w-full rounded-xl p-4"
-                style={{ background: "#F0EFFE", border: "1px solid #D4D0F5" }}
-              >
-                <p className="text-center text-sm" style={{ color: "#534AB7" }}>
-                  <span className="font-semibold">Dica:</span> Envie uma mensagem de WhatsApp para seu agente e diga{" "}
-                  <span className="font-mono font-semibold">"Olá"</span> para começar!
-                </p>
+              <div className="flex w-full flex-col gap-3 pt-2">
+                {agentPhone && (
+                  <button
+                    className="h-12 w-full rounded-[10px] text-sm font-semibold text-white transition-colors"
+                    onClick={handleOpenAgent}
+                    style={{ background: "#534AB7" }}
+                    type="button"
+                  >
+                    Conversar com meu agente
+                  </button>
+                )}
+                <button
+                  className="h-10 w-full rounded-[10px] border border-[#E5E7EB] text-sm font-medium transition-colors hover:border-[#534AB7] hover:text-[#534AB7] disabled:opacity-60"
+                  disabled={loading}
+                  onClick={handleCompleteOnboarding}
+                  style={{ color: "#6B7280" }}
+                  type="button"
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" /> Abrindo
+                      painel...
+                    </span>
+                  ) : (
+                    "Ir para meu painel"
+                  )}
+                </button>
               </div>
-
-              <button
-                className="mt-2 h-12 w-full rounded-[10px] text-sm font-semibold text-white transition-colors disabled:opacity-60"
-                disabled={loading}
-                onClick={handleCompleteOnboarding}
-                style={{ background: "#534AB7" }}
-                onMouseEnter={(e) => { if (!loading) (e.currentTarget.style.background = "#4339A0"); }}
-                onMouseLeave={(e) => { if (!loading) (e.currentTarget.style.background = "#534AB7"); }}
-                type="button"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Abrindo painel...
-                  </span>
-                ) : "Ir para meu painel"}
-              </button>
             </div>
           )}
         </div>

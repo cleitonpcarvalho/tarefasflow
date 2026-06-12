@@ -231,6 +231,30 @@ export const usersRoutes: FastifyPluginAsync = async (app) => {
 
 export const profileRoutes: FastifyPluginAsync = async (app) => {
   app.get(
+    "/agent-number",
+    { preHandler: authenticate },
+    async (_request, reply) => {
+      const rows = await sql<{ phone_number: string | null }[]>`
+        SELECT wi.phone_number
+        FROM whatsapp_instances wi
+        JOIN users u ON u.id = wi.user_id
+        WHERE u.role = 'admin'
+          AND wi.status = 'open'
+        LIMIT 1
+      `;
+
+      return reply.code(200).send({
+        success: true,
+        data: {
+          phone_number: rows[0]?.phone_number ?? null
+        },
+        message: "Número do agente carregado.",
+        error: null
+      });
+    }
+  );
+
+  app.get(
     "/reminder-defaults",
     { preHandler: authenticate },
     async (request, reply) => {

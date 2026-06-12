@@ -1,4 +1,5 @@
 import { sql } from "../config/db";
+import { openai } from "../config/openai";
 import { getFirstActiveAuthorizedNumberForUser } from "../services/authorized-number.service";
 import { sendTextMessage } from "../services/evolution.service";
 
@@ -93,7 +94,7 @@ async function sendNotification(
     return;
   }
 
-  const message = buildMessage(row, intervalType);
+  const message = await buildMessage(row, intervalType);
   const delivery = await sendTextMessage(row.instance_name, phone, message);
 
   if (!delivery.delivered) {
@@ -104,20 +105,72 @@ async function sendNotification(
   }
 }
 
-function buildMessage(row: SpecialDateRow, intervalType: IntervalType): string {
+async function buildMessage(
+  row: SpecialDateRow,
+  intervalType: IntervalType
+): Promise<string> {
   const dayMonth = `${String(row.day).padStart(2, "0")}/${String(row.month).padStart(2, "0")}`;
 
   switch (intervalType) {
-    case "today":
-      return [
-        `🎉 *${row.name}*`,
-        ``,
-        `Olá, ${row.user_name}! Hoje é um dia especial:`,
-        ``,
-        `🗓️ *${row.name}*`,
-        ``,
-        `Não esqueça de comemorar! 🥳`
-      ].join("\n");
+    case "today": {
+      try {
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content:
+                "Você é um assistente que gera mensagens de felicitação calorosas e humanizadas\n" +
+                "em português brasileiro. Gere apenas a mensagem, sem explicações adicionais."
+            },
+            {
+              role: "user",
+              content:
+                `Gere uma mensagem de felicitação para o evento "${row.name}".\n` +
+                "A mensagem deve:\n" +
+                "- Ter entre 280 e 320 caracteres\n" +
+                "- Ser calorosa, emotiva e humanizada\n" +
+                "- Incluir emojis de forma natural, sem exagero\n" +
+                "- NÃO usar travessão em nenhuma hipótese\n" +
+                "- NÃO parecer gerada por IA\n" +
+                "- Ser escrita em português brasileiro informal"
+            }
+          ]
+        });
+        const generatedMessage = completion.choices[0]?.message.content?.trim();
+
+        if (!generatedMessage) {
+          throw new Error("OpenAI não retornou uma mensagem.");
+        }
+
+        return [
+          `🎉 *${row.name}*`,
+          ``,
+          `Olá, ${row.user_name}! Hoje é um dia muito especial.`,
+          ``,
+          `Aqui vai uma sugestão de mensagem para você enviar:`,
+          ``,
+          generatedMessage,
+          ``,
+          `É só copiar e mandar! 😊`
+        ].join("\n");
+      } catch (error) {
+        console.error(
+          `[SPECIAL-DATES] Erro ao gerar mensagem com IA para ${row.name}:`,
+          error
+        );
+
+        return [
+          `🎉 *${row.name}*`,
+          ``,
+          `Olá, ${row.user_name}! Hoje é um dia especial:`,
+          ``,
+          `🗓️ *${row.name}*`,
+          ``,
+          `Não esqueça de comemorar! 🥳`
+        ].join("\n");
+      }
+    }
 
     case "tomorrow":
       return [
