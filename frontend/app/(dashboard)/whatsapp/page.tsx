@@ -665,7 +665,7 @@ function InstanceState({
           ) : null}
         </div>
 
-        {!isAdmin ? (
+        {isAdmin && (
           <Button
             className="border-rose-200 text-rose-700 hover:border-rose-400 hover:text-rose-800"
             disabled={busyAction === "delete"}
@@ -680,7 +680,7 @@ function InstanceState({
             )}
             Deletar instância
           </Button>
-        ) : null}
+        )}
       </div>
 
       {screenState === "waiting" ? (
