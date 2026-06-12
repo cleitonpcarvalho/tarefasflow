@@ -72,7 +72,13 @@ function resolveInitialStep(status: OnboardingStatus): number {
   return 1;
 }
 
-function SkipButton({ onClick }: { onClick: () => void }) {
+function SkipButton({
+  label = "Pular por agora",
+  onClick
+}: {
+  label?: string;
+  onClick: () => void;
+}) {
   return (
     <button
       onClick={onClick}
@@ -88,7 +94,7 @@ function SkipButton({ onClick }: { onClick: () => void }) {
         opacity: 0.75
       }}
     >
-      Pular por agora
+      {label}
     </button>
   );
 }
@@ -698,7 +704,10 @@ export default function OnboardingPage() {
                   "Já escaneei"
                 )}
               </button>
-              <SkipButton onClick={() => setStep(step + 1)} />
+              <SkipButton
+                label="Conectar depois"
+                onClick={() => void handleCompleteOnboarding()}
+              />
             </div>
           )}
 
