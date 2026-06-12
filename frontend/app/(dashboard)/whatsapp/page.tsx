@@ -230,21 +230,23 @@ export default function WhatsAppPage() {
     }
   }
 
-  async function handleLogout() {
+  async function handleLogout(requireConfirmation = true) {
     if (!instance) {
-      return;
+      return false;
     }
 
-    const confirmed = await confirm({
-      title: "Desconectar instância",
-      message:
-        "O número será desconectado do agente. Você precisará escanear o QR Code novamente para reconectar.",
-      variant: "warning",
-      confirmLabel: "Desconectar"
-    });
+    if (requireConfirmation) {
+      const confirmed = await confirm({
+        title: "Desconectar instância",
+        message:
+          "O número será desconectado do agente. Você precisará escanear o QR Code novamente para reconectar.",
+        variant: "warning",
+        confirmLabel: "Desconectar"
+      });
 
-    if (!confirmed) {
-      return;
+      if (!confirmed) {
+        return false;
+      }
     }
 
     setBusyAction("logout");
@@ -259,10 +261,36 @@ export default function WhatsAppPage() {
       setInstance({ ...instance, status: "close" });
       setQrCode(null);
       setFeedback("Instância desconectada.");
+      return true;
     } catch (logoutError) {
       setError(getErrorMessage(logoutError, "Erro ao desconectar instância."));
+      return false;
     } finally {
       setBusyAction(null);
+    }
+  }
+
+  async function handleChangeNumber() {
+    if (!instance) {
+      return;
+    }
+
+    const confirmed = await confirm({
+      title: "Trocar número",
+      message:
+        "Isso irá desconectar o número atual. O envio de notificações ficará pausado até você escanear o novo QR Code. Deseja continuar?",
+      variant: "warning",
+      confirmLabel: "Trocar número"
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    const disconnected = await handleLogout(false);
+
+    if (disconnected) {
+      await handleGenerateQRCode();
     }
   }
 
@@ -498,10 +526,11 @@ export default function WhatsAppPage() {
             numberBusyAction={numberBusyAction}
             numbersLoading={numbersLoading}
             onAddNumber={openAddNumberModal}
+            onChangeNumber={handleChangeNumber}
             onDelete={handleDelete}
             onEditNumber={openEditNumberModal}
             onGenerateQRCode={handleGenerateQRCode}
-            onLogout={handleLogout}
+            onLogout={() => void handleLogout()}
             onRemoveNumber={(number) => void handleRemoveAuthorizedNumber(number)}
             onToggleNumber={(number) => void handleToggleAuthorizedNumber(number)}
             onVerify={() => void verifyConnection(false)}
@@ -587,6 +616,7 @@ function InstanceState({
   numberBusyAction,
   numbersLoading,
   onAddNumber,
+  onChangeNumber,
   onDelete,
   onEditNumber,
   onGenerateQRCode,
@@ -604,6 +634,7 @@ function InstanceState({
   numberBusyAction: string | null;
   numbersLoading: boolean;
   onAddNumber: () => void;
+  onChangeNumber: () => void;
   onDelete: () => void;
   onEditNumber: (number: AuthorizedNumber) => void;
   onGenerateQRCode: () => void;
@@ -668,6 +699,7 @@ function InstanceState({
           numberBusyAction={numberBusyAction}
           numbersLoading={numbersLoading}
           onAddNumber={onAddNumber}
+          onChangeNumber={onChangeNumber}
           onEditNumber={onEditNumber}
           onLogout={onLogout}
           onRemoveNumber={onRemoveNumber}
@@ -764,6 +796,7 @@ function ConnectedContent({
   numberBusyAction,
   numbersLoading,
   onAddNumber,
+  onChangeNumber,
   onEditNumber,
   onLogout,
   onRemoveNumber,
@@ -775,6 +808,7 @@ function ConnectedContent({
   numberBusyAction: string | null;
   numbersLoading: boolean;
   onAddNumber: () => void;
+  onChangeNumber: () => void;
   onEditNumber: (number: AuthorizedNumber) => void;
   onLogout: () => void;
   onRemoveNumber: (number: AuthorizedNumber) => void;
@@ -818,7 +852,21 @@ function ConnectedContent({
             Desconectar
           </Button>
         </>
-      ) : null}
+      ) : (
+        <Button
+          disabled={busyAction === "logout" || busyAction === "qrcode"}
+          onClick={onChangeNumber}
+          type="button"
+          variant="outline"
+        >
+          {busyAction === "logout" || busyAction === "qrcode" ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <RefreshCw className="h-3.5 w-3.5" />
+          )}
+          Trocar número
+        </Button>
+      )}
     </div>
   );
 }
