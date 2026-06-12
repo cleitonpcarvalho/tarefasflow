@@ -118,6 +118,21 @@ export async function updateWhatsappInstanceStatus(
   return rows[0] ? toWhatsappInstance(rows[0]) : null;
 }
 
+export async function updateWhatsappInstancePhone(
+  instanceName: string,
+  phoneNumber: string
+): Promise<WhatsappInstance | null> {
+  const rows = await sql<WhatsappInstanceRow[]>`
+    UPDATE whatsapp_instances
+    SET phone_number = ${phoneNumber}, updated_at = NOW()
+    WHERE instance_name = ${instanceName}
+    RETURNING id, user_id, instance_name, instance_token, status,
+      phone_number, webhook_set, created_at, updated_at
+  `;
+
+  return rows[0] ? toWhatsappInstance(rows[0]) : null;
+}
+
 export async function deleteWhatsappInstanceRecord(
   instanceName: string,
   userId: string

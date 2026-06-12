@@ -215,6 +215,10 @@ export default function OnboardingPage() {
           "/profile/onboarding-status"
         );
         if (res.data?.instance_status === "open") {
+          const agentRes = await apiFetch<AgentNumberData>(
+            "/profile/agent-number"
+          );
+          setAgentPhone(agentRes.data?.phone_number ?? null);
           setStep(5);
         }
       } catch {}
@@ -303,6 +307,10 @@ export default function OnboardingPage() {
         "/profile/onboarding-status"
       );
       if (res.data?.instance_status === "open") {
+        const agentRes = await apiFetch<AgentNumberData>(
+          "/profile/agent-number"
+        );
+        setAgentPhone(agentRes.data?.phone_number ?? null);
         setStep(5);
       } else {
         setError(

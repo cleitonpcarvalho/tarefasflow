@@ -233,13 +233,12 @@ export const profileRoutes: FastifyPluginAsync = async (app) => {
   app.get(
     "/agent-number",
     { preHandler: authenticate },
-    async (_request, reply) => {
+    async (request, reply) => {
       const rows = await sql<{ phone_number: string | null }[]>`
-        SELECT wi.phone_number
-        FROM whatsapp_instances wi
-        JOIN users u ON u.id = wi.user_id
-        WHERE u.role = 'admin'
-          AND wi.status = 'open'
+        SELECT phone_number
+        FROM whatsapp_instances
+        WHERE user_id = ${request.user.id}
+          AND status = 'open'
         LIMIT 1
       `;
 

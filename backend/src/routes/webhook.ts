@@ -15,6 +15,7 @@ import { transcribeAudio } from "../services/whisper.service";
 import { createWhatsappLog } from "../services/whatsapp-log.service";
 import {
   getWhatsappInstanceByName,
+  updateWhatsappInstancePhone,
   updateWhatsappInstanceStatus
 } from "../services/whatsapp-instance.service";
 import type { EvolutionConnectionState } from "../services/evolution.service";
@@ -146,6 +147,26 @@ export const webhookRoutes: FastifyPluginAsync = async (app) => {
 
         if (state) {
           await updateWhatsappInstanceStatus(instance.instance_name, state);
+        }
+
+        if (state === "open") {
+          const data = asRecord(payload.data);
+          const wuid =
+            readString(data, ["data", "wuid"]) ??
+            readString(data, ["wuid"]);
+
+          if (wuid?.includes("@")) {
+            const phoneNumber = wuid
+              .slice(0, wuid.indexOf("@"))
+              .replace(/\D/g, "");
+
+            if (phoneNumber) {
+              await updateWhatsappInstancePhone(
+                instance.instance_name,
+                phoneNumber
+              );
+            }
+          }
         }
 
         return reply.code(200).send({
