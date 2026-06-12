@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useConfirm } from "@/hooks/useConfirm";
 import { apiFetch } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/cn";
 import type {
   AuthorizedNumber,
@@ -39,6 +40,8 @@ interface NumberFormState extends AuthorizedNumberPermissions {
 
 export default function WhatsAppPage() {
   const { confirm, modalProps } = useConfirm();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [instance, setInstance] = useState<WhatsappInstance | null>(null);
   const [qrCode, setQrCode] = useState<WhatsappQRCode | null>(null);
   const [instanceName, setInstanceName] = useState("minha-agenda");
@@ -158,13 +161,18 @@ export default function WhatsAppPage() {
   }, [fetchMine]);
 
   useEffect(() => {
-    if (instance?.status === "open") {
+    if (instance?.status === "open" && !isAdmin) {
       void fetchAuthorizedNumbers(instance.instance_name);
       return;
     }
 
     setAuthorizedNumbers([]);
-  }, [fetchAuthorizedNumbers, instance?.instance_name, instance?.status]);
+  }, [
+    fetchAuthorizedNumbers,
+    instance?.instance_name,
+    instance?.status,
+    isAdmin
+  ]);
 
   useEffect(() => {
     if (!instance || !qrCode || instance.status === "open") {
@@ -476,6 +484,7 @@ export default function WhatsAppPage() {
         ) : screenState === "empty" ? (
           <EmptyState
             creating={creating}
+            isAdmin={isAdmin}
             instanceName={instanceName}
             onChangeInstanceName={setInstanceName}
             onSubmit={handleCreateInstance}
@@ -485,6 +494,7 @@ export default function WhatsAppPage() {
             authorizedNumbers={authorizedNumbers}
             busyAction={busyAction}
             instance={instance}
+            isAdmin={isAdmin}
             numberBusyAction={numberBusyAction}
             numbersLoading={numbersLoading}
             onAddNumber={openAddNumberModal}
@@ -500,7 +510,7 @@ export default function WhatsAppPage() {
           />
         ) : null}
 
-        {numberModalMode ? (
+        {numberModalMode && !isAdmin ? (
           <AuthorizedNumberModal
             busy={numberBusyAction === "submit"}
             form={numberForm}
@@ -520,11 +530,13 @@ export default function WhatsAppPage() {
 
 function EmptyState({
   creating,
+  isAdmin,
   instanceName,
   onChangeInstanceName,
   onSubmit
 }: {
   creating: boolean;
+  isAdmin: boolean;
   instanceName: string;
   onChangeInstanceName: (value: string) => void;
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
@@ -538,8 +550,9 @@ function EmptyState({
         Criar instância WhatsApp
       </h1>
       <p className="mx-auto mt-2 max-w-sm text-[13px] leading-5 text-tf-text-muted">
-        Crie uma conexão própria para atender seus comandos de agenda pelo
-        WhatsApp.
+        {isAdmin
+          ? "Crie uma conexão própria para enviar notificações pelo WhatsApp."
+          : "Crie uma conexão própria para atender seus comandos de agenda pelo WhatsApp."}
       </p>
 
       <form className="mt-5 space-y-3 text-left" onSubmit={onSubmit}>
@@ -570,6 +583,7 @@ function InstanceState({
   authorizedNumbers,
   busyAction,
   instance,
+  isAdmin,
   numberBusyAction,
   numbersLoading,
   onAddNumber,
@@ -586,6 +600,7 @@ function InstanceState({
   authorizedNumbers: AuthorizedNumber[];
   busyAction: string | null;
   instance: WhatsappInstance;
+  isAdmin: boolean;
   numberBusyAction: string | null;
   numbersLoading: boolean;
   onAddNumber: () => void;
@@ -612,27 +627,29 @@ function InstanceState({
           <h1 className="mt-3 break-words text-[18px] font-semibold text-tf-text-primary">
             {instance.instance_name}
           </h1>
-          {instance.phone_number ? (
+          {instance.phone_number && !isAdmin ? (
             <p className="mt-1 text-[13px] text-tf-text-muted">
               Número: {instance.phone_number}
             </p>
           ) : null}
         </div>
 
-        <Button
-          className="border-rose-200 text-rose-700 hover:border-rose-400 hover:text-rose-800"
-          disabled={busyAction === "delete"}
-          onClick={onDelete}
-          type="button"
-          variant="outline"
-        >
-          {busyAction === "delete" ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Trash2 className="h-3.5 w-3.5" />
-          )}
-          Deletar instância
-        </Button>
+        {!isAdmin ? (
+          <Button
+            className="border-rose-200 text-rose-700 hover:border-rose-400 hover:text-rose-800"
+            disabled={busyAction === "delete"}
+            onClick={onDelete}
+            type="button"
+            variant="outline"
+          >
+            {busyAction === "delete" ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Trash2 className="h-3.5 w-3.5" />
+            )}
+            Deletar instância
+          </Button>
+        ) : null}
       </div>
 
       {screenState === "waiting" ? (
@@ -655,6 +672,7 @@ function InstanceState({
           onLogout={onLogout}
           onRemoveNumber={onRemoveNumber}
           onToggleNumber={onToggleNumber}
+          showAgentControls={!isAdmin}
         />
       ) : null}
 
@@ -749,7 +767,8 @@ function ConnectedContent({
   onEditNumber,
   onLogout,
   onRemoveNumber,
-  onToggleNumber
+  onToggleNumber,
+  showAgentControls
 }: {
   authorizedNumbers: AuthorizedNumber[];
   busyAction: string | null;
@@ -760,39 +779,46 @@ function ConnectedContent({
   onLogout: () => void;
   onRemoveNumber: (number: AuthorizedNumber) => void;
   onToggleNumber: (number: AuthorizedNumber) => void;
+  showAgentControls: boolean;
 }) {
   return (
     <div className="mt-6 space-y-5">
       <div className="rounded-lg border border-[#9FE1CB] bg-tf-teal-bg p-4">
         <div className="flex items-center gap-2 text-[13px] font-medium text-tf-teal-text">
           <CheckCircle2 className="h-4 w-4" />
-          Instância pronta para receber mensagens.
+          {showAgentControls
+            ? "Instância pronta para receber mensagens."
+            : "Instância pronta para envio de notificações."}
         </div>
       </div>
 
-      <AuthorizedNumbersSection
-        busyAction={numberBusyAction}
-        loading={numbersLoading}
-        numbers={authorizedNumbers}
-        onAdd={onAddNumber}
-        onEdit={onEditNumber}
-        onRemove={onRemoveNumber}
-        onToggleActive={onToggleNumber}
-      />
+      {showAgentControls ? (
+        <>
+          <AuthorizedNumbersSection
+            busyAction={numberBusyAction}
+            loading={numbersLoading}
+            numbers={authorizedNumbers}
+            onAdd={onAddNumber}
+            onEdit={onEditNumber}
+            onRemove={onRemoveNumber}
+            onToggleActive={onToggleNumber}
+          />
 
-      <Button
-        disabled={busyAction === "logout"}
-        onClick={onLogout}
-        type="button"
-        variant="outline"
-      >
-        {busyAction === "logout" ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        ) : (
-          <Power className="h-3.5 w-3.5" />
-        )}
-        Desconectar
-      </Button>
+          <Button
+            disabled={busyAction === "logout"}
+            onClick={onLogout}
+            type="button"
+            variant="outline"
+          >
+            {busyAction === "logout" ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Power className="h-3.5 w-3.5" />
+            )}
+            Desconectar
+          </Button>
+        </>
+      ) : null}
     </div>
   );
 }

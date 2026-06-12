@@ -22,7 +22,7 @@ import { useAdminUsers } from "@/hooks/useAdminUsers";
 import { useConfirm } from "@/hooks/useConfirm";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/lib/auth-context";
-import type { User } from "@/types";
+import type { AdminUser, User } from "@/types";
 
 type UserFilter = "all" | "admin" | "user" | "inactive";
 
@@ -55,7 +55,9 @@ export default function AdminUsersPage() {
       total: users.length,
       active: users.filter((user) => user.active).length,
       admins: users.filter((user) => user.role === "admin").length,
-      whatsapp: users.filter((user) => Boolean(user.whatsapp_phone)).length
+      whatsapp: users.filter((user) => Boolean(user.whatsapp_phone)).length,
+      activeInstances: users.filter((user) => user.instance_status === "open")
+        .length
     }),
     [users]
   );
@@ -132,7 +134,7 @@ export default function AdminUsersPage() {
         </Button>
       </header>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <StatCard
           icon={Users}
           label="Total de usuários"
@@ -142,8 +144,13 @@ export default function AdminUsersPage() {
         <StatCard icon={ShieldCheck} label="Admins" value={statistics.admins} />
         <StatCard
           icon={Smartphone}
-          label="Com WhatsApp"
+          label="WhatsApp vinculado"
           value={statistics.whatsapp}
+        />
+        <StatCard
+          icon={Smartphone}
+          label="Instâncias ativas"
+          value={statistics.activeInstances}
         />
       </div>
 
@@ -192,7 +199,7 @@ export default function AdminUsersPage() {
 
       <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
         <div className="overflow-x-auto">
-          <table className="min-w-[1040px] w-full border-collapse text-left">
+          <table className="min-w-[1160px] w-full border-collapse text-left">
             <thead className="bg-[#F9FAFB] text-[11px] uppercase tracking-wide text-[#6B7280]">
               <tr>
                 <TableHeader>Nome</TableHeader>
@@ -200,6 +207,7 @@ export default function AdminUsersPage() {
                 <TableHeader>Role</TableHeader>
                 <TableHeader>Status</TableHeader>
                 <TableHeader>WhatsApp</TableHeader>
+                <TableHeader>Instância</TableHeader>
                 <TableHeader>Criado em</TableHeader>
                 <TableHeader className="text-right">Ações</TableHeader>
               </tr>
@@ -207,7 +215,7 @@ export default function AdminUsersPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td className="px-4 py-8 text-center text-sm text-[#6B7280]" colSpan={7}>
+                  <td className="px-4 py-8 text-center text-sm text-[#6B7280]" colSpan={8}>
                     Carregando usuários...
                   </td>
                 </tr>
@@ -258,6 +266,9 @@ export default function AdminUsersPage() {
                           <span className="text-[#9CA3AF]">Não vinculado</span>
                         )}
                       </td>
+                      <td className="px-4 py-3">
+                        <InstanceStatusBadge status={user.instance_status} />
+                      </td>
                       <td className="px-4 py-3 text-[#6B7280]">
                         {new Date(user.createdAt).toLocaleDateString("pt-BR")}
                       </td>
@@ -296,7 +307,7 @@ export default function AdminUsersPage() {
                 })
               ) : (
                 <tr>
-                  <td className="px-4 py-8 text-center text-sm text-[#6B7280]" colSpan={7}>
+                  <td className="px-4 py-8 text-center text-sm text-[#6B7280]" colSpan={8}>
                     Nenhum usuário encontrado.
                   </td>
                 </tr>
@@ -413,6 +424,26 @@ function ActionButton({
       {children}
     </button>
   );
+}
+
+function InstanceStatusBadge({
+  status
+}: {
+  status: AdminUser["instance_status"];
+}) {
+  if (status === "open") {
+    return <Badge variant="teal">Conectado</Badge>;
+  }
+
+  if (status === "connecting") {
+    return <Badge variant="amber">Conectando</Badge>;
+  }
+
+  if (status === "created") {
+    return <Badge variant="amber">Aguardando QR</Badge>;
+  }
+
+  return <Badge variant="slate">Desconectado</Badge>;
 }
 
 function getInitials(name: string) {

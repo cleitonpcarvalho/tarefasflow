@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { apiFetch } from "@/lib/api";
-import type { ApiResponse, User, UserRole } from "@/types";
+import type { AdminUser, ApiResponse, User, UserRole } from "@/types";
 
 export interface AdminUsersFilters {
   search?: string;
@@ -25,7 +25,7 @@ export interface UpdateAdminUserInput {
 }
 
 export function useAdminUsers() {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,7 +48,7 @@ export function useAdminUsers() {
         query.set("active", String(filters.active));
       }
 
-      const response = await apiFetch<User[]>(
+      const response = await apiFetch<AdminUser[]>(
         `/admin/users${query.size ? `?${query.toString()}` : ""}`
       );
       const data = response.data ?? [];
@@ -72,7 +72,10 @@ export function useAdminUsers() {
         method: "POST",
         body: JSON.stringify(data)
       });
-      const user = unwrapData(response);
+      const user: AdminUser = {
+        ...unwrapData(response),
+        instance_status: null
+      };
       setUsers((current) => [user, ...current]);
       return user;
     } catch (error) {
@@ -85,7 +88,7 @@ export function useAdminUsers() {
 
   const updateUser = useCallback(
     async (id: string, data: UpdateAdminUserInput) => {
-      let previousUsers: User[] = [];
+      let previousUsers: AdminUser[] = [];
 
       setUsers((current) => {
         previousUsers = current;
@@ -101,10 +104,20 @@ export function useAdminUsers() {
           body: JSON.stringify(data)
         });
         const user = unwrapData(response);
+
         setUsers((current) =>
-          current.map((item) => (item.id === id ? user : item))
+          current.map((item) => {
+            if (item.id !== id) {
+              return item;
+            }
+
+            return {
+              ...user,
+              instance_status: item.instance_status
+            };
+          })
         );
-        return user;
+        return { ...user, instance_status: null };
       } catch (error) {
         setUsers(previousUsers);
         const message =

@@ -156,6 +156,17 @@ export const webhookRoutes: FastifyPluginAsync = async (app) => {
         });
       }
 
+      if (isQrCodeUpdateEvent(payload.event)) {
+        await updateWhatsappInstanceStatus(instance.instance_name, "connecting");
+
+        return reply.code(200).send({
+          success: true,
+          data: { processed: true, state: "connecting" },
+          message: "Status da instância atualizado.",
+          error: null
+        });
+      }
+
       if (!isMessageEvent(payload.event)) {
         return reply.code(200).send({
           success: true,
@@ -184,6 +195,22 @@ export const webhookRoutes: FastifyPluginAsync = async (app) => {
         return reply.code(200).send({
           success: true,
           data: { ignored: true, reason: "Usuário não encontrado." },
+          message: "Webhook recebido.",
+          error: null
+        });
+      }
+
+      if (user.role === "admin") {
+        app.log.info(
+          { instanceName, userId: user.id },
+          "Webhook WhatsApp ignorado: mensagens de instâncias administrativas não usam o agente."
+        );
+        return reply.code(200).send({
+          success: true,
+          data: {
+            ignored: true,
+            reason: "Instância administrativa não processa mensagens recebidas."
+          },
           message: "Webhook recebido.",
           error: null
         });
@@ -576,6 +603,10 @@ function isConnectionUpdateEvent(event: string | undefined) {
 function isMessageEvent(event: string | undefined) {
   const normalizedEvent = normalizeEvent(event);
   return normalizedEvent === "messages.upsert";
+}
+
+function isQrCodeUpdateEvent(event: string | undefined) {
+  return normalizeEvent(event) === "qrcode.updated";
 }
 
 function normalizeEvent(event: string | undefined) {

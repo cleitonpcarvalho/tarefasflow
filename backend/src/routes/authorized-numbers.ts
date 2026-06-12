@@ -75,6 +75,10 @@ export const authorizedNumbersRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.post("/", async (request, reply) => {
+    if (request.user.role === "admin") {
+      return sendAdminOperationForbidden(reply);
+    }
+
     const parsedParams = instanceParamsSchema.safeParse(request.params);
     const parsedBody = createAuthorizedNumberBodySchema.safeParse(request.body);
 
@@ -142,6 +146,10 @@ export const authorizedNumbersRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.patch("/:numberId", async (request, reply) => {
+    if (request.user.role === "admin") {
+      return sendAdminOperationForbidden(reply);
+    }
+
     const parsedParams = numberParamsSchema.safeParse(request.params);
     const parsedBody = updateAuthorizedNumberBodySchema.safeParse(request.body);
 
@@ -187,6 +195,10 @@ export const authorizedNumbersRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.delete("/:numberId", async (request, reply) => {
+    if (request.user.role === "admin") {
+      return sendAdminOperationForbidden(reply);
+    }
+
     const parsedParams = numberParamsSchema.safeParse(request.params);
 
     if (!parsedParams.success) {
@@ -244,6 +256,15 @@ function sendNumberNotFound(reply: FastifyReply) {
     data: null,
     message: "Número autorizado não encontrado.",
     error: "Número autorizado não encontrado."
+  });
+}
+
+function sendAdminOperationForbidden(reply: FastifyReply) {
+  return reply.code(403).send({
+    success: false,
+    data: null,
+    message: "Operação não permitida para administradores.",
+    error: "Operação não permitida para administradores."
   });
 }
 

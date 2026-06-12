@@ -11,6 +11,10 @@ export interface User {
   updatedAt: string;
 }
 
+export interface AdminUser extends User {
+  instance_status: "open" | "connecting" | "close" | "created" | null;
+}
+
 export interface Task {
   id: string;
   user_id: string;

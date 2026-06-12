@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import { sql } from "../config/db";
 import type { PublicUser, UserRole, UserRow } from "../types/auth";
+import type { EvolutionConnectionState } from "./evolution.service";
 
 export class UserServiceError extends Error {
   statusCode: number;
@@ -42,6 +43,14 @@ export interface DailySummaryData {
   time: string;
 }
 
+export interface AdminUser extends PublicUser {
+  instance_status: EvolutionConnectionState | null;
+}
+
+interface AdminUserRow extends Omit<UserRow, "password"> {
+  instance_status: EvolutionConnectionState | null;
+}
+
 const userSelectColumns =
   "id, name, email, password, role, active, whatsapp_phone, created_at, updated_at";
 
@@ -80,6 +89,54 @@ export async function listUsers(filters: UserFilters = {}): Promise<PublicUser[]
   );
 
   return rows.map(toPublicUser);
+}
+
+export async function listUsersWithInstanceStatus(
+  filters: UserFilters = {}
+): Promise<AdminUser[]> {
+  const conditions: string[] = [];
+  const params: Array<string | boolean> = [];
+
+  if (filters.search?.trim()) {
+    params.push(`%${filters.search.trim()}%`);
+    conditions.push(
+      `(u.name ILIKE $${params.length} OR u.email ILIKE $${params.length})`
+    );
+  }
+
+  if (filters.role) {
+    params.push(filters.role);
+    conditions.push(`u.role = $${params.length}`);
+  }
+
+  if (filters.active !== undefined) {
+    params.push(filters.active);
+    conditions.push(`u.active = $${params.length}`);
+  }
+
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const rows = await sql.unsafe<AdminUserRow[]>(
+    `
+      SELECT
+        u.id, u.name, u.email, u.role, u.active,
+        u.whatsapp_phone, u.created_at, u.updated_at,
+        wi.status AS instance_status
+      FROM users u
+      LEFT JOIN LATERAL (
+        SELECT status
+        FROM whatsapp_instances
+        WHERE user_id = u.id
+        ORDER BY created_at DESC
+        LIMIT 1
+      ) wi ON TRUE
+      ${whereClause}
+      ORDER BY u.created_at DESC
+    `,
+    params
+  );
+
+  return rows.map(toAdminUser);
 }
 
 export async function createUser(
@@ -374,6 +431,20 @@ function toPublicUser(user: UserRow): PublicUser {
     whatsapp_phone: user.whatsapp_phone,
     createdAt: new Date(user.created_at).toISOString(),
     updatedAt: new Date(user.updated_at).toISOString()
+  };
+}
+
+function toAdminUser(user: AdminUserRow): AdminUser {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    active: user.active,
+    whatsapp_phone: user.whatsapp_phone,
+    createdAt: new Date(user.created_at).toISOString(),
+    updatedAt: new Date(user.updated_at).toISOString(),
+    instance_status: user.instance_status
   };
 }
 

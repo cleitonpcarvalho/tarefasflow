@@ -19,7 +19,7 @@ import {
   getDailySummary,
   getReminderDefaults,
   getUserById,
-  listUsers,
+  listUsersWithInstanceStatus,
   updateDailySummary,
   updateReminderDefaults,
   updateOwnWhatsappPhone,
@@ -90,7 +90,7 @@ export const usersRoutes: FastifyPluginAsync = async (app) => {
       return sendValidationError(reply, parsedQuery.error);
     }
 
-    const users = await listUsers(parsedQuery.data);
+    const users = await listUsersWithInstanceStatus(parsedQuery.data);
 
     return reply.code(200).send({
       success: true,

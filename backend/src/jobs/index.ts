@@ -2,6 +2,7 @@ import { sendDailySummaries } from "./daily-summary";
 import { dispatchOnboardingFollowup } from "./onboarding-followup";
 import { dispatchPendingReminders } from "./reminder-dispatcher";
 import { dispatchSpecialDateNotifications } from "./special-dates-dispatcher";
+import { synchronizeInstances } from "./sync-instances";
 
 export function startJobs() {
   console.log("[JOBS] Reminder dispatcher iniciado");
@@ -43,4 +44,14 @@ export function startJobs() {
       console.error("[JOBS] Erro no onboarding follow-up:", error);
     }
   }, 60_000);
+
+  console.log("[JOBS] Sincronização de instâncias iniciada");
+
+  setInterval(async () => {
+    try {
+      await synchronizeInstances();
+    } catch (error) {
+      console.error("[JOBS] Erro na sincronização de instâncias:", error);
+    }
+  }, 5 * 60_000);
 }
