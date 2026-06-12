@@ -765,6 +765,9 @@ Regras:
 - Use o histórico da conversa para completar a intenção atual
 - Preserve título, descrição, data e horário já informados em mensagens anteriores
 - Nunca peça novamente uma informação que já aparece no histórico
+- Se a mensagem mencionar um título diferente de qualquer tarefa citada anteriormente na conversa, trate sempre como novo comando independente — não altere tarefas existentes.
+- Expressões como "agora", "hoje", "coloque pra HH:MM [título]" sem referência explícita a uma tarefa anterior significam sempre criar uma nova tarefa para a data atual.
+- Nunca renomeie, mova ou altere uma tarefa existente com base em um comando que menciona um título diferente.
 - Reunião, compromisso, agendamento e evento sem repetição devem ser criados
   com create_task
 - Use create_recurring_task quando houver repetição: todo dia, toda semana,

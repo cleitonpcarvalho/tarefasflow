@@ -176,6 +176,13 @@ export async function createTask(
         409
       );
     }
+
+    if (await hasRecurringTaskConflict(requesterId, data.task_date, taskTime)) {
+      throw new TaskServiceError(
+        `Já existe uma tarefa agendada para ${data.task_date} às ${taskTime}. Escolha outro horário.`,
+        409
+      );
+    }
   }
 
   const rows = await sql<TaskRow[]>`
@@ -239,6 +246,20 @@ export async function updateTask(
         LIMIT 1
       `;
       if (conflict.length > 0) {
+        throw new TaskServiceError(
+          `Já existe uma tarefa agendada para ${newDate} às ${newTime}. Escolha outro horário.`,
+          409
+        );
+      }
+
+      if (
+        await hasRecurringTaskConflict(
+          requesterId,
+          newDate,
+          newTime,
+          persistentTaskId
+        )
+      ) {
         throw new TaskServiceError(
           `Já existe uma tarefa agendada para ${newDate} às ${newTime}. Escolha outro horário.`,
           409
@@ -406,6 +427,38 @@ export async function getTasksForDate(
   return tasks
     .filter((task) => !task.done)
     .map((task) => ({ title: task.title, task_time: task.task_time }));
+}
+
+async function hasRecurringTaskConflict(
+  requesterId: string,
+  targetDate: string,
+  targetTime: string,
+  excludedTaskId?: string
+) {
+  const recurringRows = await sql.unsafe<TaskRow[]>(
+    `
+      SELECT ${taskSelectColumns}
+      FROM tasks
+      WHERE user_id = $1
+        AND rrule IS NOT NULL
+        AND done = false
+    `,
+    [requesterId]
+  );
+  const rangeStart = parseDateAtStartOfDay(targetDate);
+  const rangeEnd = parseDateAtEndOfDay(targetDate);
+
+  return recurringRows.some((row) => {
+    const task = toTask(row);
+
+    if (task.id === excludedTaskId) {
+      return false;
+    }
+
+    return expandRecurringTask(task, rangeStart, rangeEnd).some(
+      (occurrence) => occurrence.task_time === targetTime
+    );
+  });
 }
 
 function addUpdate(
