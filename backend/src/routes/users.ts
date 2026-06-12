@@ -445,16 +445,40 @@ export const profileRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.get("/onboarding-status", { preHandler: authenticate }, async (request, reply) => {
-    const rows = await sql<{
-      onboarding_completed: boolean;
-      onboarding_skipped: boolean;
-      whatsapp_phone: string | null;
-    }[]>`
-      SELECT onboarding_completed, onboarding_skipped, whatsapp_phone
-      FROM users
-      WHERE id = ${request.user.id}
-      LIMIT 1
-    `;
+    const [rows, taskRows, authorizedNumberRows, specialDateRows, instance] =
+      await Promise.all([
+        sql<{
+          onboarding_completed: boolean;
+          onboarding_skipped: boolean;
+          whatsapp_phone: string | null;
+        }[]>`
+          SELECT onboarding_completed, onboarding_skipped, whatsapp_phone
+          FROM users
+          WHERE id = ${request.user.id}
+          LIMIT 1
+        `,
+        sql<{ has_task: boolean }[]>`
+          SELECT EXISTS (
+            SELECT 1 FROM tasks
+            WHERE user_id = ${request.user.id}
+          ) AS has_task
+        `,
+        sql<{ has_authorized_number: boolean }[]>`
+          SELECT EXISTS (
+            SELECT 1 FROM authorized_numbers
+            WHERE user_id = ${request.user.id}
+              AND active = true
+          ) AS has_authorized_number
+        `,
+        sql<{ has_special_date: boolean }[]>`
+          SELECT EXISTS (
+            SELECT 1 FROM special_dates
+            WHERE user_id = ${request.user.id}
+              AND is_national = false
+          ) AS has_special_date
+        `,
+        getWhatsappInstanceByUserId(request.user.id)
+      ]);
 
     if (rows.length === 0) {
       return reply.code(404).send({
@@ -465,7 +489,6 @@ export const profileRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-    const instance = await getWhatsappInstanceByUserId(request.user.id);
     let instanceStatus = instance?.status ?? null;
 
     if (instance) {
@@ -488,7 +511,11 @@ export const profileRoutes: FastifyPluginAsync = async (app) => {
         onboarding_skipped: rows[0].onboarding_skipped,
         whatsapp_phone: rows[0].whatsapp_phone,
         instance_status: instanceStatus,
-        instance_name: instance?.instance_name ?? null
+        instance_name: instance?.instance_name ?? null,
+        has_task: taskRows[0]?.has_task ?? false,
+        has_special_date: specialDateRows[0]?.has_special_date ?? false,
+        has_authorized_number:
+          authorizedNumberRows[0]?.has_authorized_number ?? false
       },
       message: "Status do onboarding carregado.",
       error: null

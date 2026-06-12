@@ -23,6 +23,9 @@ interface OnboardingStatus {
   whatsapp_phone: string | null;
   instance_status: string | null;
   instance_name: string | null;
+  has_task: boolean;
+  has_special_date: boolean;
+  has_authorized_number: boolean;
 }
 
 interface QrCodeData {
@@ -59,6 +62,35 @@ function getTomorrow(): string {
   const d = new Date();
   d.setDate(d.getDate() + 1);
   return d.toLocaleDateString("en-CA");
+}
+
+function resolveInitialStep(status: OnboardingStatus): number {
+  if (status.instance_status === "open") return 5;
+  if (status.has_authorized_number) return 4;
+  if (status.has_special_date) return 3;
+  if (status.has_task) return 2;
+  return 1;
+}
+
+function SkipButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      type="button"
+      style={{
+        background: "none",
+        border: "none",
+        color: "#534AB7",
+        fontSize: "0.8rem",
+        cursor: "pointer",
+        marginTop: "0.5rem",
+        textDecoration: "underline",
+        opacity: 0.75
+      }}
+    >
+      Pular por agora
+    </button>
+  );
 }
 
 function StepIndicator({ current }: { current: number }) {
@@ -128,7 +160,9 @@ export default function OnboardingPage() {
         setWhatsappPhone(status?.whatsapp_phone ?? null);
         setPhoneInput(status?.whatsapp_phone ?? "");
         setAgentPhone(agentResponse.data?.phone_number ?? null);
-        setStep(status?.instance_status === "open" ? 5 : 1);
+        if (status) {
+          setStep(resolveInitialStep(status));
+        }
       } catch {
         // O onboarding continua disponível mesmo se o status inicial falhar.
       } finally {
@@ -352,7 +386,7 @@ export default function OnboardingPage() {
                     className="mt-2 text-sm leading-relaxed"
                     style={{ color: "#6B7280" }}
                   >
-                    Pode ser uma reunião, um compromisso, um prazo — qualquer
+                    Pode ser uma reunião, um compromisso, um prazo. Qualquer
                     coisa que merece um lugar garantido na sua agenda.
                   </p>
                 </div>
@@ -433,6 +467,7 @@ export default function OnboardingPage() {
                   "Continuar"
                 )}
               </button>
+              <SkipButton onClick={() => setStep(step + 1)} />
             </form>
           )}
 
@@ -465,12 +500,9 @@ export default function OnboardingPage() {
 
               <SpecialDateForm
                 onSave={handleCreateSpecialDate}
-                onSkip={() => {
-                  setError("");
-                  setStep(3);
-                }}
                 submitLabel="Continuar"
               />
+              <SkipButton onClick={() => setStep(step + 1)} />
 
               <p className="text-center text-xs" style={{ color: "#9CA3AF" }}>
                 Você pode cadastrar mais datas especiais depois, no menu Datas
@@ -533,7 +565,7 @@ export default function OnboardingPage() {
                   {formatPhoneDisplay(whatsappPhone) || "55119999999"}
                 </span>
                 <span className="text-xs" style={{ color: "#9CA3AF" }}>
-                  Este não é o número do agente — é o seu número pessoal.
+                  Este é o seu número pessoal, não o número do agente.
                 </span>
               </label>
 
@@ -557,6 +589,7 @@ export default function OnboardingPage() {
                   "Confirmar"
                 )}
               </button>
+              <SkipButton onClick={() => setStep(step + 1)} />
             </form>
           )}
 
@@ -665,6 +698,7 @@ export default function OnboardingPage() {
                   "Já escaneei"
                 )}
               </button>
+              <SkipButton onClick={() => setStep(step + 1)} />
             </div>
           )}
 
