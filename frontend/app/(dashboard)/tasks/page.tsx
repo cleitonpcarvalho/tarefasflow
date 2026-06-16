@@ -112,10 +112,12 @@ export default function TasksPage() {
 
   return (
     <section className="space-y-5 p-5">
-      <div className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-white p-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-white p-4 dark:border-tf-dark-border dark:bg-tf-dark-bg-card lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-[#111827]">Tarefas</h1>
-          <p className="mt-1 text-sm text-[#6b7280]">
+          <h1 className="text-2xl font-semibold text-[#111827] dark:text-tf-dark-text-primary">
+            Tarefas
+          </h1>
+          <p className="mt-1 text-sm text-[#6b7280] dark:text-tf-dark-text-muted">
             Gerencie as tarefas do mês atual.
           </p>
         </div>
@@ -132,7 +134,7 @@ export default function TasksPage() {
         </Button>
       </div>
 
-      <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-4 dark:border-tf-dark-border dark:bg-tf-dark-bg-card lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap gap-2">
           {[
             { id: "all", label: "Todas" },
@@ -143,8 +145,8 @@ export default function TasksPage() {
               className={cn(
                 "h-9 rounded-lg px-3 text-sm font-semibold transition",
                 filter === item.id
-                  ? "bg-[#EEEDFE] text-[#534AB7]"
-                  : "text-[#6b7280] hover:bg-[#f3f4f6]"
+                  ? "bg-[#EEEDFE] text-[#534AB7] dark:bg-tf-dark-purple-light"
+                  : "text-[#6b7280] hover:bg-[#f3f4f6] dark:text-tf-dark-text-muted dark:hover:bg-tf-dark-bg-sidebar"
               )}
               key={item.id}
               onClick={() => setFilter(item.id as TaskFilter)}
@@ -156,9 +158,9 @@ export default function TasksPage() {
         </div>
 
         <label className="relative block w-full lg:max-w-xs">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7280]" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7280] dark:text-tf-dark-text-muted" />
           <input
-            className="h-10 w-full rounded-lg border border-slate-200 pl-10 pr-3 text-sm outline-none transition focus:border-[#534AB7] focus:ring-4 focus:ring-[#EEEDFE]"
+            className="h-10 w-full rounded-lg border border-slate-200 pl-10 pr-3 text-sm outline-none transition focus:border-[#534AB7] focus:ring-4 focus:ring-[#EEEDFE] dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-primary"
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Buscar por título"
             value={search}
@@ -173,14 +175,14 @@ export default function TasksPage() {
       ) : null}
 
       {loading ? (
-        <p className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-[#6b7280]">
+        <p className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-[#6b7280] dark:border-tf-dark-border dark:bg-tf-dark-bg-card dark:text-tf-dark-text-muted">
           Carregando tarefas...
         </p>
       ) : groupedTasks.length > 0 ? (
         <div className="space-y-5">
           {groupedTasks.map((group) => (
             <section className="space-y-3" key={group.date}>
-              <h2 className="text-sm font-semibold text-[#6b7280]">
+              <h2 className="text-sm font-semibold text-[#6b7280] dark:text-tf-dark-text-muted">
                 {formatCompactDate(group.date)}
               </h2>
               <div className="space-y-2">
@@ -202,14 +204,14 @@ export default function TasksPage() {
           ))}
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed border-slate-200 bg-white p-10 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-lg bg-[#EEEDFE] text-[#534AB7]">
+        <div className="rounded-lg border border-dashed border-slate-200 bg-white p-10 text-center dark:border-tf-dark-border dark:bg-tf-dark-bg-card">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-lg bg-[#EEEDFE] text-[#534AB7] dark:bg-tf-dark-purple-light">
             <Check className="h-7 w-7" />
           </div>
-          <h2 className="text-lg font-semibold text-[#111827]">
+          <h2 className="text-lg font-semibold text-[#111827] dark:text-tf-dark-text-primary">
             Nenhuma tarefa encontrada
           </h2>
-          <p className="mt-1 text-sm text-[#6b7280]">
+          <p className="mt-1 text-sm text-[#6b7280] dark:text-tf-dark-text-muted">
             Ajuste os filtros ou crie uma nova tarefa.
           </p>
         </div>
@@ -254,7 +256,7 @@ function TaskRow({
   onReminder: () => void;
 }) {
   return (
-    <article className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+    <article className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-4 dark:border-tf-dark-border dark:bg-tf-dark-bg-card sm:flex-row sm:items-center sm:justify-between">
       <div className="flex min-w-0 items-start gap-3">
         <button
           aria-label="Alternar tarefa concluída"
@@ -262,7 +264,7 @@ function TaskRow({
             "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition",
             task.done
               ? "border-[#534AB7] bg-[#534AB7] text-white"
-              : "border-slate-300 text-transparent hover:border-[#534AB7]"
+              : "border-slate-300 text-transparent hover:border-[#534AB7] dark:border-tf-dark-border"
           )}
           onClick={onToggle}
           type="button"
@@ -270,10 +272,12 @@ function TaskRow({
           <Check className="h-3.5 w-3.5" />
         </button>
         <div className="min-w-0">
-          <p className="text-xs text-[#6b7280]">{task.task_time ?? "Dia todo"}</p>
+          <p className="text-xs text-[#6b7280] dark:text-tf-dark-text-muted">
+            {task.task_time ?? "Dia todo"}
+          </p>
           <h3
             className={cn(
-              "truncate text-sm font-semibold text-[#111827]",
+              "truncate text-sm font-semibold text-[#111827] dark:text-tf-dark-text-primary",
               task.done && "line-through opacity-70"
             )}
           >
@@ -327,7 +331,7 @@ function IconButton({
   return (
     <button
       aria-label={label}
-      className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] transition hover:bg-[#f3f4f6] hover:text-[#111827]"
+      className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] transition hover:bg-[#f3f4f6] hover:text-[#111827] dark:text-tf-dark-text-muted dark:hover:bg-tf-dark-bg-sidebar dark:hover:text-tf-dark-text-primary"
       onClick={onClick}
       title={label}
       type="button"

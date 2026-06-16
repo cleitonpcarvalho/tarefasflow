@@ -117,13 +117,13 @@ export function RecurrenceBuilder({
   }
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-[#F9FAFB] p-4">
+    <section className="rounded-lg border border-slate-200 bg-[#F9FAFB] p-4 dark:border-tf-dark-border dark:bg-tf-dark-bg-page">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-[#111827]">
+          <p className="text-sm font-medium text-[#111827] dark:text-tf-dark-text-primary">
             Tarefa recorrente
           </p>
-          <p className="mt-0.5 text-xs text-[#6B7280]">
+          <p className="mt-0.5 text-xs text-[#6B7280] dark:text-tf-dark-text-muted">
             Repita esta tarefa automaticamente.
           </p>
         </div>
@@ -132,7 +132,7 @@ export function RecurrenceBuilder({
           aria-label="Tarefa recorrente"
           className={cn(
             "relative h-6 w-11 rounded-full transition",
-            enabled ? "bg-[#534AB7]" : "bg-slate-300"
+            enabled ? "bg-[#534AB7]" : "bg-slate-300 dark:bg-tf-dark-border"
           )}
           data-testid="recurrence-toggle"
           onClick={() => onChange(enabled ? null : defaultOptions())}
@@ -141,7 +141,7 @@ export function RecurrenceBuilder({
         >
           <span
             className={cn(
-              "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition",
+              "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition dark:bg-tf-dark-text-primary",
               enabled ? "left-[22px]" : "left-0.5"
             )}
           />
@@ -149,9 +149,9 @@ export function RecurrenceBuilder({
       </div>
 
       {enabled ? (
-        <div className="mt-4 space-y-4 border-t border-slate-200 pt-4">
+        <div className="mt-4 space-y-4 border-t border-slate-200 pt-4 dark:border-tf-dark-border-light">
           <fieldset>
-            <legend className="mb-2 text-xs font-medium text-[#374151]">
+            <legend className="mb-2 text-xs font-medium text-[#374151] dark:text-tf-dark-text-muted">
               Frequência
             </legend>
             <div className="grid grid-cols-3 gap-2">
@@ -161,8 +161,8 @@ export function RecurrenceBuilder({
                   className={cn(
                     "h-9 rounded-lg border text-xs font-medium transition",
                     options.frequency === item.value
-                      ? "border-[#534AB7] bg-[#EEEDFE] text-[#534AB7]"
-                      : "border-slate-200 bg-white text-[#6B7280] hover:border-slate-300"
+                      ? "border-[#534AB7] bg-[#EEEDFE] text-[#534AB7] dark:bg-tf-dark-purple-light"
+                      : "border-slate-200 bg-white text-[#6B7280] hover:border-slate-300 dark:border-tf-dark-border dark:bg-tf-dark-bg-card dark:text-tf-dark-text-muted"
                   )}
                   key={item.value}
                   onClick={() => changeFrequency(item.value)}
@@ -175,7 +175,7 @@ export function RecurrenceBuilder({
           </fieldset>
 
           {options.frequency === "daily" ? (
-            <label className="flex items-center gap-2 text-xs text-[#374151]">
+            <label className="flex items-center gap-2 text-xs text-[#374151] dark:text-tf-dark-text-muted">
               A cada
               <NumberInput
                 ariaLabel="Intervalo em dias"
@@ -190,7 +190,7 @@ export function RecurrenceBuilder({
 
           {options.frequency === "weekly" ? (
             <fieldset>
-              <legend className="mb-2 text-xs font-medium text-[#374151]">
+              <legend className="mb-2 text-xs font-medium text-[#374151] dark:text-tf-dark-text-muted">
                 Dias da semana
               </legend>
               <div className="flex flex-wrap gap-1.5">
@@ -203,8 +203,8 @@ export function RecurrenceBuilder({
                       className={cn(
                         "h-8 min-w-10 rounded-full border px-2 text-xs font-medium transition",
                         selected
-                          ? "border-[#534AB7] bg-[#EEEDFE] text-[#534AB7]"
-                          : "border-slate-200 bg-white text-[#6B7280]"
+                          ? "border-[#534AB7] bg-[#EEEDFE] text-[#534AB7] dark:bg-tf-dark-purple-light"
+                          : "border-slate-200 bg-white text-[#6B7280] dark:border-tf-dark-border dark:bg-tf-dark-bg-card dark:text-tf-dark-text-muted"
                       )}
                       key={day}
                       onClick={() => toggleWeekday(index)}
@@ -225,10 +225,10 @@ export function RecurrenceBuilder({
 
           {options.frequency === "monthly" ? (
             <fieldset className="space-y-3">
-              <legend className="text-xs font-medium text-[#374151]">
+              <legend className="text-xs font-medium text-[#374151] dark:text-tf-dark-text-muted">
                 Padrão mensal
               </legend>
-              <label className="flex flex-wrap items-center gap-2 text-xs text-[#374151]">
+              <label className="flex flex-wrap items-center gap-2 text-xs text-[#374151] dark:text-tf-dark-text-muted">
                 <input
                   checked={options.monthlyMode !== "monthWeekday"}
                   className="accent-[#534AB7]"
@@ -246,7 +246,7 @@ export function RecurrenceBuilder({
                 />
                 do mês
               </label>
-              <label className="flex flex-wrap items-center gap-2 text-xs text-[#374151]">
+              <label className="flex flex-wrap items-center gap-2 text-xs text-[#374151] dark:text-tf-dark-text-muted">
                 <input
                   checked={options.monthlyMode === "monthWeekday"}
                   className="accent-[#534AB7]"
@@ -265,7 +265,7 @@ export function RecurrenceBuilder({
                 Todo
                 <select
                   aria-label="Semana do mês"
-                  className="h-9 rounded-lg border border-slate-200 bg-white px-2 outline-none focus:border-[#534AB7]"
+                  className="h-9 rounded-lg border border-slate-200 bg-white px-2 outline-none focus:border-[#534AB7] dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-primary"
                   onChange={(event) =>
                     update({
                       monthWeekday: {
@@ -284,7 +284,7 @@ export function RecurrenceBuilder({
                 </select>
                 <select
                   aria-label="Dia da semana mensal"
-                  className="h-9 rounded-lg border border-slate-200 bg-white px-2 outline-none focus:border-[#534AB7]"
+                  className="h-9 rounded-lg border border-slate-200 bg-white px-2 outline-none focus:border-[#534AB7] dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-primary"
                   onChange={(event) =>
                     update({
                       monthWeekday: {
@@ -306,7 +306,7 @@ export function RecurrenceBuilder({
           ) : null}
 
           <fieldset className="space-y-2">
-            <legend className="mb-1 text-xs font-medium text-[#374151]">
+            <legend className="mb-1 text-xs font-medium text-[#374151] dark:text-tf-dark-text-muted">
               Fim da recorrência
             </legend>
             <EndOption
@@ -321,7 +321,7 @@ export function RecurrenceBuilder({
             >
               <input
                 aria-label="Data final da recorrência"
-                className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none focus:border-[#534AB7]"
+                className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none focus:border-[#534AB7] dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-primary"
                 disabled={endMode !== "until"}
                 onChange={(event) =>
                   update({
@@ -353,7 +353,7 @@ export function RecurrenceBuilder({
           </fieldset>
 
           <div
-            className="flex items-start gap-2 rounded-lg bg-[#EEEDFE] px-3 py-2.5 text-xs font-medium text-[#534AB7]"
+            className="flex items-start gap-2 rounded-lg bg-[#EEEDFE] px-3 py-2.5 text-xs font-medium text-[#534AB7] dark:bg-tf-dark-purple-light"
             data-testid="recurrence-preview"
           >
             <RefreshCw className="mt-0.5 h-3.5 w-3.5 shrink-0" />
@@ -383,7 +383,7 @@ function NumberInput({
   return (
     <input
       aria-label={ariaLabel}
-      className="h-9 w-16 rounded-lg border border-slate-200 bg-white px-2 text-center text-xs outline-none focus:border-[#534AB7]"
+      className="h-9 w-16 rounded-lg border border-slate-200 bg-white px-2 text-center text-xs outline-none focus:border-[#534AB7] dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-primary"
       disabled={disabled}
       max={max}
       min={min}
@@ -410,7 +410,7 @@ function EndOption({
   onChange: () => void;
 }) {
   return (
-    <label className="flex flex-wrap items-center gap-2 text-xs text-[#374151]">
+    <label className="flex flex-wrap items-center gap-2 text-xs text-[#374151] dark:text-tf-dark-text-muted">
       <input
         checked={checked}
         className="accent-[#534AB7]"

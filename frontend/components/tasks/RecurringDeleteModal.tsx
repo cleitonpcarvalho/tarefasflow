@@ -24,19 +24,19 @@ export function RecurringDeleteModal({
       <section
         aria-labelledby="recurring-delete-title"
         aria-modal="true"
-        className="w-full max-w-[430px] rounded-xl bg-white p-6 shadow-xl"
+        className="w-full max-w-[430px] rounded-xl bg-white p-6 shadow-xl dark:bg-tf-dark-bg-card"
         role="dialog"
       >
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EEEDFE] text-[#534AB7]">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EEEDFE] text-[#534AB7] dark:bg-tf-dark-purple-light">
           <RefreshCw className="h-5 w-5" />
         </div>
         <h2
-          className="mt-3 text-center text-base font-semibold text-[#111827]"
+          className="mt-3 text-center text-base font-semibold text-[#111827] dark:text-tf-dark-text-primary"
           id="recurring-delete-title"
         >
           Excluir tarefa recorrente
         </h2>
-        <p className="mt-2 text-center text-sm leading-5 text-[#6B7280]">
+        <p className="mt-2 text-center text-sm leading-5 text-[#6B7280] dark:text-tf-dark-text-muted">
           Deseja excluir somente esta ocorrência de “{task.title}” ou toda a
           série?
         </p>

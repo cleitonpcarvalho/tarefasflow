@@ -93,8 +93,10 @@ export default function RemindersPage() {
   return (
     <section className="space-y-6 p-5">
       <header>
-        <h1 className="text-2xl font-semibold text-[#111827]">Lembretes</h1>
-        <p className="mt-1 text-sm text-[#6B7280]">
+        <h1 className="text-2xl font-semibold text-[#111827] dark:text-tf-dark-text-primary">
+          Lembretes
+        </h1>
+        <p className="mt-1 text-sm text-[#6B7280] dark:text-tf-dark-text-muted">
           Centralize e acompanhe os avisos das suas tarefas.
         </p>
       </header>
@@ -105,34 +107,38 @@ export default function RemindersPage() {
         </p>
       ) : null}
 
-      <section className="w-full overflow-hidden rounded-xl border border-[#D8D5F5] bg-gradient-to-br from-[#F7F6FF] to-white p-5">
+      <section className="w-full overflow-hidden rounded-xl border border-[#D8D5F5] bg-gradient-to-br from-[#F7F6FF] to-white p-5 dark:border-tf-dark-border dark:bg-tf-dark-bg-card dark:bg-none">
         <div className="mb-4 flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#EEEDFE] text-[#534AB7]">
+          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#EEEDFE] text-[#534AB7] dark:bg-tf-dark-purple-light">
             <BellRing className="h-5 w-5" />
           </span>
           <div>
-            <h2 className="text-base font-semibold text-[#111827]">
+            <h2 className="text-base font-semibold text-[#111827] dark:text-tf-dark-text-primary">
               Próximos lembretes
             </h2>
-            <p className="text-xs text-[#6B7280]">Nas próximas 24 horas</p>
+            <p className="text-xs text-[#6B7280] dark:text-tf-dark-text-muted">
+              Nas próximas 24 horas
+            </p>
           </div>
         </div>
 
         {loading ? (
-          <p className="text-sm text-[#6B7280]">Carregando...</p>
+          <p className="text-sm text-[#6B7280] dark:text-tf-dark-text-muted">
+            Carregando...
+          </p>
         ) : upcomingReminders.length ? (
           <div className="grid w-full gap-3 overflow-hidden lg:grid-cols-2">
             {upcomingReminders.map((item) => (
               <article
-                className="flex min-w-0 items-start gap-3 overflow-hidden rounded-lg border border-white bg-white p-3 shadow-sm"
+                className="flex min-w-0 items-start gap-3 overflow-hidden rounded-lg border border-white bg-white p-3 shadow-sm dark:border-tf-dark-border dark:bg-tf-dark-bg-card"
                 key={`${item.task.id}-${item.reminder.id}`}
               >
                 <Bell className="mt-0.5 h-4 w-4 shrink-0 text-[#534AB7]" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-[#111827]">
+                  <p className="truncate text-sm font-medium text-[#111827] dark:text-tf-dark-text-primary">
                     {item.task.title}
                   </p>
-                  <p className="mt-1 text-xs text-[#6B7280]">
+                  <p className="mt-1 text-xs text-[#6B7280] dark:text-tf-dark-text-muted">
                     {formatTaskDateTime(item.task)}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
@@ -148,8 +154,8 @@ export default function RemindersPage() {
             ))}
           </div>
         ) : (
-          <div className="flex items-center gap-3 rounded-lg bg-white/70 p-4 text-sm text-[#6B7280]">
-            <Bell className="h-5 w-5 text-[#9CA3AF]" />
+          <div className="flex items-center gap-3 rounded-lg bg-white/70 p-4 text-sm text-[#6B7280] dark:bg-tf-dark-bg-page dark:text-tf-dark-text-muted">
+            <Bell className="h-5 w-5 text-[#9CA3AF] dark:text-tf-dark-text-faint" />
             Nenhum lembrete nas próximas 24h
           </div>
         )}
@@ -158,10 +164,10 @@ export default function RemindersPage() {
       <section className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-base font-semibold text-[#111827]">
+            <h2 className="text-base font-semibold text-[#111827] dark:text-tf-dark-text-primary">
               Todas as tarefas
             </h2>
-            <p className="text-xs text-[#6B7280]">
+            <p className="text-xs text-[#6B7280] dark:text-tf-dark-text-muted">
               Expanda uma tarefa para gerenciar seus lembretes.
             </p>
           </div>
@@ -175,8 +181,8 @@ export default function RemindersPage() {
                 className={cn(
                   "h-9 rounded-lg px-3 text-xs font-medium transition",
                   filter === value
-                    ? "bg-[#EEEDFE] text-[#534AB7]"
-                    : "bg-white text-[#6B7280] hover:bg-[#F3F4F6]"
+                    ? "bg-[#EEEDFE] text-[#534AB7] dark:bg-tf-dark-purple-light"
+                    : "bg-white text-[#6B7280] hover:bg-[#F3F4F6] dark:bg-tf-dark-bg-card dark:text-tf-dark-text-muted dark:hover:bg-tf-dark-bg-sidebar"
                 )}
                 key={value}
                 onClick={() => setFilter(value as ReminderFilter)}
@@ -192,32 +198,32 @@ export default function RemindersPage() {
           <div className="space-y-4">
             {groupedTasks.map(([date, items]) => (
               <section key={date}>
-                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#6B7280]">
+                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#6B7280] dark:text-tf-dark-text-muted">
                   {formatCompactDate(date)} ·{" "}
                   {parseDateKey(date).toLocaleDateString("pt-BR", {
                     weekday: "long"
                   })}
                 </h3>
-                <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+                <div className="overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-tf-dark-border dark:bg-tf-dark-bg-card">
                   {items.map(({ task, reminders }) => {
                     const expanded = expandedTasks.has(task.id);
                     const showingOptions = addingTaskId === task.id;
 
                     return (
                       <article
-                        className="border-b border-slate-100 last:border-b-0"
+                        className="border-b border-slate-100 last:border-b-0 dark:border-tf-dark-border-light"
                         key={task.id}
                       >
                         <button
                           aria-expanded={expanded}
-                          className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-[#FAFAFA]"
+                          className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-[#FAFAFA] dark:hover:bg-tf-dark-bg-page"
                           onClick={() => toggleExpanded(task.id)}
                           type="button"
                         >
                           {expanded ? (
-                            <ChevronDown className="h-4 w-4 shrink-0 text-[#6B7280]" />
+                            <ChevronDown className="h-4 w-4 shrink-0 text-[#6B7280] dark:text-tf-dark-text-muted" />
                           ) : (
-                            <ChevronRight className="h-4 w-4 shrink-0 text-[#6B7280]" />
+                            <ChevronRight className="h-4 w-4 shrink-0 text-[#6B7280] dark:text-tf-dark-text-muted" />
                           )}
                           <span
                             className={cn(
@@ -228,7 +234,7 @@ export default function RemindersPage() {
                           <span className="w-12 shrink-0 text-xs font-semibold text-[#534AB7]">
                             {task.task_time ?? "—"}
                           </span>
-                          <span className="min-w-0 flex-1 truncate text-sm font-medium text-[#111827]">
+                          <span className="min-w-0 flex-1 truncate text-sm font-medium text-[#111827] dark:text-tf-dark-text-primary">
                             {task.title}
                           </span>
                           <span
@@ -243,7 +249,7 @@ export default function RemindersPage() {
                         </button>
 
                         {expanded ? (
-                          <div className="border-t border-slate-100 bg-[#F9FAFB] px-4 py-4 pl-11">
+                          <div className="border-t border-slate-100 bg-[#F9FAFB] px-4 py-4 pl-11 dark:border-tf-dark-border-light dark:bg-tf-dark-bg-page">
                             <div className="flex flex-wrap gap-2">
                               {reminders.map((reminder) => (
                                 <span
@@ -266,7 +272,7 @@ export default function RemindersPage() {
                                 </span>
                               ))}
                               {!reminders.length ? (
-                                <span className="text-xs text-[#9CA3AF]">
+                                <span className="text-xs text-[#9CA3AF] dark:text-tf-dark-text-faint">
                                   Nenhum lembrete configurado.
                                 </span>
                               ) : null}
@@ -295,7 +301,7 @@ export default function RemindersPage() {
 
                                     return (
                                       <button
-                                        className="h-8 rounded-md border border-slate-200 bg-white px-3 text-xs font-medium text-[#534AB7] transition hover:border-[#534AB7] disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-[#9CA3AF]"
+                                        className="h-8 rounded-md border border-slate-200 bg-white px-3 text-xs font-medium text-[#534AB7] transition hover:border-[#534AB7] disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-[#9CA3AF] dark:border-tf-dark-border dark:bg-tf-dark-bg-card disabled:dark:bg-tf-dark-bg-sidebar disabled:dark:text-tf-dark-text-faint"
                                         disabled={exists}
                                         key={option.value}
                                         onClick={() =>
@@ -323,20 +329,20 @@ export default function RemindersPage() {
             ))}
           </div>
         ) : (
-          <div className="rounded-lg border border-dashed border-slate-200 bg-white p-8 text-center text-sm text-[#6B7280]">
+          <div className="rounded-lg border border-dashed border-slate-200 bg-white p-8 text-center text-sm text-[#6B7280] dark:border-tf-dark-border dark:bg-tf-dark-bg-card dark:text-tf-dark-text-muted">
             Nenhuma tarefa encontrada para este filtro.
           </div>
         )}
       </section>
 
-      <section className="rounded-xl border border-[#F2D49B] bg-[#FAEEDA] p-5">
+      <section className="rounded-xl border border-[#F2D49B] bg-[#FAEEDA] p-5 dark:border-tf-dark-border dark:bg-tf-dark-bg-card">
         <div className="mb-4 flex items-center gap-3">
-          <AlertTriangle className="h-5 w-5 text-[#854F0B]" />
+          <AlertTriangle className="h-5 w-5 text-[#854F0B] dark:text-tf-dark-text-muted" />
           <div>
-            <h2 className="text-base font-semibold text-[#5F3B08]">
+            <h2 className="text-base font-semibold text-[#5F3B08] dark:text-tf-dark-text-primary">
               Tarefas sem lembrete
             </h2>
-            <p className="text-xs text-[#854F0B]">
+            <p className="text-xs text-[#854F0B] dark:text-tf-dark-text-muted">
               Próximas tarefas dos próximos 7 dias.
             </p>
           </div>
@@ -346,15 +352,15 @@ export default function RemindersPage() {
           <div className="space-y-2">
             {tasksWithoutReminders.map((task) => (
               <article
-                className="flex flex-col gap-3 rounded-lg bg-white/75 px-3 py-3 sm:flex-row sm:items-center"
+                className="flex flex-col gap-3 rounded-lg bg-white/75 px-3 py-3 dark:bg-tf-dark-bg-page sm:flex-row sm:items-center"
                 key={task.id}
               >
-                <Clock3 className="h-4 w-4 shrink-0 text-[#854F0B]" />
+                <Clock3 className="h-4 w-4 shrink-0 text-[#854F0B] dark:text-tf-dark-text-muted" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-[#111827]">
+                  <p className="truncate text-sm font-medium text-[#111827] dark:text-tf-dark-text-primary">
                     {task.title}
                   </p>
-                  <p className="text-xs text-[#6B7280]">
+                  <p className="text-xs text-[#6B7280] dark:text-tf-dark-text-muted">
                     {formatTaskDateTime(task)}
                   </p>
                 </div>
@@ -370,7 +376,7 @@ export default function RemindersPage() {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-[#854F0B]">
+          <p className="text-sm text-[#854F0B] dark:text-tf-dark-text-muted">
             Todas as próximas tarefas já têm lembretes.
           </p>
         )}

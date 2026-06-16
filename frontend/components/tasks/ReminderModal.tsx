@@ -56,19 +56,19 @@ export function ReminderModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6">
-      <section className="w-[90vw] max-w-[480px] rounded-xl bg-white p-6 shadow-xl">
+      <section className="w-[90vw] max-w-[480px] rounded-xl bg-white p-6 shadow-xl dark:bg-tf-dark-bg-card">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#6b7280]">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#6b7280] dark:text-tf-dark-text-muted">
               Lembretes
             </p>
-            <h2 className="truncate text-lg font-semibold text-[#111827]">
+            <h2 className="truncate text-lg font-semibold text-[#111827] dark:text-tf-dark-text-primary">
               {task.title}
             </h2>
           </div>
           <button
             aria-label="Fechar modal"
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-[#6b7280] transition hover:bg-[#f3f4f6]"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-[#6b7280] transition hover:bg-[#f3f4f6] dark:text-tf-dark-text-muted dark:hover:bg-tf-dark-bg-sidebar"
             onClick={onClose}
             type="button"
           >
@@ -77,27 +77,27 @@ export function ReminderModal({
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-[#111827]">
+          <h3 className="text-sm font-semibold text-[#111827] dark:text-tf-dark-text-primary">
             Lembretes ativos
           </h3>
           {loading ? (
-            <p className="rounded-lg bg-[#f9fafb] p-3 text-sm text-[#6b7280]">
+            <p className="rounded-lg bg-[#f9fafb] p-3 text-sm text-[#6b7280] dark:bg-tf-dark-bg-page dark:text-tf-dark-text-muted">
               Carregando...
             </p>
           ) : reminders.length > 0 ? (
             <div className="space-y-2">
               {reminders.map((reminder) => (
                 <div
-                  className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
+                  className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 dark:border-tf-dark-border"
                   key={reminder.id}
                 >
-                  <span className="inline-flex items-center gap-2 text-sm text-[#111827]">
+                  <span className="inline-flex items-center gap-2 text-sm text-[#111827] dark:text-tf-dark-text-primary">
                     <Bell className="h-4 w-4 text-[#534AB7]" />
                     {formatReminderLabel(reminder.minutes_before)}
                   </span>
                   <button
                     aria-label="Excluir lembrete"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] transition hover:bg-[#f3f4f6]"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] transition hover:bg-[#f3f4f6] dark:text-tf-dark-text-muted dark:hover:bg-tf-dark-bg-sidebar"
                     onClick={() => deleteReminder(reminder.id)}
                     type="button"
                   >
@@ -107,14 +107,14 @@ export function ReminderModal({
               ))}
             </div>
           ) : (
-            <p className="rounded-lg bg-[#f9fafb] p-3 text-sm text-[#6b7280]">
+            <p className="rounded-lg bg-[#f9fafb] p-3 text-sm text-[#6b7280] dark:bg-tf-dark-bg-page dark:text-tf-dark-text-muted">
               Nenhum lembrete configurado.
             </p>
           )}
         </div>
 
         <div className="mt-5">
-          <h3 className="mb-3 text-sm font-semibold text-[#111827]">
+          <h3 className="mb-3 text-sm font-semibold text-[#111827] dark:text-tf-dark-text-primary">
             Adicionar
           </h3>
           <div className="grid gap-2 sm:grid-cols-2">

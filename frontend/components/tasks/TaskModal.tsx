@@ -113,14 +113,14 @@ export function TaskModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6">
-      <section className="max-h-[calc(100vh-48px)] w-[94vw] max-w-[640px] overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
+      <section className="max-h-[calc(100vh-48px)] w-[94vw] max-w-[640px] overflow-y-auto rounded-xl bg-white p-6 shadow-xl dark:bg-tf-dark-bg-card">
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-[#111827]">
+          <h2 className="text-lg font-semibold text-[#111827] dark:text-tf-dark-text-primary">
             {task ? "Editar tarefa" : "Nova tarefa"}
           </h2>
           <button
             aria-label="Fechar modal"
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-[#6b7280] transition hover:bg-[#f3f4f6]"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-[#6b7280] transition hover:bg-[#f3f4f6] dark:text-tf-dark-text-muted dark:hover:bg-tf-dark-bg-sidebar"
             onClick={onClose}
             type="button"
           >
@@ -130,11 +130,11 @@ export function TaskModal({
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <label className="block">
-            <span className="mb-2 block text-sm font-medium text-[#111827]">
+            <span className="mb-2 block text-sm font-medium text-[#111827] dark:text-tf-dark-text-primary">
               Título
             </span>
             <input
-              className="h-11 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none transition focus:border-[#534AB7] focus:ring-4 focus:ring-[#EEEDFE]"
+              className="h-11 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none transition focus:border-[#534AB7] focus:ring-4 focus:ring-[#EEEDFE] dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-primary"
               onChange={(event) => setTitle(event.target.value)}
               placeholder="Nome da tarefa..."
               required
@@ -144,11 +144,11 @@ export function TaskModal({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
-              <span className="mb-2 block text-sm font-medium text-[#111827]">
+              <span className="mb-2 block text-sm font-medium text-[#111827] dark:text-tf-dark-text-primary">
                 Data
               </span>
               <input
-                className="h-11 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none transition focus:border-[#534AB7] focus:ring-4 focus:ring-[#EEEDFE]"
+                className="h-11 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none transition focus:border-[#534AB7] focus:ring-4 focus:ring-[#EEEDFE] dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-primary"
                 onChange={(event) => setTaskDate(event.target.value)}
                 required
                 type="date"
@@ -157,11 +157,11 @@ export function TaskModal({
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-sm font-medium text-[#111827]">
+              <span className="mb-2 block text-sm font-medium text-[#111827] dark:text-tf-dark-text-primary">
                 Horário
               </span>
               <input
-                className="h-11 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none transition focus:border-[#534AB7] focus:ring-4 focus:ring-[#EEEDFE]"
+                className="h-11 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none transition focus:border-[#534AB7] focus:ring-4 focus:ring-[#EEEDFE] dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-primary"
                 onChange={(event) => setTaskTime(event.target.value)}
                 placeholder="HH:MM"
                 type="time"
@@ -171,11 +171,11 @@ export function TaskModal({
           </div>
 
           <label className="block">
-            <span className="mb-2 block text-sm font-medium text-[#111827]">
+            <span className="mb-2 block text-sm font-medium text-[#111827] dark:text-tf-dark-text-primary">
               Descrição
             </span>
             <textarea
-              className="min-h-24 w-full resize-none rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-[#534AB7] focus:ring-4 focus:ring-[#EEEDFE]"
+              className="min-h-24 w-full resize-none rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-[#534AB7] focus:ring-4 focus:ring-[#EEEDFE] dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-primary"
               onChange={(event) => setDescription(event.target.value)}
               placeholder="Descrição..."
               rows={3}
@@ -184,7 +184,9 @@ export function TaskModal({
           </label>
 
           <div>
-            <p className="mb-2 text-sm font-medium text-[#111827]">Cor</p>
+            <p className="mb-2 text-sm font-medium text-[#111827] dark:text-tf-dark-text-primary">
+              Cor
+            </p>
             <div className="flex items-center gap-3">
               {colors.map((item) => (
                 <button
