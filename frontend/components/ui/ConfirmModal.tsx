@@ -27,19 +27,19 @@ interface ConfirmModalProps {
 const variantStyles = {
   danger: {
     icon: AlertTriangle,
-    iconContainer: "bg-rose-50 text-[#DC2626]",
+    iconContainer: "bg-rose-50 text-[#DC2626] dark:bg-tf-dark-bg-sidebar",
     confirmButton:
       "border-[#DC2626] bg-[#DC2626] text-white hover:border-[#B91C1C] hover:bg-[#B91C1C]"
   },
   warning: {
     icon: AlertCircle,
-    iconContainer: "bg-amber-50 text-[#D97706]",
+    iconContainer: "bg-amber-50 text-[#D97706] dark:bg-tf-dark-bg-sidebar",
     confirmButton:
       "border-[#D97706] bg-[#D97706] text-white hover:border-[#B45309] hover:bg-[#B45309]"
   },
   default: {
     icon: HelpCircle,
-    iconContainer: "bg-tf-purple-light text-tf-purple",
+    iconContainer: "bg-tf-purple-light text-tf-purple dark:bg-tf-dark-purple-light",
     confirmButton:
       "border-tf-purple bg-tf-purple text-white hover:border-[#4540A3] hover:bg-[#4540A3]"
   }
@@ -85,7 +85,7 @@ export function ConfirmModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6 dark:bg-black/70"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) {
           onCancel();
@@ -96,7 +96,7 @@ export function ConfirmModal({
         aria-describedby={messageId}
         aria-labelledby={titleId}
         aria-modal="true"
-        className="w-full max-w-[400px] rounded-xl bg-white p-6 shadow-soft"
+        className="w-full max-w-[400px] rounded-xl bg-white p-6 shadow-soft dark:bg-tf-dark-bg-card"
         role="dialog"
       >
         <div
@@ -109,13 +109,13 @@ export function ConfirmModal({
         </div>
 
         <h2
-          className="mt-3 text-center text-[15px] font-semibold text-[#111827]"
+          className="mt-3 text-center text-[15px] font-semibold text-[#111827] dark:text-tf-dark-text-primary"
           id={titleId}
         >
           {title}
         </h2>
         <p
-          className="mt-2 text-center text-[13px] leading-5 text-[#6B7280]"
+          className="mt-2 text-center text-[13px] leading-5 text-[#6B7280] dark:text-tf-dark-text-muted"
           id={messageId}
         >
           {message}

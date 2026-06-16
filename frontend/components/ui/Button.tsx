@@ -9,10 +9,11 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const variants = {
   primary: "border border-tf-purple bg-tf-purple text-white hover:bg-[#4540A3]",
   outline:
-    "border border-tf-border bg-transparent text-tf-text-muted hover:border-tf-purple hover:text-tf-purple",
+    "border border-tf-border bg-transparent text-tf-text-muted hover:border-tf-purple hover:text-tf-purple dark:border-tf-dark-border dark:text-tf-dark-text-muted",
   secondary:
-    "border border-tf-border bg-transparent text-tf-text-muted hover:border-tf-purple hover:text-tf-purple",
-  ghost: "border border-transparent bg-transparent text-tf-text-muted hover:text-tf-text-primary"
+    "border border-tf-border bg-transparent text-tf-text-muted hover:border-tf-purple hover:text-tf-purple dark:border-tf-dark-border dark:text-tf-dark-text-muted",
+  ghost:
+    "border border-transparent bg-transparent text-tf-text-muted hover:text-tf-text-primary dark:text-tf-dark-text-muted dark:hover:text-tf-dark-text-primary"
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(

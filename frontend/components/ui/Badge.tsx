@@ -6,11 +6,11 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 }
 
 const variants = {
-  purple: "bg-tf-purple-light text-tf-purple",
+  purple: "bg-tf-purple-light text-tf-purple dark:bg-tf-dark-purple-light",
   teal: "bg-tf-teal-bg text-tf-teal-text",
   amber: "bg-tf-amber-bg text-tf-amber-text",
   coral: "bg-tf-coral-bg text-tf-coral-text",
-  slate: "bg-slate-100 text-slate-700"
+  slate: "bg-slate-100 text-slate-700 dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-muted"
 };
 
 export function Badge({
