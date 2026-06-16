@@ -53,7 +53,9 @@ export async function apiFetch<TData>(
     }
 
     throw new ApiFetchError(
-      payload?.message ?? "Erro ao chamar a API.",
+      typeof payload?.error === "string"
+        ? payload.error
+        : payload?.message ?? "Erro ao chamar a API.",
       response.status,
       payload?.error ?? "HTTP_ERROR"
     );

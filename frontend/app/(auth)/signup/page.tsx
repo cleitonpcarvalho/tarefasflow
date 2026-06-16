@@ -88,6 +88,11 @@ export default function SignupPage() {
       return;
     }
 
+    if (password.length < 8) {
+      setError("A senha deve ter pelo menos 8 caracteres.");
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError("As senhas não coincidem.");
       return;
@@ -207,6 +212,9 @@ export default function SignupPage() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              <p className="mt-1 text-xs text-tf-text-faint dark:text-tf-dark-text-faint">
+                Mínimo 8 caracteres
+              </p>
             </label>
 
             <label className="flex flex-col gap-1.5">
