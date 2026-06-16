@@ -34,11 +34,11 @@ export function CalendarGrid({
 
   return (
     <section>
-      <div className="overflow-hidden rounded-lg border border-tf-border bg-white">
-        <div className="grid grid-cols-7 border-b border-tf-border bg-tf-bg-page">
+      <div className="overflow-hidden rounded-lg border border-tf-border bg-white dark:border-tf-dark-border dark:bg-tf-dark-bg-card">
+        <div className="grid grid-cols-7 border-b border-tf-border bg-tf-bg-page dark:border-tf-dark-border dark:bg-tf-dark-bg-page">
           {weekDays.map((day) => (
             <div
-              className="px-1.5 py-1.5 text-center text-[11px] font-medium text-tf-text-faint"
+              className="px-1.5 py-1.5 text-center text-[11px] font-medium text-tf-text-faint dark:text-tf-dark-text-faint"
               key={day}
             >
               {day}
@@ -57,7 +57,7 @@ export function CalendarGrid({
               <button
                 aria-label={`Selecionar ${cell.dateKey}`}
                 className={cn(
-                  "min-h-20 border-b border-r border-tf-border-light bg-white p-1.5 text-left transition duration-100 hover:bg-tf-bg-page",
+                  "min-h-20 border-b border-r border-tf-border-light bg-white p-1.5 text-left transition duration-100 hover:bg-tf-bg-page dark:border-tf-dark-border-light dark:bg-tf-dark-bg-card dark:hover:bg-tf-dark-bg-page",
                   !cell.isCurrentMonth && "opacity-35",
                   selected &&
                     "relative z-10 outline outline-[1.5px] -outline-offset-[1.5px] outline-tf-purple"
@@ -69,8 +69,9 @@ export function CalendarGrid({
                 <span
                   className={cn(
                     "mb-1 inline-block h-[22px] w-[22px] text-center text-[12px] font-medium leading-[22px] text-tf-text-muted",
+                    "dark:text-tf-dark-text-muted",
                     cell.isToday &&
-                      "rounded-full bg-tf-purple font-semibold text-white"
+                      "rounded-full bg-tf-purple font-semibold text-white dark:text-white"
                   )}
                 >
                   {cell.date.getDate()}
@@ -106,7 +107,7 @@ export function CalendarGrid({
                       </span>
                     ))}
                     {dayTasks.length > 2 ? (
-                      <span className="block text-[10px] font-medium text-tf-text-faint">
+                      <span className="block text-[10px] font-medium text-tf-text-faint dark:text-tf-dark-text-faint">
                         +{dayTasks.length - 2}
                       </span>
                     ) : null}

@@ -73,16 +73,16 @@ export function DayPanel({
   return (
     <aside
       className={cn(
-        "relative h-[calc(100vh-56px)] shrink-0 bg-white",
+        "relative h-[calc(100vh-56px)] shrink-0 bg-white dark:bg-tf-dark-bg-card",
         !resizing && "transition-[width] duration-200 ease-in-out",
-        open ? "border-l border-tf-border" : "border-l-0"
+        open ? "border-l border-tf-border dark:border-tf-dark-border" : "border-l-0"
       )}
       style={{ width: open ? width : 0 }}
     >
       {open ? (
         <div
           aria-label="Redimensionar painel lateral"
-          className="absolute bottom-0 left-0 top-0 z-10 w-1 -translate-x-1/2 cursor-col-resize transition hover:bg-[#E5E7EB]"
+          className="absolute bottom-0 left-0 top-0 z-10 w-1 -translate-x-1/2 cursor-col-resize transition hover:bg-[#E5E7EB] dark:hover:bg-tf-dark-border"
           data-testid="day-panel-resize-handle"
           onMouseDown={onResizeStart}
           role="separator"
@@ -91,7 +91,7 @@ export function DayPanel({
 
       <button
         aria-label={open ? "Esconder painel" : "Mostrar painel"}
-        className="absolute left-0 top-1/2 z-20 flex h-9 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-md border border-tf-border bg-white text-tf-text-muted shadow-sm transition hover:text-tf-purple"
+        className="absolute left-0 top-1/2 z-20 flex h-9 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-md border border-tf-border bg-white text-tf-text-muted shadow-sm transition hover:text-tf-purple dark:border-tf-dark-border dark:bg-tf-dark-bg-card dark:text-tf-dark-text-muted"
         onClick={onToggleOpen}
         type="button"
       >
@@ -109,7 +109,7 @@ export function DayPanel({
         )}
       >
         <section>
-          <h3 className="mb-2.5 text-[12px] font-medium capitalize text-tf-text-muted">
+          <h3 className="mb-2.5 text-[12px] font-medium capitalize text-tf-text-muted dark:text-tf-dark-text-muted">
             {formatPanelTitle(selectedDate)}
           </h3>
 
@@ -117,7 +117,7 @@ export function DayPanel({
             <div>
               {sortedTasks.map((task) => (
                 <article
-                  className="group flex gap-2 border-b border-tf-border-light py-2"
+                  className="group flex gap-2 border-b border-tf-border-light py-2 dark:border-tf-dark-border-light"
                   key={task.id}
                 >
                   <button
@@ -126,7 +126,7 @@ export function DayPanel({
                       "mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border-[1.5px] transition",
                       task.done
                         ? "border-tf-purple bg-tf-purple text-white"
-                        : "border-slate-300 text-transparent hover:border-tf-purple"
+                        : "border-slate-300 text-transparent hover:border-tf-purple dark:border-tf-dark-border"
                     )}
                     onClick={() => onToggleDone(task.id)}
                     type="button"
@@ -135,24 +135,24 @@ export function DayPanel({
                   </button>
 
                   <div className="min-w-0 flex-1">
-                    <p className="text-[11px] leading-4 text-tf-text-faint">
+                    <p className="text-[11px] leading-4 text-tf-text-faint dark:text-tf-dark-text-faint">
                       {task.task_time ?? "Dia todo"}
                     </p>
                     <p
                       className={cn(
-                        "truncate text-[12px] leading-5 text-tf-text-primary",
-                        task.done && "text-tf-text-faint line-through"
+                        "truncate text-[12px] leading-5 text-tf-text-primary dark:text-tf-dark-text-primary",
+                        task.done && "text-tf-text-faint line-through dark:text-tf-dark-text-faint"
                       )}
                     >
                       {task.title}
                     </p>
                     {task.is_recurring && task.rrule ? (
                       <div className="mt-1">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-[#EEEDFE] px-1.5 py-0.5 text-[9px] font-medium text-[#534AB7]">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-tf-purple-light px-1.5 py-0.5 text-[9px] font-medium text-[#534AB7] dark:bg-tf-dark-purple-light">
                           <RefreshCw className="h-2.5 w-2.5" />
                           Recorrente
                         </span>
-                        <p className="mt-1 text-[10px] leading-4 text-tf-text-muted">
+                        <p className="mt-1 text-[10px] leading-4 text-tf-text-muted dark:text-tf-dark-text-muted">
                           {describeRRule(task.rrule)}
                         </p>
                       </div>
@@ -181,7 +181,7 @@ export function DayPanel({
             </div>
           ) : (
             <div className="py-2">
-              <p className="mb-3 text-[12px] text-tf-text-faint">
+              <p className="mb-3 text-[12px] text-tf-text-faint dark:text-tf-dark-text-faint">
                 Nenhuma tarefa para este dia
               </p>
               <Button onClick={onCreateTask} type="button" variant="outline">
@@ -193,7 +193,7 @@ export function DayPanel({
         </section>
 
         <section className="mt-6">
-          <h3 className="mb-2.5 text-[12px] font-medium text-tf-text-muted">
+          <h3 className="mb-2.5 text-[12px] font-medium text-tf-text-muted dark:text-tf-dark-text-muted">
             Lembretes próximos
           </h3>
           {upcomingTasks.length > 0 ? (
@@ -206,15 +206,15 @@ export function DayPanel({
 
                 return (
                   <div
-                    className="mb-1.5 flex gap-2 rounded-md bg-tf-bg-page p-2"
+                    className="mb-1.5 flex gap-2 rounded-md bg-tf-bg-page p-2 dark:bg-tf-dark-bg-page"
                     key={task.id}
                   >
                     <Bell className="mt-0.5 h-3.5 w-3.5 shrink-0 text-tf-purple" />
                     <div className="min-w-0">
-                      <p className="truncate text-[12px] text-tf-text-primary">
+                      <p className="truncate text-[12px] text-tf-text-primary dark:text-tf-dark-text-primary">
                         {task.title}
                       </p>
-                      <p className="text-[11px] text-tf-text-muted">
+                      <p className="text-[11px] text-tf-text-muted dark:text-tf-dark-text-muted">
                         {targetDate ? humanizeFutureDistance(targetDate) : ""}
                       </p>
                     </div>
@@ -229,13 +229,13 @@ export function DayPanel({
               })}
             </div>
           ) : (
-            <p className="rounded-md bg-tf-bg-page p-2 text-[12px] text-tf-text-muted">
+            <p className="rounded-md bg-tf-bg-page p-2 text-[12px] text-tf-text-muted dark:bg-tf-dark-bg-page dark:text-tf-dark-text-muted">
               Nenhum lembrete nas próximas 24h.
             </p>
           )}
         </section>
 
-        <div className="mt-6 rounded-md border border-[#9FE1CB] bg-tf-teal-bg p-2.5 text-tf-teal-text">
+        <div className="mt-6 rounded-md border border-[#9FE1CB] bg-tf-teal-bg p-2.5 text-tf-teal-text dark:border-tf-dark-border dark:bg-tf-dark-bg-page dark:text-tf-dark-text-muted">
           <div className="flex items-center gap-2 text-[12px] font-medium">
             <Wifi className="h-4 w-4" />
             Agente ativo
@@ -258,7 +258,7 @@ function IconButton({
   return (
     <button
       aria-label={label}
-      className="flex h-6 w-6 items-center justify-center rounded-md text-tf-text-faint transition hover:bg-tf-bg-page hover:text-tf-text-primary"
+      className="flex h-6 w-6 items-center justify-center rounded-md text-tf-text-faint transition hover:bg-tf-bg-page hover:text-tf-text-primary dark:text-tf-dark-text-faint dark:hover:bg-tf-dark-bg-page dark:hover:text-tf-dark-text-primary"
       onClick={onClick}
       title={label}
       type="button"

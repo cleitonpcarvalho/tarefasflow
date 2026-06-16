@@ -63,16 +63,16 @@ export function MobileDaySheet({
         onClick={onClose}
       />
 
-      <div className="fixed bottom-0 left-0 right-0 z-50 max-h-[70vh] overflow-y-auto rounded-t-2xl bg-white p-4 shadow-xl">
-        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-slate-200" />
+      <div className="fixed bottom-0 left-0 right-0 z-50 max-h-[70vh] overflow-y-auto rounded-t-2xl bg-white p-4 shadow-xl dark:bg-tf-dark-bg-card">
+        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-slate-200 dark:bg-tf-dark-border-light" />
 
         <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 className="text-[15px] font-semibold capitalize text-slate-900">
+          <h2 className="text-[15px] font-semibold capitalize text-slate-900 dark:text-tf-dark-text-primary">
             {formattedDate}
           </h2>
           <button
             aria-label="Fechar"
-            className="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 dark:text-tf-dark-text-faint dark:hover:bg-tf-dark-bg-sidebar"
             onClick={onClose}
             type="button"
           >
@@ -80,13 +80,13 @@ export function MobileDaySheet({
           </button>
         </div>
 
-        <div className="mb-4 h-px bg-slate-100" />
+        <div className="mb-4 h-px bg-slate-100 dark:bg-tf-dark-border-light" />
 
         {sortedTasks.length > 0 ? (
           <div>
             {sortedTasks.map((task) => (
               <article
-                className="flex gap-3 border-b border-slate-100 py-3"
+                className="flex gap-3 border-b border-slate-100 py-3 dark:border-tf-dark-border-light"
                 key={task.id}
               >
                 <button
@@ -95,7 +95,7 @@ export function MobileDaySheet({
                     "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-[1.5px] transition",
                     task.done
                       ? "border-[#534AB7] bg-[#534AB7] text-white"
-                      : "border-slate-300 text-transparent"
+                      : "border-slate-300 text-transparent dark:border-tf-dark-border"
                   )}
                   onClick={() => onToggleDone(task.id)}
                   type="button"
@@ -104,13 +104,13 @@ export function MobileDaySheet({
                 </button>
 
                 <div className="min-w-0 flex-1">
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[11px] text-slate-400 dark:text-tf-dark-text-faint">
                     {task.task_time ? task.task_time.slice(0, 5) : "Dia todo"}
                   </p>
                   <p
                     className={cn(
-                      "text-[13px] text-slate-900",
-                      task.done && "text-slate-400 line-through"
+                      "text-[13px] text-slate-900 dark:text-tf-dark-text-primary",
+                      task.done && "text-slate-400 line-through dark:text-tf-dark-text-faint"
                     )}
                   >
                     {task.title}
@@ -127,7 +127,7 @@ export function MobileDaySheet({
                 <div className="flex shrink-0 items-start gap-1">
                   <button
                     aria-label="Editar"
-                    className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                    className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:text-tf-dark-text-faint dark:hover:bg-tf-dark-bg-sidebar dark:hover:text-tf-dark-text-muted"
                     onClick={() => {
                       onClose();
                       onEditTask(task);
@@ -138,7 +138,7 @@ export function MobileDaySheet({
                   </button>
                   <button
                     aria-label="Lembrete"
-                    className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                    className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:text-tf-dark-text-faint dark:hover:bg-tf-dark-bg-sidebar dark:hover:text-tf-dark-text-muted"
                     onClick={() => {
                       onClose();
                       onAddReminder(task);
@@ -149,7 +149,7 @@ export function MobileDaySheet({
                   </button>
                   <button
                     aria-label="Deletar"
-                    className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+                    className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:text-tf-dark-text-faint dark:hover:bg-tf-dark-bg-sidebar"
                     onClick={() => onDeleteTask(task)}
                     type="button"
                   >
@@ -168,7 +168,7 @@ export function MobileDaySheet({
           </div>
         ) : (
           <div className="py-4">
-            <p className="mb-3 text-[13px] text-slate-400">
+            <p className="mb-3 text-[13px] text-slate-400 dark:text-tf-dark-text-faint">
               Nenhuma tarefa para este dia
             </p>
             <Button onClick={onCreateTask} type="button" variant="outline">

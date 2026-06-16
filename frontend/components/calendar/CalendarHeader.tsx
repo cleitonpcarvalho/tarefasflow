@@ -34,7 +34,7 @@ export function CalendarHeader({
       <div className="flex items-center gap-2">
         <button
           aria-label="Período anterior"
-          className="flex h-7 w-7 items-center justify-center rounded-md border border-tf-border text-tf-text-muted transition hover:bg-tf-bg-page"
+          className="flex h-7 w-7 items-center justify-center rounded-md border border-tf-border text-tf-text-muted transition hover:bg-tf-bg-page dark:border-tf-dark-border dark:text-tf-dark-text-muted dark:hover:bg-tf-dark-bg-page"
           onClick={onPrevious}
           type="button"
         >
@@ -42,13 +42,13 @@ export function CalendarHeader({
         </button>
         <button
           aria-label="Próximo período"
-          className="flex h-7 w-7 items-center justify-center rounded-md border border-tf-border text-tf-text-muted transition hover:bg-tf-bg-page"
+          className="flex h-7 w-7 items-center justify-center rounded-md border border-tf-border text-tf-text-muted transition hover:bg-tf-bg-page dark:border-tf-dark-border dark:text-tf-dark-text-muted dark:hover:bg-tf-dark-bg-page"
           onClick={onNext}
           type="button"
         >
           <ChevronRight className="h-3.5 w-3.5" />
         </button>
-        <h2 className="ml-2 text-[15px] font-medium capitalize text-tf-text-primary">
+        <h2 className="ml-2 text-[15px] font-medium capitalize text-tf-text-primary dark:text-tf-dark-text-primary">
           {title}
         </h2>
       </div>
@@ -58,10 +58,10 @@ export function CalendarHeader({
           {views.map((view) => (
             <button
               className={cn(
-                "h-7 rounded-md border border-tf-border px-2.5 text-[11px] font-medium transition",
+                "h-7 rounded-md border border-tf-border px-2.5 text-[11px] font-medium transition dark:border-tf-dark-border",
                 currentView === view.id
-                  ? "bg-tf-border-light text-tf-text-primary"
-                  : "text-tf-text-muted hover:bg-tf-bg-page"
+                  ? "bg-tf-border-light text-tf-text-primary dark:bg-tf-dark-border-light dark:text-tf-dark-text-primary"
+                  : "text-tf-text-muted hover:bg-tf-bg-page dark:text-tf-dark-text-muted dark:hover:bg-tf-dark-bg-page"
               )}
               key={view.id}
               onClick={() => onChangeView(view.id)}

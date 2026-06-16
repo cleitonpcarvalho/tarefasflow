@@ -44,11 +44,11 @@ export function DayView({
   }, [date]);
 
   return (
-    <section className="overflow-hidden rounded-lg border border-tf-border bg-white">
-      <div className="grid grid-cols-[56px_1fr] border-b border-tf-border bg-white">
+    <section className="overflow-hidden rounded-lg border border-tf-border bg-white dark:border-tf-dark-border dark:bg-tf-dark-bg-card">
+      <div className="grid grid-cols-[56px_1fr] border-b border-tf-border bg-white dark:border-tf-dark-border dark:bg-tf-dark-bg-card">
         <div />
-        <div className="border-l border-tf-border-light px-4 py-3">
-          <p className="text-[13px] font-semibold capitalize text-tf-text-primary">
+        <div className="border-l border-tf-border-light px-4 py-3 dark:border-tf-dark-border-light">
+          <p className="text-[13px] font-semibold capitalize text-tf-text-primary dark:text-tf-dark-text-primary">
             {formatDayHeader(date)}
           </p>
         </div>
@@ -65,7 +65,7 @@ export function DayView({
           <div className="relative">
             {hours.map((hour) => (
               <span
-                className="absolute right-2 -translate-y-1/2 text-[11px] text-[#9CA3AF]"
+                className="absolute right-2 -translate-y-1/2 text-[11px] text-[#9CA3AF] dark:text-tf-dark-text-faint"
                 key={hour}
                 style={{ top: hour * 60 }}
               >
@@ -75,7 +75,7 @@ export function DayView({
           </div>
 
           <div
-            className="relative border-l border-tf-border-light bg-[repeating-linear-gradient(to_bottom,transparent_0,transparent_59px,#F3F4F6_59px,#F3F4F6_60px)]"
+            className="relative border-l border-tf-border-light bg-[repeating-linear-gradient(to_bottom,transparent_0,transparent_59px,#F3F4F6_59px,#F3F4F6_60px)] dark:border-tf-dark-border-light dark:bg-[repeating-linear-gradient(to_bottom,transparent_0,transparent_59px,theme(colors.tf.dark-border-light)_59px,theme(colors.tf.dark-border-light)_60px)]"
             data-date={date}
             data-testid="day-timeline"
             onClick={(event) => onCreateTask(date, timeFromPointer(event))}
@@ -125,7 +125,7 @@ export function DayView({
                 <div className="flex shrink-0 gap-1">
                   <button
                     aria-label={`Editar ${task.title}`}
-                    className="flex h-7 w-7 items-center justify-center rounded-md bg-white/60 transition hover:bg-white"
+                    className="flex h-7 w-7 items-center justify-center rounded-md bg-white/60 transition hover:bg-white dark:bg-tf-dark-bg-card/70 dark:hover:bg-tf-dark-bg-card"
                     onClick={() => onSelectTask(task)}
                     type="button"
                   >
@@ -133,7 +133,7 @@ export function DayView({
                   </button>
                   <button
                     aria-label={`Deletar ${task.title}`}
-                    className="flex h-7 w-7 items-center justify-center rounded-md bg-white/60 transition hover:bg-white"
+                    className="flex h-7 w-7 items-center justify-center rounded-md bg-white/60 transition hover:bg-white dark:bg-tf-dark-bg-card/70 dark:hover:bg-tf-dark-bg-card"
                     onClick={() => onDeleteTask(task)}
                     type="button"
                   >

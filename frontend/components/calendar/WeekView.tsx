@@ -47,15 +47,15 @@ export function WeekView({
   }, [days, today]);
 
   return (
-    <section className="overflow-hidden rounded-lg border border-tf-border bg-white">
-      <div className="grid grid-cols-[48px_repeat(7,minmax(104px,1fr))] border-b border-tf-border bg-white">
+    <section className="overflow-hidden rounded-lg border border-tf-border bg-white dark:border-tf-dark-border dark:bg-tf-dark-bg-card">
+      <div className="grid grid-cols-[48px_repeat(7,minmax(104px,1fr))] border-b border-tf-border bg-white dark:border-tf-dark-border dark:bg-tf-dark-bg-card">
         <div />
         {days.map((day) => {
           const dateKey = toDateKey(day);
           return (
             <div
               className={cn(
-                "border-l border-tf-border-light px-2 py-2 text-center",
+                "border-l border-tf-border-light px-2 py-2 text-center dark:border-tf-dark-border-light",
                 dateKey === today && "text-[#534AB7]"
               )}
               key={dateKey}
@@ -92,7 +92,7 @@ export function WeekView({
 
             return (
               <div
-                className="relative border-l border-tf-border-light bg-[repeating-linear-gradient(to_bottom,transparent_0,transparent_59px,#F3F4F6_59px,#F3F4F6_60px)]"
+                className="relative border-l border-tf-border-light bg-[repeating-linear-gradient(to_bottom,transparent_0,transparent_59px,#F3F4F6_59px,#F3F4F6_60px)] dark:border-tf-dark-border-light dark:bg-[repeating-linear-gradient(to_bottom,transparent_0,transparent_59px,theme(colors.tf.dark-border-light)_59px,theme(colors.tf.dark-border-light)_60px)]"
                 data-date={dateKey}
                 data-testid="week-day-column"
                 key={dateKey}
@@ -150,7 +150,7 @@ function TimeLabels() {
     <div className="relative">
       {hours.map((hour) => (
         <span
-          className="absolute right-2 -translate-y-1/2 text-[11px] text-[#9CA3AF]"
+          className="absolute right-2 -translate-y-1/2 text-[11px] text-[#9CA3AF] dark:text-tf-dark-text-faint"
           key={hour}
           style={{ top: hour * hourHeight }}
         >

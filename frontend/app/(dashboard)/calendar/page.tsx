@@ -275,10 +275,9 @@ export default function CalendarPage() {
         {onboardingStatus ? (
           whatsappDisconnected ? (
             <div
-              className="mb-3 flex flex-wrap items-center justify-between gap-3 px-4 py-3"
-              style={{ background: "#FFF8E7", border: "1px solid #F59E0B", borderRadius: 12 }}
+              className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#F59E0B] bg-[#FFF8E7] px-4 py-3 dark:border-tf-dark-border dark:bg-tf-dark-bg-card"
             >
-              <span className="text-sm font-medium" style={{ color: "#92400E" }}>
+              <span className="text-sm font-medium text-[#92400E] dark:text-tf-dark-text-muted">
                 ⚠️ Seu agente ainda não está conectado. Conecte seu WhatsApp para começar a receber lembretes.
               </span>
               <Link
@@ -291,10 +290,9 @@ export default function CalendarPage() {
             </div>
           ) : showOnboardingReminder ? (
             <div
-              className="mb-3 flex flex-wrap items-center justify-between gap-3 px-4 py-3"
-              style={{ background: "#FFF8E7", border: "1px solid #F59E0B", borderRadius: 12 }}
+              className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#F59E0B] bg-[#FFF8E7] px-4 py-3 dark:border-tf-dark-border dark:bg-tf-dark-bg-card"
             >
-              <span className="text-sm font-medium" style={{ color: "#92400E" }}>
+              <span className="text-sm font-medium text-[#92400E] dark:text-tf-dark-text-muted">
                 🚀 Complete a configuração do TarefasFlow para aproveitar todos os recursos.
               </span>
               <div className="flex shrink-0 items-center gap-3">
@@ -306,9 +304,8 @@ export default function CalendarPage() {
                   Continuar configuração
                 </Link>
                 <button
-                  className="text-sm font-medium hover:underline"
+                  className="text-sm font-medium text-[#92400E] hover:underline dark:text-tf-dark-text-muted"
                   onClick={() => void handleDismissOnboarding()}
-                  style={{ color: "#92400E" }}
                   type="button"
                 >
                   Dispensar
