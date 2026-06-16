@@ -17,10 +17,16 @@ import { Button } from "@/components/ui/Button";
 import { useTasks } from "@/hooks/useTasks";
 import { cn } from "@/lib/cn";
 import { formatCompactDate, todayKey } from "@/lib/date";
-import { taskColorClasses } from "@/lib/task-colors";
 import type { CreateTaskInput, Task } from "@/types";
 
 type TaskFilter = "all" | "pending" | "done";
+
+const COLOR_MAP: Record<Task["color"], string> = {
+  purple: "#534AB7",
+  teal: "#2A9D8F",
+  coral: "#E76F51",
+  amber: "#E9C46A"
+};
 
 export default function TasksPage() {
   const [filter, setFilter] = useState<TaskFilter>("all");
@@ -283,13 +289,16 @@ function TaskRow({
 
       <div className="flex items-center justify-between gap-2 sm:justify-end">
         <span
-          className={cn(
-            "inline-flex rounded-full px-2 py-1 text-xs font-medium",
-            taskColorClasses[task.color]
-          )}
-        >
-          {task.color}
-        </span>
+          style={{
+            display: "inline-block",
+            width: 12,
+            height: 12,
+            borderRadius: "50%",
+            background: COLOR_MAP[task.color ?? "purple"],
+            flexShrink: 0
+          }}
+          title={task.color}
+        />
         <div className="flex items-center gap-1">
           <IconButton label="Editar" onClick={onEdit}>
             <Edit3 className="h-4 w-4" />
