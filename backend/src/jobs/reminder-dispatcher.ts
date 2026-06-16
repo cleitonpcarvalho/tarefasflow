@@ -165,58 +165,34 @@ async function createNextRecurringReminder(reminder: PendingReminderRow) {
 }
 
 function buildReminderMessage(reminder: PendingReminderRow) {
-  return formatReminderMessage(
-    reminder.user_name,
-    reminder.title,
-    reminder.occurrence_date ?? reminder.task_date,
-    reminder.task_time,
-    reminder.minutes_before
-  );
+  const emoji = colorEmoji(reminder.color ?? "purple");
+  const horario = reminder.task_time?.slice(0, 5) ?? "";
+  const minutos = reminder.minutes_before;
+
+  const linhas = [
+    `${emoji} *Lembrete em ${minutos} minuto${minutos !== 1 ? "s" : ""}*`,
+    ``,
+    `📌 ${reminder.title}`,
+    horario ? `🕐 ${horario}` : null,
+    reminder.description ? `📝 ${reminder.description}` : null
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  return linhas;
 }
 
-function formatReminderMessage(
-  userName: string,
-  taskTitle: string,
-  taskDate: Date | string,
-  taskTime: string | null,
-  minutesBefore: number
-): string {
-  const dateStr =
-    taskDate instanceof Date ? taskDate.toISOString().slice(0, 10) : taskDate;
-  const dateFormatted = new Date(`${dateStr}T12:00:00`).toLocaleDateString(
-    "pt-BR",
-    { day: "2-digit", month: "2-digit" }
-  );
-
-  const timeFormatted = taskTime ? taskTime.substring(0, 5) : null;
-
-  let whenText: string;
-
-  if (minutesBefore === 1440) {
-    whenText = "1 dia antes";
-  } else if (minutesBefore === 60) {
-    whenText = "1 hora antes";
-  } else if (minutesBefore === 30) {
-    whenText = "30 minutos antes";
-  } else if (minutesBefore === 15) {
-    whenText = "15 minutos antes";
-  } else {
-    whenText = `${minutesBefore} minutos antes`;
+function colorEmoji(color: string): string {
+  switch (color) {
+    case "coral":
+      return "🔴";
+    case "amber":
+      return "🟡";
+    case "teal":
+      return "🟢";
+    default:
+      return "🟣";
   }
-
-  const timeStr = timeFormatted ? ` às ${timeFormatted}` : "";
-
-  return [
-    `⏰ *Lembrete TarefasFlow*`,
-    ``,
-    `Olá, ${userName}! Você tem um compromisso chegando:`,
-    ``,
-    `📌 *${taskTitle}*`,
-    `📅 ${dateFormatted}${timeStr}`,
-    `🔔 Este lembrete é ${whenText}`,
-    ``,
-    `Boa sorte! 💪`
-  ].join("\n");
 }
 
 function toTask(row: PendingReminderRow): Task {

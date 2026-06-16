@@ -417,7 +417,14 @@ export async function toggleTaskDone(
 export async function getTasksForDate(
   userId: string,
   date: string
-): Promise<Array<{ title: string; task_time: string | null }>> {
+): Promise<
+  Array<{
+    title: string;
+    task_time: string | null;
+    color: TaskColor;
+    description: string | null;
+  }>
+> {
   const tasks = await getTasks({
     requesterId: userId,
     requesterRole: "user",
@@ -426,7 +433,12 @@ export async function getTasksForDate(
 
   return tasks
     .filter((task) => !task.done)
-    .map((task) => ({ title: task.title, task_time: task.task_time }));
+    .map((task) => ({
+      title: task.title,
+      task_time: task.task_time,
+      color: task.color ?? "purple",
+      description: task.description ?? null
+    }));
 }
 
 async function hasRecurringTaskConflict(

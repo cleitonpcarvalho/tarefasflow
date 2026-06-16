@@ -65,7 +65,7 @@ async function dispatchSummaryForUser(user: DailySummaryUserRow): Promise<void> 
 
 function buildSummaryMessage(
   name: string,
-  tasks: Array<{ title: string; task_time: string | null }>
+  tasks: Array<{ title: string; task_time: string | null; color: string }>
 ): string {
   const hoje = new Date().toLocaleDateString("pt-BR", {
     timeZone: "America/Fortaleza",
@@ -80,10 +80,26 @@ function buildSummaryMessage(
   const linhas = tasks
     .map((task) => {
       const horario = task.task_time ? task.task_time.slice(0, 5) : null;
+      const emoji = colorEmoji(task.color);
 
-      return horario ? `🕐 ${horario} — ${task.title}` : `📌 ${task.title}`;
+      return horario
+        ? `${emoji} ${horario} — ${task.title}`
+        : `${emoji} ${task.title}`;
     })
     .join("\n");
 
   return `🌅 Bom dia, ${name}!\n\n📋 Suas tarefas de hoje (${hoje}):\n\n${linhas}\n\nTenha um ótimo dia! 💪`;
+}
+
+function colorEmoji(color: string): string {
+  switch (color) {
+    case "coral":
+      return "🔴";
+    case "amber":
+      return "🟡";
+    case "teal":
+      return "🟢";
+    default:
+      return "🟣";
+  }
 }

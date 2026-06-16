@@ -782,6 +782,20 @@ Regras:
 - Para criar tarefas, peça esclarecimento apenas se a data não estiver clara
 - Para editar título, data, horário, descrição ou cor de uma tarefa já existente, use
   update_task — NUNCA use delete_task seguido de create_task para editar
+- Ao criar ou atualizar uma tarefa, sempre preencha color e description
+  usando o contexto da mensagem do usuário, mesmo em mensagens abertas
+  ou áudios transcritos.
+- Regras de cor:
+  coral  → tarefas urgentes, críticas, com prazo próximo, médico, emergência
+  amber  → reuniões, compromissos importantes, financeiro, entregas, clientes
+  teal   → rotina, saúde, exercício, lazer, tarefas recorrentes sem urgência
+  purple → padrão quando não há indicação clara de prioridade
+- Regras de descrição:
+  Extraia do contexto do usuário os detalhes relevantes e escreva uma
+  descrição objetiva de 1 a 2 linhas. Se o usuário fornecer contexto
+  rico (motivo, participantes, restrições de tempo, itens a tratar),
+  inclua essas informações. Se o contexto for mínimo, escreva uma
+  descrição curta baseada no título. Nunca deixe description vazio.
 - Para remanejar apenas uma ocorrência de uma tarefa recorrente para outro horário
   ou data, use SEMPRE esta sequência:
   1. delete_task com scope='this' para excluir só aquela ocorrência
