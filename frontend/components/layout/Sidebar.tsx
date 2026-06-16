@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
 import type { Task } from "@/types";
@@ -160,7 +161,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-tf-purple-light text-[12px] font-semibold text-tf-purple">
               {getInitials(user?.name)}
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="truncate text-[12px] font-medium text-tf-text-primary">
                 {user?.name ?? "TarefasFlow"}
               </p>
@@ -168,6 +169,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 {user?.email ?? "Carregando sessão"}
               </p>
             </div>
+            <ThemeToggle />
           </div>
         </div>
       </aside>

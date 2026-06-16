@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -26,7 +27,16 @@ const config: Config = {
           "border-light": "#F3F4F6",
           "text-primary": "#111827",
           "text-muted": "#6B7280",
-          "text-faint": "#9CA3AF"
+          "text-faint": "#9CA3AF",
+          "dark-bg-page": "#0F1117",
+          "dark-bg-sidebar": "#1A1D27",
+          "dark-bg-card": "#1E2130",
+          "dark-border": "#2D3148",
+          "dark-border-light": "#252840",
+          "dark-text-primary": "#F1F1F5",
+          "dark-text-muted": "#9DA3B4",
+          "dark-text-faint": "#5C6280",
+          "dark-purple-light": "#2A2750"
         },
         taskflow: {
           primary: "#534AB7",
