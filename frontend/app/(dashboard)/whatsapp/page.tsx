@@ -572,23 +572,23 @@ function EmptyState({
 }) {
   return (
     <Card className="mx-auto max-w-lg text-center">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-tf-purple-light text-tf-purple">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-tf-purple-light text-tf-purple dark:bg-tf-dark-purple-light">
         <MessageCircle className="h-6 w-6" />
       </div>
-      <h1 className="mt-4 text-[18px] font-semibold text-tf-text-primary">
+      <h1 className="mt-4 text-[18px] font-semibold text-tf-text-primary dark:text-tf-dark-text-primary">
         Criar instância WhatsApp
       </h1>
-      <p className="mx-auto mt-2 max-w-sm text-[13px] leading-5 text-tf-text-muted">
+      <p className="mx-auto mt-2 max-w-sm text-[13px] leading-5 text-tf-text-muted dark:text-tf-dark-text-muted">
         {isAdmin
           ? "Crie uma conexão própria para enviar notificações pelo WhatsApp."
           : "Crie uma conexão própria para atender seus comandos de agenda pelo WhatsApp."}
       </p>
 
       <form className="mt-5 space-y-3 text-left" onSubmit={onSubmit}>
-        <label className="block text-[12px] font-medium text-tf-text-primary">
+        <label className="block text-[12px] font-medium text-tf-text-primary dark:text-tf-dark-text-primary">
           Nome da instância
           <input
-            className="mt-1 h-9 w-full rounded-md border border-tf-border bg-white px-3 text-[13px] outline-none transition focus:border-tf-purple focus:ring-4 focus:ring-tf-purple-light"
+            className="mt-1 h-9 w-full rounded-md border border-tf-border bg-white px-3 text-[13px] outline-none transition focus:border-tf-purple focus:ring-4 focus:ring-tf-purple-light dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-primary"
             onChange={(event) => onChangeInstanceName(event.target.value)}
             placeholder="minha-agenda"
             value={instanceName}
@@ -651,15 +651,15 @@ function InstanceState({
         <div>
           <div className="flex items-center gap-2">
             <StatusBadge status={instance.status} />
-            <span className="text-[12px] text-tf-text-faint">
+            <span className="text-[12px] text-tf-text-faint dark:text-tf-dark-text-faint">
               {instance.webhook_set ? "Webhook ativo" : "Webhook pendente"}
             </span>
           </div>
-          <h1 className="mt-3 break-words text-[18px] font-semibold text-tf-text-primary">
+          <h1 className="mt-3 break-words text-[18px] font-semibold text-tf-text-primary dark:text-tf-dark-text-primary">
             {instance.instance_name}
           </h1>
           {instance.phone_number && !isAdmin ? (
-            <p className="mt-1 text-[13px] text-tf-text-muted">
+            <p className="mt-1 text-[13px] text-tf-text-muted dark:text-tf-dark-text-muted">
               Número: {instance.phone_number}
             </p>
           ) : null}
@@ -731,27 +731,27 @@ function WaitingContent({
 }) {
   return (
     <div className="mt-6 grid gap-5 md:grid-cols-[220px_minmax(0,1fr)]">
-      <div className="flex min-h-[220px] items-center justify-center rounded-lg border border-tf-border bg-tf-bg-page p-4">
+      <div className="flex min-h-[220px] items-center justify-center rounded-lg border border-tf-border bg-tf-bg-page p-4 dark:border-tf-dark-border dark:bg-tf-dark-bg-page">
         {qrCode?.code ? (
           <QRCodeSVG bgColor="#FFFFFF" fgColor="#111827" size={180} value={qrCode.code} />
         ) : (
-          <QrCode className="h-16 w-16 text-tf-text-faint" />
+          <QrCode className="h-16 w-16 text-tf-text-faint dark:text-tf-dark-text-faint" />
         )}
       </div>
 
       <div className="space-y-4">
         <div>
-          <h2 className="text-[15px] font-semibold text-tf-text-primary">
+          <h2 className="text-[15px] font-semibold text-tf-text-primary dark:text-tf-dark-text-primary">
             Aguardando conexão
           </h2>
-          <p className="mt-1 text-[13px] leading-5 text-tf-text-muted">
+          <p className="mt-1 text-[13px] leading-5 text-tf-text-muted dark:text-tf-dark-text-muted">
             Abra o WhatsApp &gt; Menu &gt; Dispositivos conectados &gt;
             Conectar.
           </p>
           {qrCode?.pairingCode ? (
-            <p className="mt-3 rounded-md bg-tf-bg-page px-3 py-2 text-[12px] text-tf-text-muted">
+            <p className="mt-3 rounded-md bg-tf-bg-page px-3 py-2 text-[12px] text-tf-text-muted dark:bg-tf-dark-bg-page dark:text-tf-dark-text-muted">
               Código de pareamento:{" "}
-              <span className="font-semibold text-tf-text-primary">
+              <span className="font-semibold text-tf-text-primary dark:text-tf-dark-text-primary">
                 {qrCode.pairingCode}
               </span>
             </p>
@@ -817,8 +817,8 @@ function ConnectedContent({
 }) {
   return (
     <div className="mt-6 space-y-5">
-      <div className="rounded-lg border border-[#9FE1CB] bg-tf-teal-bg p-4">
-        <div className="flex items-center gap-2 text-[13px] font-medium text-tf-teal-text">
+      <div className="rounded-lg border border-[#9FE1CB] bg-tf-teal-bg p-4 dark:border-tf-dark-border dark:bg-tf-dark-bg-page">
+        <div className="flex items-center gap-2 text-[13px] font-medium text-tf-teal-text dark:text-tf-dark-text-muted">
           <CheckCircle2 className="h-4 w-4" />
           {showAgentControls
             ? "Instância pronta para receber mensagens."
@@ -889,13 +889,13 @@ function AuthorizedNumbersSection({
   onToggleActive: (number: AuthorizedNumber) => void;
 }) {
   return (
-    <section className="rounded-lg border border-tf-border bg-white p-4">
+    <section className="rounded-lg border border-tf-border bg-white p-4 dark:border-tf-dark-border dark:bg-tf-dark-bg-card">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-[15px] font-semibold text-tf-text-primary">
+          <h2 className="text-[15px] font-semibold text-tf-text-primary dark:text-tf-dark-text-primary">
             Números autorizados
           </h2>
-          <p className="mt-1 text-[12px] text-tf-text-muted">
+          <p className="mt-1 text-[12px] text-tf-text-muted dark:text-tf-dark-text-muted">
             Somente estes números podem conversar com o agente.
           </p>
         </div>
@@ -906,11 +906,11 @@ function AuthorizedNumbersSection({
       </div>
 
       {loading ? (
-        <div className="mt-4 flex h-20 items-center justify-center rounded-md border border-dashed border-tf-border">
+        <div className="mt-4 flex h-20 items-center justify-center rounded-md border border-dashed border-tf-border dark:border-tf-dark-border">
           <Loader2 className="h-4 w-4 animate-spin text-tf-purple" />
         </div>
       ) : numbers.length === 0 ? (
-        <div className="mt-4 rounded-md border border-dashed border-tf-border bg-tf-bg-page px-3 py-4 text-[12px] text-tf-text-muted">
+        <div className="mt-4 rounded-md border border-dashed border-tf-border bg-tf-bg-page px-3 py-4 text-[12px] text-tf-text-muted dark:border-tf-dark-border dark:bg-tf-dark-bg-page dark:text-tf-dark-text-muted">
           Nenhum número autorizado ainda.
         </div>
       ) : (
@@ -945,13 +945,13 @@ function AuthorizedNumberItem({
   onToggleActive: (number: AuthorizedNumber) => void;
 }) {
   return (
-    <div className="rounded-md border border-tf-border bg-tf-bg-page p-3">
+    <div className="rounded-md border border-tf-border bg-tf-bg-page p-3 dark:border-tf-dark-border dark:bg-tf-dark-bg-page">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
-          <p className="truncate text-[13px] font-semibold text-tf-text-primary">
+          <p className="truncate text-[13px] font-semibold text-tf-text-primary dark:text-tf-dark-text-primary">
             {number.label || "Sem nome"}
           </p>
-          <p className="mt-0.5 text-[12px] text-tf-text-muted">
+          <p className="mt-0.5 text-[12px] text-tf-text-muted dark:text-tf-dark-text-muted">
             {formatPhone(number.phone)}
           </p>
         </div>
@@ -1042,7 +1042,7 @@ function ActiveSwitch({
         "inline-flex h-8 items-center gap-2 rounded-full border px-2.5 text-[12px] font-medium transition disabled:cursor-not-allowed disabled:opacity-60",
         active
           ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-          : "border-slate-200 bg-white text-slate-500"
+          : "border-slate-200 bg-white text-slate-500 dark:border-tf-dark-border dark:bg-tf-dark-bg-card dark:text-tf-dark-text-muted"
       )}
       disabled={busy}
       onClick={onToggle}
@@ -1051,7 +1051,7 @@ function ActiveSwitch({
       <span
         className={cn(
           "h-2.5 w-2.5 rounded-full",
-          active ? "bg-emerald-500" : "bg-slate-300"
+          active ? "bg-emerald-500" : "bg-slate-300 dark:bg-tf-dark-border"
         )}
       />
       {active ? "Ativo" : "Inativo"}
@@ -1080,19 +1080,19 @@ function AuthorizedNumberModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 px-4 py-6">
-      <div className="max-h-[calc(100vh-3rem)] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-5 shadow-soft">
+      <div className="max-h-[calc(100vh-3rem)] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-5 shadow-soft dark:bg-tf-dark-bg-card">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-[17px] font-semibold text-tf-text-primary">
+            <h2 className="text-[17px] font-semibold text-tf-text-primary dark:text-tf-dark-text-primary">
               {editing ? "Editar permissões" : "Adicionar número"}
             </h2>
-            <p className="mt-1 text-[12px] text-tf-text-muted">
+            <p className="mt-1 text-[12px] text-tf-text-muted dark:text-tf-dark-text-muted">
               Configure o acesso deste número ao agente.
             </p>
           </div>
           <button
             aria-label="Fechar modal"
-            className="flex h-8 w-8 items-center justify-center rounded-md text-tf-text-muted hover:bg-tf-bg-page hover:text-tf-text-primary"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-tf-text-muted hover:bg-tf-bg-page hover:text-tf-text-primary dark:text-tf-dark-text-muted dark:hover:bg-tf-dark-bg-sidebar dark:hover:text-tf-dark-text-primary"
             onClick={onClose}
             type="button"
           >
@@ -1102,11 +1102,11 @@ function AuthorizedNumberModal({
 
         <form className="mt-5 space-y-4" onSubmit={onSubmit}>
           <label className="block">
-            <span className="mb-2 block text-sm font-medium text-tf-text-primary">
+            <span className="mb-2 block text-sm font-medium text-tf-text-primary dark:text-tf-dark-text-primary">
               Telefone
             </span>
             <input
-              className="h-10 w-full rounded-md border border-tf-border bg-white px-3 text-[13px] outline-none transition focus:border-tf-purple focus:ring-4 focus:ring-tf-purple-light disabled:bg-tf-bg-page disabled:text-tf-text-muted"
+              className="h-10 w-full rounded-md border border-tf-border bg-white px-3 text-[13px] outline-none transition focus:border-tf-purple focus:ring-4 focus:ring-tf-purple-light disabled:bg-tf-bg-page disabled:text-tf-text-muted dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-primary disabled:dark:bg-tf-dark-bg-page disabled:dark:text-tf-dark-text-muted"
               disabled={editing}
               onChange={(event) =>
                 onChange({ ...form, phone: event.target.value })
@@ -1114,17 +1114,17 @@ function AuthorizedNumberModal({
               placeholder="5598999990000"
               value={form.phone}
             />
-            <span className="mt-1 block text-[11px] text-tf-text-faint">
+            <span className="mt-1 block text-[11px] text-tf-text-faint dark:text-tf-dark-text-faint">
               Use apenas dígitos, com DDI e DDD.
             </span>
           </label>
 
           <label className="block">
-            <span className="mb-2 block text-sm font-medium text-tf-text-primary">
+            <span className="mb-2 block text-sm font-medium text-tf-text-primary dark:text-tf-dark-text-primary">
               Apelido
             </span>
             <input
-              className="h-10 w-full rounded-md border border-tf-border bg-white px-3 text-[13px] outline-none transition focus:border-tf-purple focus:ring-4 focus:ring-tf-purple-light"
+              className="h-10 w-full rounded-md border border-tf-border bg-white px-3 text-[13px] outline-none transition focus:border-tf-purple focus:ring-4 focus:ring-tf-purple-light dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-primary"
               maxLength={50}
               onChange={(event) =>
                 onChange({ ...form, label: event.target.value })
@@ -1205,8 +1205,8 @@ function PermissionToggle({
       className={cn(
         "flex h-11 items-center justify-between rounded-md border px-3 text-left text-[12px] font-medium transition",
         checked
-          ? "border-tf-purple bg-tf-purple-light text-tf-purple"
-          : "border-tf-border bg-white text-tf-text-muted"
+          ? "border-tf-purple bg-tf-purple-light text-tf-purple dark:bg-tf-dark-purple-light"
+          : "border-tf-border bg-white text-tf-text-muted dark:border-tf-dark-border dark:bg-tf-dark-bg-card dark:text-tf-dark-text-muted"
       )}
       onClick={() => onChange(!checked)}
       type="button"
@@ -1215,7 +1215,7 @@ function PermissionToggle({
       <span
         className={cn(
           "h-4 w-4 rounded-full border",
-          checked ? "border-tf-purple bg-tf-purple" : "border-slate-300"
+          checked ? "border-tf-purple bg-tf-purple" : "border-slate-300 dark:border-tf-dark-border"
         )}
       />
     </button>
@@ -1230,14 +1230,14 @@ function DisconnectedContent({
   onReconnect: () => void;
 }) {
   return (
-    <div className="mt-6 rounded-lg border border-tf-border bg-tf-bg-page p-4">
+    <div className="mt-6 rounded-lg border border-tf-border bg-tf-bg-page p-4 dark:border-tf-dark-border dark:bg-tf-dark-bg-page">
       <div className="flex items-start gap-3">
         <WifiOff className="mt-0.5 h-4 w-4 text-tf-coral-text" />
         <div className="min-w-0 flex-1">
-          <h2 className="text-[15px] font-semibold text-tf-text-primary">
+          <h2 className="text-[15px] font-semibold text-tf-text-primary dark:text-tf-dark-text-primary">
             Instância desconectada
           </h2>
-          <p className="mt-1 text-[13px] text-tf-text-muted">
+          <p className="mt-1 text-[13px] text-tf-text-muted dark:text-tf-dark-text-muted">
             Gere um novo QR Code para reconectar este dispositivo.
           </p>
           <Button
@@ -1279,7 +1279,12 @@ function Card({
   className?: string;
 }) {
   return (
-    <div className={cn("rounded-lg border border-tf-border bg-white p-5", className)}>
+    <div
+      className={cn(
+        "rounded-lg border border-tf-border bg-white p-5 dark:border-tf-dark-border dark:bg-tf-dark-bg-card",
+        className
+      )}
+    >
       {children}
     </div>
   );

@@ -112,10 +112,10 @@ export default function SpecialDatesPage() {
     <section className="space-y-6 p-5">
       <header className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-[#111827]">
+          <h1 className="text-2xl font-semibold text-[#111827] dark:text-tf-dark-text-primary">
             Datas Especiais
           </h1>
-          <p className="mt-1 text-sm text-[#6B7280]">
+          <p className="mt-1 text-sm text-[#6B7280] dark:text-tf-dark-text-muted">
             Gerencie aniversários e datas comemorativas
           </p>
         </div>
@@ -134,16 +134,18 @@ export default function SpecialDatesPage() {
       {/* Datas nacionais */}
       <section className="space-y-3">
         <div>
-          <h2 className="text-base font-semibold text-[#111827]">
+          <h2 className="text-base font-semibold text-[#111827] dark:text-tf-dark-text-primary">
             Datas nacionais
           </h2>
-          <p className="text-xs text-[#6B7280]">
+          <p className="text-xs text-[#6B7280] dark:text-tf-dark-text-muted">
             Ative as que deseja receber lembretes
           </p>
         </div>
 
         {loading ? (
-          <p className="text-sm text-[#6B7280]">Carregando...</p>
+          <p className="text-sm text-[#6B7280] dark:text-tf-dark-text-muted">
+            Carregando...
+          </p>
         ) : (
           <div className="space-y-2">
             {nationalDates.map((date) => (
@@ -161,23 +163,25 @@ export default function SpecialDatesPage() {
       {/* Minhas datas */}
       <section className="space-y-3">
         <div>
-          <h2 className="text-base font-semibold text-[#111827]">
+          <h2 className="text-base font-semibold text-[#111827] dark:text-tf-dark-text-primary">
             Minhas datas
           </h2>
-          <p className="text-xs text-[#6B7280]">
+          <p className="text-xs text-[#6B7280] dark:text-tf-dark-text-muted">
             Aniversários e datas pessoais
           </p>
         </div>
 
         {loading ? (
-          <p className="text-sm text-[#6B7280]">Carregando...</p>
+          <p className="text-sm text-[#6B7280] dark:text-tf-dark-text-muted">
+            Carregando...
+          </p>
         ) : personalDates.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center">
-            <Gift className="mx-auto mb-3 h-8 w-8 text-[#9CA3AF]" />
-            <p className="text-sm font-medium text-[#374151]">
+          <div className="rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center dark:border-tf-dark-border dark:bg-tf-dark-bg-card">
+            <Gift className="mx-auto mb-3 h-8 w-8 text-[#9CA3AF] dark:text-tf-dark-text-faint" />
+            <p className="text-sm font-medium text-[#374151] dark:text-tf-dark-text-primary">
               Nenhuma data cadastrada ainda
             </p>
-            <p className="mt-1 text-xs text-[#6B7280]">
+            <p className="mt-1 text-xs text-[#6B7280] dark:text-tf-dark-text-muted">
               Adicione aniversários, datas de casamento e comemorações pessoais.
             </p>
             <Button
@@ -191,7 +195,7 @@ export default function SpecialDatesPage() {
             </Button>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-tf-dark-border dark:bg-tf-dark-bg-card">
             {personalDates.map((date, idx) => (
               <PersonalDateRow
                 date={date}
@@ -246,17 +250,19 @@ function NationalDateCard({
   return (
     <div
       className={cn(
-        "rounded-lg border border-slate-200 bg-[#F9FAFB] p-4 transition-opacity",
+        "rounded-lg border border-slate-200 bg-[#F9FAFB] p-4 transition-opacity dark:border-tf-dark-border dark:bg-tf-dark-bg-page",
         !date.active && "opacity-60"
       )}
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-          <span className="text-sm font-medium text-[#111827]">{date.name}</span>
-          <span className="rounded-full bg-[#EEEDFE] px-2 py-0.5 text-[10px] font-semibold text-[#534AB7]">
+          <span className="text-sm font-medium text-[#111827] dark:text-tf-dark-text-primary">
+            {date.name}
+          </span>
+          <span className="rounded-full bg-[#EEEDFE] px-2 py-0.5 text-[10px] font-semibold text-[#534AB7] dark:bg-tf-dark-purple-light">
             Nacional
           </span>
-          <span className="text-xs text-[#6B7280]">
+          <span className="text-xs text-[#6B7280] dark:text-tf-dark-text-muted">
             {String(date.day).padStart(2, "0")}/
             {String(date.month).padStart(2, "0")}
           </span>
@@ -278,7 +284,7 @@ function NationalDateCard({
         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
           {NOTIFY_OPTIONS.map((opt) => (
             <label
-              className="flex cursor-pointer items-center gap-1.5 text-xs text-[#374151]"
+              className="flex cursor-pointer items-center gap-1.5 text-xs text-[#374151] dark:text-tf-dark-text-muted"
               key={opt.field}
             >
               <input
@@ -319,13 +325,15 @@ function PersonalDateRow({
     <div
       className={cn(
         "flex items-center gap-3 px-4 py-3",
-        !isLast && "border-b border-slate-100"
+        !isLast && "border-b border-slate-100 dark:border-tf-dark-border-light"
       )}
     >
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium text-[#111827]">{date.name}</span>
-          <span className="text-xs text-[#6B7280]">
+          <span className="text-sm font-medium text-[#111827] dark:text-tf-dark-text-primary">
+            {date.name}
+          </span>
+          <span className="text-xs text-[#6B7280] dark:text-tf-dark-text-muted">
             {String(date.day).padStart(2, "0")}/
             {String(date.month).padStart(2, "0")}
           </span>
@@ -334,7 +342,7 @@ function PersonalDateRow({
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {activeBadges.map((opt) => (
               <span
-                className="rounded-full bg-[#EEEDFE] px-2 py-0.5 text-[10px] font-medium text-[#534AB7]"
+                className="rounded-full bg-[#EEEDFE] px-2 py-0.5 text-[10px] font-medium text-[#534AB7] dark:bg-tf-dark-purple-light"
                 key={opt.field}
               >
                 {opt.label}
@@ -346,7 +354,7 @@ function PersonalDateRow({
       <div className="flex shrink-0 items-center gap-1">
         <button
           aria-label={`Editar ${date.name}`}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#111827]"
+          className="flex h-8 w-8 items-center justify-center rounded-md text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#111827] dark:text-tf-dark-text-muted dark:hover:bg-tf-dark-bg-sidebar dark:hover:text-tf-dark-text-primary"
           onClick={() => onEdit(date)}
           type="button"
         >
@@ -354,7 +362,7 @@ function PersonalDateRow({
         </button>
         <button
           aria-label={`Excluir ${date.name}`}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-[#6B7280] hover:bg-rose-50 hover:text-rose-600"
+          className="flex h-8 w-8 items-center justify-center rounded-md text-[#6B7280] hover:bg-rose-50 hover:text-rose-600 dark:text-tf-dark-text-muted dark:hover:bg-tf-dark-bg-sidebar"
           onClick={() => onDelete(date.id, date.name)}
           type="button"
         >
@@ -381,7 +389,7 @@ function Toggle({
       aria-checked={checked}
       className={cn(
         "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#534AB7] focus:ring-offset-2",
-        checked ? "bg-[#534AB7]" : "bg-slate-200"
+        checked ? "bg-[#534AB7]" : "bg-slate-200 dark:bg-tf-dark-border"
       )}
       onClick={() => onChange(!checked)}
       role="switch"
@@ -389,7 +397,7 @@ function Toggle({
     >
       <span
         className={cn(
-          "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200",
+          "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 dark:bg-tf-dark-text-primary",
           checked ? "translate-x-4" : "translate-x-0"
         )}
       />

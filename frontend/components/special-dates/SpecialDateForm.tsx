@@ -130,13 +130,13 @@ export function SpecialDateForm({
     >
       <div>
         <label
-          className="mb-1 block text-xs font-medium text-[#374151]"
+          className="mb-1 block text-xs font-medium text-[#374151] dark:text-tf-dark-text-muted"
           htmlFor="sd-name"
         >
           Nome
         </label>
         <input
-          className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm text-[#111827] placeholder-[#9CA3AF] outline-none focus:border-[#534AB7] focus:ring-2 focus:ring-[#EEEDFE]"
+          className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm text-[#111827] placeholder-[#9CA3AF] outline-none focus:border-[#534AB7] focus:ring-2 focus:ring-[#EEEDFE] dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-primary dark:placeholder:text-tf-dark-text-faint"
           id="sd-name"
           onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
           placeholder="Ex: Aniversário da mãe, Casamento…"
@@ -148,12 +148,12 @@ export function SpecialDateForm({
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-medium text-[#374151]">
+        <label className="mb-1 block text-xs font-medium text-[#374151] dark:text-tf-dark-text-muted">
           Data
         </label>
         <div className="flex gap-2">
           <select
-            className="w-24 rounded-md border border-slate-200 px-3 py-2 text-sm text-[#111827] outline-none focus:border-[#534AB7] focus:ring-2 focus:ring-[#EEEDFE]"
+            className="w-24 rounded-md border border-slate-200 px-3 py-2 text-sm text-[#111827] outline-none focus:border-[#534AB7] focus:ring-2 focus:ring-[#EEEDFE] dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-primary"
             onChange={(e) =>
               setForm((prev) => ({ ...prev, day: Number(e.target.value) }))
             }
@@ -166,7 +166,7 @@ export function SpecialDateForm({
             ))}
           </select>
           <select
-            className="flex-1 rounded-md border border-slate-200 px-3 py-2 text-sm text-[#111827] outline-none focus:border-[#534AB7] focus:ring-2 focus:ring-[#EEEDFE]"
+            className="flex-1 rounded-md border border-slate-200 px-3 py-2 text-sm text-[#111827] outline-none focus:border-[#534AB7] focus:ring-2 focus:ring-[#EEEDFE] dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-primary"
             onChange={(e) =>
               setForm((prev) => ({ ...prev, month: Number(e.target.value) }))
             }
@@ -182,13 +182,13 @@ export function SpecialDateForm({
       </div>
 
       <div>
-        <p className="mb-2 text-xs font-medium text-[#374151]">
+        <p className="mb-2 text-xs font-medium text-[#374151] dark:text-tf-dark-text-muted">
           Quando avisar
         </p>
         <div className="space-y-2">
           {NOTIFY_OPTIONS.map((option) => (
             <label
-              className="flex cursor-pointer items-center gap-2 text-sm text-[#374151]"
+              className="flex cursor-pointer items-center gap-2 text-sm text-[#374151] dark:text-tf-dark-text-muted"
               key={option.field}
             >
               <input
@@ -261,16 +261,19 @@ export function SpecialDateForm({
       <section
         aria-labelledby={titleId}
         aria-modal="true"
-        className="w-full max-w-[440px] rounded-xl bg-white p-6 shadow-xl"
+        className="w-full max-w-[440px] rounded-xl bg-white p-6 shadow-xl dark:bg-tf-dark-bg-card"
         role="dialog"
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-[15px] font-semibold text-[#111827]" id={titleId}>
+          <h2
+            className="text-[15px] font-semibold text-[#111827] dark:text-tf-dark-text-primary"
+            id={titleId}
+          >
             {date ? "Editar data especial" : "Nova data especial"}
           </h2>
           <button
             aria-label="Fechar"
-            className="flex h-8 w-8 items-center justify-center rounded-md text-[#6B7280] hover:bg-[#F3F4F6]"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-[#6B7280] hover:bg-[#F3F4F6] dark:text-tf-dark-text-muted dark:hover:bg-tf-dark-bg-sidebar"
             onClick={onCancel}
             type="button"
           >
