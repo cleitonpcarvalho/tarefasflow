@@ -8,6 +8,12 @@ interface RequesterContext {
   requesterRole: UserRole;
 }
 
+interface CreateReminderInput {
+  task_id: string;
+  minutes_before: number;
+  occurrence_date?: string;
+}
+
 export class ReminderServiceError extends Error {
   statusCode: number;
 
@@ -45,7 +51,7 @@ export async function getRemindersByTask(
 }
 
 export async function createReminder(
-  data: { task_id: string; minutes_before: number },
+  data: CreateReminderInput,
   { requesterId }: { requesterId: string }
 ): Promise<Reminder> {
   const tasks = await sql<
@@ -68,6 +74,7 @@ export async function createReminder(
     WHERE task_id = ${data.task_id}
       AND user_id = ${requesterId}
       AND minutes_before = ${data.minutes_before}
+      AND occurrence_date IS NOT DISTINCT FROM ${data.occurrence_date ?? null}
     LIMIT 1
   `;
 
@@ -79,14 +86,19 @@ export async function createReminder(
   }
 
   const rows = await sql<ReminderRow[]>`
-    INSERT INTO reminders (task_id, user_id, minutes_before)
-    VALUES (${data.task_id}, ${requesterId}, ${data.minutes_before})
+    INSERT INTO reminders (task_id, user_id, minutes_before, occurrence_date)
+    VALUES (
+      ${data.task_id},
+      ${requesterId},
+      ${data.minutes_before},
+      ${data.occurrence_date ?? null}
+    )
     RETURNING id, task_id, user_id, minutes_before, sent_at, created_at
   `;
 
   const reminder = toReminder(rows[0]);
   const scheduledFor = calculateScheduledFor(
-    tasks[0].task_date,
+    data.occurrence_date ?? tasks[0].task_date,
     tasks[0].task_time,
     data.minutes_before
   );

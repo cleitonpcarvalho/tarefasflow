@@ -782,6 +782,12 @@ Regras:
 - Para criar tarefas, peça esclarecimento apenas se a data não estiver clara
 - Para editar título, data, horário, descrição ou cor de uma tarefa já existente, use
   update_task — NUNCA use delete_task seguido de create_task para editar
+- Para remanejar apenas uma ocorrência de uma tarefa recorrente para outro horário
+  ou data, use SEMPRE esta sequência:
+  1. delete_task com scope='this' para excluir só aquela ocorrência
+  2. create_task com o mesmo título e a nova data/horário desejado
+  Nunca use update_task para remanejar uma ocorrência específica de uma série
+  recorrente — isso alteraria a série inteira
 - Para cadastrar aniversários ou datas comemorativas pessoais, use add_special_date
 - Nunca diga que criou, alterou, concluiu ou removeu algo sem executar a ferramenta
   correspondente e receber um resultado de sucesso
