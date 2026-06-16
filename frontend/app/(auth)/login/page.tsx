@@ -18,7 +18,7 @@ const bullets = [
 function LeftPanel() {
   return (
     <div
-      className="hidden lg:flex lg:w-[45%] flex-col justify-center items-center p-12 gap-8"
+      className="hidden flex-col items-center justify-center gap-8 p-12 md:flex md:w-[45%]"
       style={{ background: "linear-gradient(135deg, #534AB7 0%, #7C6FD4 100%)" }}
     >
       <div className="flex flex-col gap-6">
@@ -112,10 +112,10 @@ function LoginPageContent() {
     <div className="flex min-h-screen">
       <LeftPanel />
 
-      <div className="flex w-full lg:w-[55%] items-center justify-center bg-white p-6">
+      <div className="flex w-full items-center justify-center bg-white p-6 md:w-[55%]">
         <div className="w-full max-w-[400px] py-12">
-          <div className="mb-8 flex justify-center lg:hidden">
-            <Image src="/logo-dark.png" width={120} height={36} alt="TarefasFlow" priority />
+          <div className="mb-8 block text-center md:hidden">
+            <Image src="/logo-light.png" width={120} height={36} alt="TarefasFlow" priority />
           </div>
 
           <h2 className="mb-1 text-2xl font-bold" style={{ color: "#1A1A2E" }}>

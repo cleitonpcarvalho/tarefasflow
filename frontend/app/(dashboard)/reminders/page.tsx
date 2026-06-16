@@ -105,7 +105,7 @@ export default function RemindersPage() {
         </p>
       ) : null}
 
-      <section className="rounded-xl border border-[#D8D5F5] bg-gradient-to-br from-[#F7F6FF] to-white p-5">
+      <section className="w-full overflow-hidden rounded-xl border border-[#D8D5F5] bg-gradient-to-br from-[#F7F6FF] to-white p-5">
         <div className="mb-4 flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#EEEDFE] text-[#534AB7]">
             <BellRing className="h-5 w-5" />
@@ -121,10 +121,10 @@ export default function RemindersPage() {
         {loading ? (
           <p className="text-sm text-[#6B7280]">Carregando...</p>
         ) : upcomingReminders.length ? (
-          <div className="grid gap-3 lg:grid-cols-2">
+          <div className="grid w-full gap-3 overflow-hidden lg:grid-cols-2">
             {upcomingReminders.map((item) => (
               <article
-                className="flex items-start gap-3 rounded-lg border border-white bg-white p-3 shadow-sm"
+                className="flex min-w-0 items-start gap-3 overflow-hidden rounded-lg border border-white bg-white p-3 shadow-sm"
                 key={`${item.task.id}-${item.reminder.id}`}
               >
                 <Bell className="mt-0.5 h-4 w-4 shrink-0 text-[#534AB7]" />
