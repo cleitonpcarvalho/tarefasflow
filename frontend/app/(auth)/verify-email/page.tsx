@@ -9,7 +9,8 @@ import { apiFetch } from "@/lib/api";
 
 const inputClass =
   "h-12 w-full rounded-[10px] border border-[#E5E7EB] px-4 text-sm outline-none transition " +
-  "focus:border-[#534AB7] focus:shadow-[0_0_0_3px_#EEEDFE] bg-white";
+  "bg-white focus:border-[#534AB7] focus:shadow-[0_0_0_3px_#EEEDFE] " +
+  "dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-primary";
 
 function VerifyEmailContent() {
   const router = useRouter();
@@ -135,12 +136,9 @@ function VerifyEmailContent() {
   const backHref = isReset ? "/forgot-password" : "/signup";
 
   return (
-    <div
-      className="flex min-h-screen items-center justify-center px-4 py-8"
-      style={{ background: "#F8F7FF" }}
-    >
+    <div className="flex min-h-screen items-center justify-center bg-[#F8F7FF] px-4 py-8 dark:bg-tf-dark-bg-page">
       <div
-        className="w-full max-w-[440px] rounded-[20px] bg-white p-10"
+        className="w-full max-w-[440px] rounded-[20px] bg-white p-10 dark:bg-tf-dark-bg-card"
         style={{ boxShadow: "0 12px 40px rgba(15,23,42,0.08)" }}
       >
         <div className="mb-6 flex justify-center">
@@ -148,20 +146,17 @@ function VerifyEmailContent() {
         </div>
 
         <div className="mb-5 flex justify-center">
-          <div
-            className="flex h-16 w-16 items-center justify-center rounded-full"
-            style={{ background: "#F0EFFE" }}
-          >
-            <Mail className="h-7 w-7" style={{ color: "#534AB7" }} />
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#F0EFFE] dark:bg-tf-dark-purple-light">
+            <Mail className="h-7 w-7 text-[#534AB7]" />
           </div>
         </div>
 
-        <h2 className="mb-2 text-center text-2xl font-bold" style={{ color: "#1A1A2E" }}>
+        <h2 className="mb-2 text-center text-2xl font-bold text-[#1A1A2E] dark:text-tf-dark-text-primary">
           Verifique seu email
         </h2>
-        <p className="mb-6 text-center text-sm leading-relaxed" style={{ color: "#6B7280" }}>
+        <p className="mb-6 text-center text-sm leading-relaxed text-[#6B7280] dark:text-tf-dark-text-muted">
           Enviamos um código de 6 dígitos para{" "}
-          <span className="font-medium" style={{ color: "#1A1A2E" }}>
+          <span className="font-medium text-[#1A1A2E] dark:text-tf-dark-text-primary">
             {email}
           </span>
         </p>
@@ -174,17 +169,16 @@ function VerifyEmailContent() {
                 ref={(el) => {
                   inputRefs.current[index] = el;
                 }}
-                className="h-[60px] w-full rounded-xl border-2 text-center text-2xl font-bold outline-none transition"
+                className={`h-[60px] w-full rounded-xl border-2 text-center text-2xl font-bold text-[#534AB7] outline-none transition ${
+                  digit
+                    ? "border-[#534AB7] bg-[#F0EFFE] dark:bg-tf-dark-purple-light"
+                    : "border-[#E5E7EB] bg-white dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar"
+                }`}
                 inputMode="numeric"
                 maxLength={1}
                 onChange={(e) => handleOtpChange(index, e.target.value)}
                 onKeyDown={(e) => handleOtpKeyDown(index, e)}
                 onPaste={handleOtpPaste}
-                style={{
-                  borderColor: digit ? "#534AB7" : "#E5E7EB",
-                  color: "#534AB7",
-                  background: digit ? "#F0EFFE" : "white"
-                }}
                 type="text"
                 value={digit}
               />
@@ -194,7 +188,7 @@ function VerifyEmailContent() {
           {isReset && (
             <>
               <label className="flex flex-col gap-1.5">
-                <span className="text-sm font-medium" style={{ color: "#1A1A2E" }}>Nova senha</span>
+                <span className="text-sm font-medium text-[#1A1A2E] dark:text-tf-dark-text-primary">Nova senha</span>
                 <div className="relative">
                   <input
                     autoComplete="new-password"
@@ -206,7 +200,7 @@ function VerifyEmailContent() {
                     value={newPassword}
                   />
                   <button
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#6B7280]"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#6B7280] dark:text-tf-dark-text-faint dark:hover:text-tf-dark-text-muted"
                     onClick={() => setShowNewPassword((v) => !v)}
                     tabIndex={-1}
                     type="button"
@@ -217,7 +211,7 @@ function VerifyEmailContent() {
               </label>
 
               <label className="flex flex-col gap-1.5">
-                <span className="text-sm font-medium" style={{ color: "#1A1A2E" }}>Confirmar nova senha</span>
+                <span className="text-sm font-medium text-[#1A1A2E] dark:text-tf-dark-text-primary">Confirmar nova senha</span>
                 <div className="relative">
                   <input
                     autoComplete="new-password"
@@ -229,7 +223,7 @@ function VerifyEmailContent() {
                     value={confirmPassword}
                   />
                   <button
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#6B7280]"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#6B7280] dark:text-tf-dark-text-faint dark:hover:text-tf-dark-text-muted"
                     onClick={() => setShowConfirmPassword((v) => !v)}
                     tabIndex={-1}
                     type="button"
@@ -260,7 +254,7 @@ function VerifyEmailContent() {
 
           <div className="text-center">
             {countdown > 0 ? (
-              <p className="text-sm" style={{ color: "#9CA3AF" }}>
+              <p className="text-sm text-[#9CA3AF] dark:text-tf-dark-text-faint">
                 Reenviar código em {countdown}s
               </p>
             ) : (

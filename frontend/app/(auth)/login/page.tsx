@@ -52,7 +52,8 @@ function LeftPanel() {
 
 const inputClass =
   "h-12 w-full rounded-[10px] border border-[#E5E7EB] px-4 text-sm outline-none transition " +
-  "focus:border-[#534AB7] focus:shadow-[0_0_0_3px_#EEEDFE] bg-white";
+  "bg-white focus:border-[#534AB7] focus:shadow-[0_0_0_3px_#EEEDFE] " +
+  "dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-primary";
 
 function LoginPageContent() {
   const router = useRouter();
@@ -112,16 +113,16 @@ function LoginPageContent() {
     <div className="flex min-h-screen">
       <LeftPanel />
 
-      <div className="flex w-full items-center justify-center bg-white p-6 md:w-[55%]">
+      <div className="flex w-full items-center justify-center bg-white p-6 dark:bg-tf-dark-bg-card md:w-[55%]">
         <div className="w-full max-w-[400px] py-12">
           <div className="mb-8 block text-center md:hidden">
             <Image src="/logo-light.png" width={120} height={36} alt="TarefasFlow" priority />
           </div>
 
-          <h2 className="mb-1 text-2xl font-bold" style={{ color: "#1A1A2E" }}>
+          <h2 className="mb-1 text-2xl font-bold text-[#1A1A2E] dark:text-tf-dark-text-primary">
             Bem-vindo de volta
           </h2>
-          <p className="mb-8 text-sm" style={{ color: "#6B7280" }}>
+          <p className="mb-8 text-sm text-[#6B7280] dark:text-tf-dark-text-muted">
             Entre na sua conta para continuar
           </p>
 
@@ -138,7 +139,7 @@ function LoginPageContent() {
 
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium" style={{ color: "#1A1A2E" }}>Email</span>
+              <span className="text-sm font-medium text-[#1A1A2E] dark:text-tf-dark-text-primary">Email</span>
               <input
                 autoComplete="email"
                 className={inputClass}
@@ -151,7 +152,7 @@ function LoginPageContent() {
             </label>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium" style={{ color: "#1A1A2E" }}>Senha</span>
+              <span className="text-sm font-medium text-[#1A1A2E] dark:text-tf-dark-text-primary">Senha</span>
               <div className="relative">
                 <input
                   autoComplete="current-password"
@@ -163,7 +164,7 @@ function LoginPageContent() {
                   value={password}
                 />
                 <button
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#6B7280]"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#6B7280] dark:text-tf-dark-text-faint dark:hover:text-tf-dark-text-muted"
                   onClick={() => setShowPassword((v) => !v)}
                   tabIndex={-1}
                   type="button"
@@ -201,9 +202,9 @@ function LoginPageContent() {
             </button>
 
             <div className="flex items-center gap-3">
-              <hr className="flex-1 border-[#E5E7EB]" />
-              <span className="text-sm" style={{ color: "#9CA3AF" }}>ou</span>
-              <hr className="flex-1 border-[#E5E7EB]" />
+              <hr className="flex-1 border-[#E5E7EB] dark:border-tf-dark-border" />
+              <span className="text-sm text-[#9CA3AF] dark:text-tf-dark-text-faint">ou</span>
+              <hr className="flex-1 border-[#E5E7EB] dark:border-tf-dark-border" />
             </div>
 
             <Link

@@ -9,7 +9,8 @@ import { apiFetch } from "@/lib/api";
 
 const inputClass =
   "h-12 w-full rounded-[10px] border border-[#E5E7EB] px-4 text-sm outline-none transition " +
-  "focus:border-[#534AB7] focus:shadow-[0_0_0_3px_#EEEDFE] bg-white";
+  "bg-white focus:border-[#534AB7] focus:shadow-[0_0_0_3px_#EEEDFE] " +
+  "dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-primary";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -37,12 +38,9 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div
-      className="flex min-h-screen items-center justify-center px-4 py-8"
-      style={{ background: "#F8F7FF" }}
-    >
+    <div className="flex min-h-screen items-center justify-center bg-[#F8F7FF] px-4 py-8 dark:bg-tf-dark-bg-page">
       <div
-        className="w-full max-w-[420px] rounded-[20px] bg-white p-10"
+        className="w-full max-w-[420px] rounded-[20px] bg-white p-10 dark:bg-tf-dark-bg-card"
         style={{ boxShadow: "0 12px 40px rgba(15,23,42,0.08)" }}
       >
         <div className="mb-6 flex justify-center">
@@ -50,24 +48,21 @@ export default function ForgotPasswordPage() {
         </div>
 
         <div className="mb-6 flex justify-center">
-          <div
-            className="flex h-16 w-16 items-center justify-center rounded-full"
-            style={{ background: "#F0EFFE" }}
-          >
-            <KeyRound className="h-7 w-7" style={{ color: "#534AB7" }} />
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#F0EFFE] dark:bg-tf-dark-purple-light">
+            <KeyRound className="h-7 w-7 text-[#534AB7]" />
           </div>
         </div>
 
-        <h2 className="mb-2 text-center text-2xl font-bold" style={{ color: "#1A1A2E" }}>
+        <h2 className="mb-2 text-center text-2xl font-bold text-[#1A1A2E] dark:text-tf-dark-text-primary">
           Esqueceu sua senha?
         </h2>
-        <p className="mb-8 text-center text-sm leading-relaxed" style={{ color: "#6B7280" }}>
+        <p className="mb-8 text-center text-sm leading-relaxed text-[#6B7280] dark:text-tf-dark-text-muted">
           Digite seu email e enviaremos um código para redefinir sua senha
         </p>
 
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium" style={{ color: "#1A1A2E" }}>Email</span>
+            <span className="text-sm font-medium text-[#1A1A2E] dark:text-tf-dark-text-primary">Email</span>
             <input
               autoComplete="email"
               className={inputClass}

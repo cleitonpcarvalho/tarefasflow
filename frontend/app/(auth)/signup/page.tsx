@@ -50,7 +50,8 @@ function LeftPanel() {
 
 const inputClass =
   "h-12 w-full rounded-[10px] border border-[#E5E7EB] px-4 text-sm outline-none transition " +
-  "focus:border-[#534AB7] focus:shadow-[0_0_0_3px_#EEEDFE] bg-white";
+  "bg-white focus:border-[#534AB7] focus:shadow-[0_0_0_3px_#EEEDFE] " +
+  "dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-primary";
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -123,22 +124,22 @@ export default function SignupPage() {
     <div className="flex min-h-screen">
       <LeftPanel />
 
-      <div className="flex w-full lg:w-[55%] items-center justify-center bg-white p-6">
+      <div className="flex w-full items-center justify-center bg-white p-6 dark:bg-tf-dark-bg-card lg:w-[55%]">
         <div className="w-full max-w-[400px] py-10">
           <div className="mb-8 flex justify-center lg:hidden">
             <Image src="/logo-dark.png" width={120} height={36} alt="TarefasFlow" priority />
           </div>
 
-          <h2 className="mb-1 text-2xl font-bold" style={{ color: "#1A1A2E" }}>
+          <h2 className="mb-1 text-2xl font-bold text-[#1A1A2E] dark:text-tf-dark-text-primary">
             Crie sua conta
           </h2>
-          <p className="mb-8 text-sm" style={{ color: "#6B7280" }}>
+          <p className="mb-8 text-sm text-[#6B7280] dark:text-tf-dark-text-muted">
             Comece a organizar sua vida hoje
           </p>
 
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium" style={{ color: "#1A1A2E" }}>Nome completo</span>
+              <span className="text-sm font-medium text-[#1A1A2E] dark:text-tf-dark-text-primary">Nome completo</span>
               <input
                 autoComplete="name"
                 className={inputClass}
@@ -151,7 +152,7 @@ export default function SignupPage() {
             </label>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium" style={{ color: "#1A1A2E" }}>Email</span>
+              <span className="text-sm font-medium text-[#1A1A2E] dark:text-tf-dark-text-primary">Email</span>
               <input
                 autoComplete="email"
                 className={inputClass}
@@ -164,7 +165,7 @@ export default function SignupPage() {
             </label>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium" style={{ color: "#1A1A2E" }}>WhatsApp</span>
+              <span className="text-sm font-medium text-[#1A1A2E] dark:text-tf-dark-text-primary">WhatsApp</span>
               <div className="relative">
                 <input
                   autoComplete="tel"
@@ -186,7 +187,7 @@ export default function SignupPage() {
             </label>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium" style={{ color: "#1A1A2E" }}>Senha</span>
+              <span className="text-sm font-medium text-[#1A1A2E] dark:text-tf-dark-text-primary">Senha</span>
               <div className="relative">
                 <input
                   autoComplete="new-password"
@@ -198,7 +199,7 @@ export default function SignupPage() {
                   value={password}
                 />
                 <button
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#6B7280]"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#6B7280] dark:text-tf-dark-text-faint dark:hover:text-tf-dark-text-muted"
                   onClick={() => setShowPassword((v) => !v)}
                   tabIndex={-1}
                   type="button"
@@ -209,7 +210,7 @@ export default function SignupPage() {
             </label>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium" style={{ color: "#1A1A2E" }}>Confirmar senha</span>
+              <span className="text-sm font-medium text-[#1A1A2E] dark:text-tf-dark-text-primary">Confirmar senha</span>
               <div className="relative">
                 <input
                   autoComplete="new-password"
@@ -221,7 +222,7 @@ export default function SignupPage() {
                   value={confirmPassword}
                 />
                 <button
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#6B7280]"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#6B7280] dark:text-tf-dark-text-faint dark:hover:text-tf-dark-text-muted"
                   onClick={() => setShowConfirmPassword((v) => !v)}
                   tabIndex={-1}
                   type="button"
@@ -238,7 +239,7 @@ export default function SignupPage() {
                 onChange={(e) => setTerms(e.target.checked)}
                 type="checkbox"
               />
-              <span className="text-sm leading-relaxed" style={{ color: "#6B7280" }}>
+              <span className="text-sm leading-relaxed text-[#6B7280] dark:text-tf-dark-text-muted">
                 Concordo com os{" "}
                 <a className="font-medium hover:underline" href="#" style={{ color: "#534AB7" }}>
                   Termos de Uso
@@ -267,7 +268,7 @@ export default function SignupPage() {
               {loading ? "Criando conta..." : "Criar conta"}
             </button>
 
-            <p className="text-center text-sm" style={{ color: "#6B7280" }}>
+            <p className="text-center text-sm text-[#6B7280] dark:text-tf-dark-text-muted">
               Já tenho uma conta{" "}
               <Link className="font-medium hover:underline" href="/login" style={{ color: "#534AB7" }}>
                 Fazer login
