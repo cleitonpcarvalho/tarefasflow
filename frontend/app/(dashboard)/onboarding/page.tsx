@@ -15,6 +15,7 @@ import {
   type SpecialDateFormValues
 } from "@/components/special-dates/SpecialDateForm";
 import { apiFetch } from "@/lib/api";
+import { cn } from "@/lib/cn";
 import { QRCodeSVG } from "qrcode.react";
 
 interface OnboardingStatus {
@@ -48,7 +49,15 @@ const STEPS = [
 
 const inputClass =
   "h-12 w-full rounded-[10px] border border-[#E5E7EB] px-4 text-sm outline-none transition " +
-  "focus:border-[#534AB7] focus:shadow-[0_0_0_3px_#EEEDFE] bg-white";
+  "focus:border-[#534AB7] focus:shadow-[0_0_0_3px_#EEEDFE] bg-white " +
+  "dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-primary";
+
+const iconBubbleClass =
+  "flex items-center justify-center rounded-full bg-[#F0EFFE] dark:bg-tf-dark-purple-light";
+const titleClass = "font-bold text-[#1A1A2E] dark:text-tf-dark-text-primary";
+const bodyTextClass = "text-[#6B7280] dark:text-tf-dark-text-muted";
+const hintTextClass = "text-[#9CA3AF] dark:text-tf-dark-text-faint";
+const labelClass = "text-sm font-medium text-[#1A1A2E] dark:text-tf-dark-text-primary";
 
 function formatPhoneDisplay(phone: string | null): string {
   if (!phone) return "";
@@ -101,30 +110,37 @@ function SkipButton({
 
 function StepIndicator({ current }: { current: number }) {
   return (
-    <div className="flex items-center gap-0 mb-8">
+    <div className="mb-8 flex items-center gap-0">
       {STEPS.map((s, i) => (
         <div key={s.label} className="flex items-center">
           <div className="flex flex-col items-center gap-1">
             <div
-              className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold transition-all"
-              style={{
-                background: i < current ? "#534AB7" : i === current ? "#534AB7" : "#E5E7EB",
-                color: i <= current ? "white" : "#9CA3AF"
-              }}
+              className={cn(
+                "flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold transition-all",
+                i <= current
+                  ? "bg-[#534AB7] text-white"
+                  : "bg-[#E5E7EB] text-[#9CA3AF] dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-faint"
+              )}
             >
               {i < current ? "✓" : i + 1}
             </div>
             <span
-              className="text-[11px] font-medium"
-              style={{ color: i <= current ? "#534AB7" : "#9CA3AF" }}
+              className={cn(
+                "text-[11px] font-medium",
+                i <= current
+                  ? "text-[#534AB7]"
+                  : "text-[#9CA3AF] dark:text-tf-dark-text-faint"
+              )}
             >
               {s.label}
             </span>
           </div>
           {i < STEPS.length - 1 && (
             <div
-              className="h-0.5 w-12 sm:w-16 mx-1 mb-4 transition-all"
-              style={{ background: i < current ? "#534AB7" : "#E5E7EB" }}
+              className={cn(
+                "mx-1 mb-4 h-0.5 w-12 transition-all sm:w-16",
+                i < current ? "bg-[#534AB7]" : "bg-[#E5E7EB] dark:bg-tf-dark-border"
+              )}
             />
           )}
         </div>
@@ -356,16 +372,13 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div
-      className="flex min-h-[calc(100vh-64px)] items-start justify-center px-4 py-10"
-      style={{ background: "#F8F7FF" }}
-    >
+    <div className="flex min-h-[calc(100vh-64px)] items-start justify-center bg-[#F8F7FF] px-4 py-10 dark:bg-tf-dark-bg-page">
       <div className="w-full max-w-[520px]">
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-bold" style={{ color: "#1A1A2E" }}>
+          <h1 className={cn("text-2xl", titleClass)}>
             Configure seu TarefasFlow
           </h1>
-          <p className="mt-1 text-sm" style={{ color: "#6B7280" }}>
+          <p className={cn("mt-1 text-sm", bodyTextClass)}>
             Siga os passos para começar a usar seu agente no WhatsApp
           </p>
         </div>
@@ -373,33 +386,24 @@ export default function OnboardingPage() {
         <StepIndicator current={step - 1} />
 
         <div
-          className="rounded-[20px] bg-white p-8"
+          className="rounded-[20px] bg-white p-8 dark:bg-tf-dark-bg-card"
           style={{ boxShadow: "0 8px 32px rgba(15,23,42,0.08)" }}
         >
           {step === 1 && (
             <form className="flex flex-col gap-5" onSubmit={handleCreateTask}>
               <div className="flex flex-col items-center gap-4">
-                <div
-                  className="flex h-14 w-14 items-center justify-center rounded-full"
-                  style={{ background: "#F0EFFE" }}
-                >
+                <div className={cn("h-14 w-14", iconBubbleClass)}>
                   <Sparkles
                     className="h-7 w-7"
                     style={{ color: "#534AB7" }}
                   />
                 </div>
                 <div className="text-center">
-                  <h2
-                    className="text-xl font-bold"
-                    style={{ color: "#1A1A2E" }}
-                  >
+                  <h2 className={cn("text-xl", titleClass)}>
                     Qual é a primeira coisa importante que você não quer
                     esquecer?
                   </h2>
-                  <p
-                    className="mt-2 text-sm leading-relaxed"
-                    style={{ color: "#6B7280" }}
-                  >
+                  <p className={cn("mt-2 text-sm leading-relaxed", bodyTextClass)}>
                     Pode ser uma reunião, um compromisso, um prazo. Qualquer
                     coisa que merece um lugar garantido na sua agenda.
                   </p>
@@ -407,10 +411,7 @@ export default function OnboardingPage() {
               </div>
 
               <label className="flex flex-col gap-1.5">
-                <span
-                  className="text-sm font-medium"
-                  style={{ color: "#1A1A2E" }}
-                >
+                <span className={labelClass}>
                   Título da tarefa
                 </span>
                 <input
@@ -427,10 +428,7 @@ export default function OnboardingPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <label className="flex flex-col gap-1.5">
-                  <span
-                    className="text-sm font-medium"
-                    style={{ color: "#1A1A2E" }}
-                  >
+                  <span className={labelClass}>
                     Data
                   </span>
                   <input
@@ -442,12 +440,9 @@ export default function OnboardingPage() {
                   />
                 </label>
                 <label className="flex flex-col gap-1.5">
-                  <span
-                    className="text-sm font-medium"
-                    style={{ color: "#1A1A2E" }}
-                  >
+                  <span className={labelClass}>
                     Horário{" "}
-                    <span style={{ color: "#9CA3AF", fontWeight: 400 }}>
+                    <span className={cn("font-normal", hintTextClass)}>
                       (opcional)
                     </span>
                   </span>
@@ -488,24 +483,18 @@ export default function OnboardingPage() {
           {step === 2 && (
             <div className="flex flex-col gap-5">
               <div className="flex flex-col items-center gap-4">
-                <div
-                  className="flex h-14 w-14 items-center justify-center rounded-full"
-                  style={{ background: "#F0EFFE" }}
-                >
+                <div className={cn("h-14 w-14", iconBubbleClass)}>
                   <Calendar
                     className="h-7 w-7"
                     style={{ color: "#534AB7" }}
                   />
                 </div>
                 <div className="text-center">
-                  <h2
-                    className="text-xl font-bold"
-                    style={{ color: "#1A1A2E" }}
-                  >
+                  <h2 className={cn("text-xl", titleClass)}>
                     Existe alguém importante que você nunca quer esquecer de
                     parabenizar?
                   </h2>
-                  <p className="mt-2 text-sm" style={{ color: "#6B7280" }}>
+                  <p className={cn("mt-2 text-sm", bodyTextClass)}>
                     Cadastre uma data especial e seu agente vai te lembrar na
                     hora certa.
                   </p>
@@ -518,7 +507,7 @@ export default function OnboardingPage() {
               />
               <SkipButton onClick={() => setStep(step + 1)} />
 
-              <p className="text-center text-xs" style={{ color: "#9CA3AF" }}>
+              <p className={cn("text-center text-xs", hintTextClass)}>
                 Você pode cadastrar mais datas especiais depois, no menu Datas
                 Especiais.
               </p>
@@ -534,30 +523,21 @@ export default function OnboardingPage() {
           {step === 3 && (
             <form className="flex flex-col gap-5" onSubmit={handleConfirmPhone}>
               <div className="flex flex-col items-center gap-4">
-                <div
-                  className="flex h-14 w-14 items-center justify-center rounded-full"
-                  style={{ background: "#F0EFFE" }}
-                >
+                <div className={cn("h-14 w-14", iconBubbleClass)}>
                   <Phone className="h-7 w-7" style={{ color: "#534AB7" }} />
                 </div>
                 <div className="text-center">
-                  <h2
-                    className="text-xl font-bold"
-                    style={{ color: "#1A1A2E" }}
-                  >
+                  <h2 className={cn("text-xl", titleClass)}>
                     Seu WhatsApp pessoal
                   </h2>
-                  <p className="mt-1 text-sm" style={{ color: "#6B7280" }}>
+                  <p className={cn("mt-1 text-sm", bodyTextClass)}>
                     Este é o número que poderá conversar com seu agente.
                   </p>
                 </div>
               </div>
 
               <label className="flex flex-col gap-1.5">
-                <span
-                  className="text-sm font-medium"
-                  style={{ color: "#1A1A2E" }}
-                >
+                <span className={labelClass}>
                   Número de WhatsApp
                 </span>
                 <input
@@ -574,11 +554,11 @@ export default function OnboardingPage() {
                       : ""
                   }
                 />
-                <span className="text-xs" style={{ color: "#9CA3AF" }}>
+                <span className={cn("text-xs", hintTextClass)}>
                   Apenas dígitos (DDD + número), ex:{" "}
                   {formatPhoneDisplay(whatsappPhone) || "55119999999"}
                 </span>
-                <span className="text-xs" style={{ color: "#9CA3AF" }}>
+                <span className={cn("text-xs", hintTextClass)}>
                   Este é o seu número pessoal, não o número do agente.
                 </span>
               </label>
@@ -609,32 +589,20 @@ export default function OnboardingPage() {
 
           {step === 4 && (
             <div className="flex flex-col items-center gap-5">
-              <div
-                className="flex h-14 w-14 items-center justify-center rounded-full"
-                style={{ background: "#F0EFFE" }}
-              >
+              <div className={cn("h-14 w-14", iconBubbleClass)}>
                 <QrCode className="h-7 w-7" style={{ color: "#534AB7" }} />
               </div>
               <div className="text-center">
-                <h2
-                  className="text-xl font-bold"
-                  style={{ color: "#1A1A2E" }}
-                >
+                <h2 className={cn("text-xl", titleClass)}>
                   Agora vamos conectar seu agente pessoal
                 </h2>
-                <p className="mt-2 text-sm" style={{ color: "#6B7280" }}>
+                <p className={cn("mt-2 text-sm", bodyTextClass)}>
                   Abra o WhatsApp no celular, toque em Dispositivos conectados
                   e escaneie o QR Code abaixo.
                 </p>
               </div>
 
-              <div
-                className="flex h-[220px] w-[220px] items-center justify-center rounded-2xl"
-                style={{
-                  border: "2px solid #E5E7EB",
-                  background: "#FAFAFA"
-                }}
-              >
+              <div className="flex h-[220px] w-[220px] items-center justify-center rounded-2xl border-2 border-[#E5E7EB] bg-[#FAFAFA] dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar">
                 {qrLoading && !qrCode && (
                   <Loader2
                     className="h-8 w-8 animate-spin"
@@ -643,7 +611,7 @@ export default function OnboardingPage() {
                 )}
                 {!qrLoading && qrError && !qrCode && (
                   <div className="flex flex-col items-center gap-2 p-4 text-center">
-                    <p className="text-xs" style={{ color: "#9CA3AF" }}>
+                    <p className={cn("text-xs", hintTextClass)}>
                       {qrError}
                     </p>
                     <button
@@ -670,7 +638,7 @@ export default function OnboardingPage() {
                       className="h-6 w-6 animate-spin"
                       style={{ color: "#534AB7" }}
                     />
-                    <p className="text-xs" style={{ color: "#9CA3AF" }}>
+                    <p className={cn("text-xs", hintTextClass)}>
                       Preparando sua instância...
                     </p>
                   </div>
@@ -679,7 +647,7 @@ export default function OnboardingPage() {
 
               {pairingCode && (
                 <div className="text-center">
-                  <p className="text-xs" style={{ color: "#9CA3AF" }}>
+                  <p className={cn("text-xs", hintTextClass)}>
                     Código de pareamento
                   </p>
                   <p
@@ -721,10 +689,7 @@ export default function OnboardingPage() {
 
           {step === 5 && (
             <div className="flex flex-col items-center gap-5 py-2">
-              <div
-                className="flex h-20 w-20 items-center justify-center rounded-full"
-                style={{ background: "#F0EFFE" }}
-              >
+              <div className={cn("h-20 w-20", iconBubbleClass)}>
                 <CheckCircle2
                   className="h-10 w-10"
                   style={{ color: "#534AB7" }}
@@ -732,16 +697,10 @@ export default function OnboardingPage() {
               </div>
 
               <div className="text-center">
-                <h2
-                  className="text-2xl font-bold"
-                  style={{ color: "#1A1A2E" }}
-                >
+                <h2 className={cn("text-2xl", titleClass)}>
                   Seu agente está pronto 🎉
                 </h2>
-                <p
-                  className="mt-2 text-sm leading-relaxed"
-                  style={{ color: "#6B7280" }}
-                >
+                <p className={cn("mt-2 text-sm leading-relaxed", bodyTextClass)}>
                   Agora é só conversar. Seu agente já conhece sua primeira
                   tarefa e está esperando por você.
                 </p>
@@ -759,10 +718,9 @@ export default function OnboardingPage() {
                   </button>
                 )}
                 <button
-                  className="h-10 w-full rounded-[10px] border border-[#E5E7EB] text-sm font-medium transition-colors hover:border-[#534AB7] hover:text-[#534AB7] disabled:opacity-60"
+                  className="h-10 w-full rounded-[10px] border border-[#E5E7EB] text-sm font-medium text-[#6B7280] transition-colors hover:border-[#534AB7] hover:text-[#534AB7] disabled:opacity-60 dark:border-tf-dark-border dark:text-tf-dark-text-muted dark:hover:border-[#534AB7] dark:hover:text-[#534AB7]"
                   disabled={loading}
                   onClick={handleCompleteOnboarding}
-                  style={{ color: "#6B7280" }}
                   type="button"
                 >
                   {loading ? (

@@ -123,8 +123,10 @@ export default function AdminUsersPage() {
     <section className="space-y-5 p-5">
       <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-[#111827]">Usuários</h1>
-          <p className="mt-1 text-sm text-[#6B7280]">
+          <h1 className="text-2xl font-semibold text-[#111827] dark:text-tf-dark-text-primary">
+            Usuários
+          </h1>
+          <p className="mt-1 text-sm text-[#6B7280] dark:text-tf-dark-text-muted">
             Gerencie os usuários da plataforma
           </p>
         </div>
@@ -154,13 +156,13 @@ export default function AdminUsersPage() {
         />
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-white p-4">
+      <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-tf-dark-border dark:bg-tf-dark-bg-card">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <label className="relative block w-full lg:max-w-sm">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF] dark:text-tf-dark-text-faint" />
             <input
               aria-label="Buscar usuários"
-              className="h-10 w-full rounded-lg border border-slate-200 pl-10 pr-3 text-sm outline-none focus:border-[#534AB7] focus:ring-4 focus:ring-[#EEEDFE]"
+              className="h-10 w-full rounded-lg border border-slate-200 pl-10 pr-3 text-sm outline-none focus:border-[#534AB7] focus:ring-4 focus:ring-[#EEEDFE] dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-primary"
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Buscar por nome ou email"
               value={search}
@@ -177,8 +179,8 @@ export default function AdminUsersPage() {
                 className={cn(
                   "h-9 rounded-lg px-3 text-xs font-medium transition",
                   filter === value
-                    ? "bg-[#EEEDFE] text-[#534AB7]"
-                    : "text-[#6B7280] hover:bg-[#F3F4F6]"
+                    ? "bg-[#EEEDFE] text-[#534AB7] dark:bg-tf-dark-purple-light"
+                    : "text-[#6B7280] hover:bg-[#F3F4F6] dark:text-tf-dark-text-muted dark:hover:bg-tf-dark-bg-sidebar"
                 )}
                 key={value}
                 onClick={() => setFilter(value as UserFilter)}
@@ -197,10 +199,10 @@ export default function AdminUsersPage() {
         </p>
       ) : null}
 
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-tf-dark-border dark:bg-tf-dark-bg-card">
         <div className="overflow-x-auto">
           <table className="min-w-[1160px] w-full border-collapse text-left">
-            <thead className="bg-[#F9FAFB] text-[11px] uppercase tracking-wide text-[#6B7280]">
+            <thead className="bg-[#F9FAFB] text-[11px] uppercase tracking-wide text-[#6B7280] dark:bg-tf-dark-bg-page dark:text-tf-dark-text-muted">
               <tr>
                 <TableHeader>Nome</TableHeader>
                 <TableHeader>Email</TableHeader>
@@ -215,40 +217,46 @@ export default function AdminUsersPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td className="px-4 py-8 text-center text-sm text-[#6B7280]" colSpan={8}>
+                  <td
+                    className="px-4 py-8 text-center text-sm text-[#6B7280] dark:text-tf-dark-text-muted"
+                    colSpan={8}
+                  >
                     Carregando usuários...
                   </td>
                 </tr>
               ) : visibleUsers.length ? (
-                visibleUsers.map((user) => {
+                visibleUsers.map((user, index) => {
                   const isCurrentUser = user.id === currentUser?.id;
 
                   return (
                     <tr
                       className={cn(
-                        "border-t border-slate-100 text-sm",
-                        isCurrentUser && "bg-[#FAFAFA]"
+                        "border-t border-slate-100 text-sm transition-colors hover:bg-[#FAFAFA] dark:border-tf-dark-border-light dark:hover:bg-tf-dark-bg-page",
+                        index % 2 === 1 && "bg-[#FCFCFD] dark:bg-tf-dark-bg-page/60",
+                        isCurrentUser && "bg-[#FAFAFA] dark:bg-tf-dark-bg-page"
                       )}
                       key={user.id}
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EEEDFE] text-xs font-semibold text-[#534AB7]">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EEEDFE] text-xs font-semibold text-[#534AB7] dark:bg-tf-dark-purple-light">
                             {getInitials(user.name)}
                           </span>
                           <div>
-                            <p className="font-medium text-[#111827]">
+                            <p className="font-medium text-[#111827] dark:text-tf-dark-text-primary">
                               {user.name}
                             </p>
                             {isCurrentUser ? (
-                              <p className="text-[11px] text-[#6B7280]">
+                              <p className="text-[11px] text-[#6B7280] dark:text-tf-dark-text-muted">
                                 Você
                               </p>
                             ) : null}
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-[#6B7280]">{user.email}</td>
+                      <td className="px-4 py-3 text-[#6B7280] dark:text-tf-dark-text-muted">
+                        {user.email}
+                      </td>
                       <td className="px-4 py-3">
                         <Badge variant={user.role === "admin" ? "purple" : "slate"}>
                           {user.role === "admin" ? "Admin" : "Usuário"}
@@ -259,17 +267,19 @@ export default function AdminUsersPage() {
                           {user.active ? "Ativo" : "Inativo"}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-[#6B7280]">
+                      <td className="px-4 py-3 text-[#6B7280] dark:text-tf-dark-text-muted">
                         {user.whatsapp_phone ? (
                           formatPhone(user.whatsapp_phone)
                         ) : (
-                          <span className="text-[#9CA3AF]">Não vinculado</span>
+                          <span className="text-[#9CA3AF] dark:text-tf-dark-text-faint">
+                            Não vinculado
+                          </span>
                         )}
                       </td>
                       <td className="px-4 py-3">
                         <InstanceStatusBadge status={user.instance_status} />
                       </td>
-                      <td className="px-4 py-3 text-[#6B7280]">
+                      <td className="px-4 py-3 text-[#6B7280] dark:text-tf-dark-text-muted">
                         {new Date(user.createdAt).toLocaleDateString("pt-BR")}
                       </td>
                       <td className="px-4 py-3">
@@ -291,7 +301,7 @@ export default function AdminUsersPage() {
                               </ActionButton>
                             ) : (
                               <button
-                                className="inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-xs font-medium text-[#0F6E56] hover:bg-[#E1F5EE]"
+                                className="inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-xs font-medium text-[#0F6E56] hover:bg-[#E1F5EE] dark:hover:bg-tf-dark-bg-sidebar"
                                 onClick={() => void toggleActive(user.id, true)}
                                 type="button"
                               >
@@ -307,7 +317,10 @@ export default function AdminUsersPage() {
                 })
               ) : (
                 <tr>
-                  <td className="px-4 py-8 text-center text-sm text-[#6B7280]" colSpan={8}>
+                  <td
+                    className="px-4 py-8 text-center text-sm text-[#6B7280] dark:text-tf-dark-text-muted"
+                    colSpan={8}
+                  >
                     Nenhum usuário encontrado.
                   </td>
                 </tr>
@@ -316,26 +329,26 @@ export default function AdminUsersPage() {
           </table>
         </div>
 
-        <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
-          <p className="text-xs text-[#6B7280]">
+        <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3 dark:border-tf-dark-border-light">
+          <p className="text-xs text-[#6B7280] dark:text-tf-dark-text-muted">
             {filteredUsers.length} usuário(s)
           </p>
           <div className="flex items-center gap-2">
             <button
               aria-label="Página anterior"
-              className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-[#6B7280] disabled:opacity-40"
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-[#6B7280] disabled:opacity-40 dark:border-tf-dark-border dark:text-tf-dark-text-muted"
               disabled={page <= 1}
               onClick={() => setPage((current) => Math.max(1, current - 1))}
               type="button"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <span className="min-w-20 text-center text-xs font-medium text-[#374151]">
+            <span className="min-w-20 text-center text-xs font-medium text-[#374151] dark:text-tf-dark-text-muted">
               Página {Math.min(page, totalPages)} de {totalPages}
             </span>
             <button
               aria-label="Próxima página"
-              className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-[#6B7280] disabled:opacity-40"
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-[#6B7280] disabled:opacity-40 dark:border-tf-dark-border dark:text-tf-dark-text-muted"
               disabled={page >= totalPages}
               onClick={() =>
                 setPage((current) => Math.min(totalPages, current + 1))
@@ -375,13 +388,17 @@ function StatCard({
   value: number;
 }) {
   return (
-    <article className="rounded-lg border border-slate-200 bg-white p-4">
+    <article className="rounded-lg border border-slate-200 bg-white p-4 dark:border-tf-dark-border dark:bg-tf-dark-bg-card">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs text-[#6B7280]">{label}</p>
-          <p className="mt-1 text-2xl font-semibold text-[#111827]">{value}</p>
+          <p className="text-xs text-[#6B7280] dark:text-tf-dark-text-muted">
+            {label}
+          </p>
+          <p className="mt-1 text-2xl font-semibold text-[#111827] dark:text-tf-dark-text-primary">
+            {value}
+          </p>
         </div>
-        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#EEEDFE] text-[#534AB7]">
+        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#EEEDFE] text-[#534AB7] dark:bg-tf-dark-purple-light">
           <Icon className="h-5 w-5" />
         </span>
       </div>
@@ -415,6 +432,7 @@ function ActionButton({
       aria-label={label}
       className={cn(
         "flex h-8 w-8 items-center justify-center rounded-md text-[#6B7280] hover:bg-[#F3F4F6]",
+        "dark:text-tf-dark-text-muted dark:hover:bg-tf-dark-bg-sidebar",
         danger && "hover:bg-rose-50 hover:text-rose-600"
       )}
       onClick={onClick}
