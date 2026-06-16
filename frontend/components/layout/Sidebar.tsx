@@ -103,7 +103,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex h-screen w-[220px] flex-col border-r border-tf-border bg-tf-bg-sidebar transition-transform duration-200 md:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 flex h-screen w-[220px] flex-col border-r border-tf-border bg-tf-bg-sidebar transition-transform duration-200 dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar md:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -114,7 +114,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             </Link>
             <button
               aria-label="Fechar menu"
-              className="flex h-8 w-8 items-center justify-center rounded-md text-tf-text-muted hover:bg-tf-bg-page md:hidden"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-tf-text-muted hover:bg-tf-bg-page dark:text-tf-dark-text-muted dark:hover:bg-tf-dark-bg-page md:hidden"
               onClick={onClose}
               type="button"
             >
@@ -123,7 +123,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           </div>
         </div>
 
-        <div className="mx-5 h-px bg-tf-border-light" />
+        <div className="mx-5 h-px bg-tf-border-light dark:bg-tf-dark-border-light" />
 
         <nav className="flex-1 overflow-y-auto px-3">
           <NavSection label="Menu">
@@ -156,16 +156,16 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           ) : null}
         </nav>
 
-        <div className="mt-auto border-t border-tf-border-light p-3">
+        <div className="mt-auto border-t border-tf-border-light p-3 dark:border-tf-dark-border-light">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-tf-purple-light text-[12px] font-semibold text-tf-purple">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-tf-purple-light text-[12px] font-semibold text-tf-purple dark:bg-tf-dark-purple-light">
               {getInitials(user?.name)}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[12px] font-medium text-tf-text-primary">
+              <p className="truncate text-[12px] font-medium text-tf-text-primary dark:text-tf-dark-text-primary">
                 {user?.name ?? "TarefasFlow"}
               </p>
-              <p className="truncate text-[11px] text-tf-text-faint">
+              <p className="truncate text-[11px] text-tf-text-faint dark:text-tf-dark-text-faint">
                 {user?.email ?? "Carregando sessão"}
               </p>
             </div>
@@ -186,7 +186,7 @@ function NavSection({
 }) {
   return (
     <div className="pt-4">
-      <div className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-tf-text-faint">
+      <div className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-tf-text-faint dark:text-tf-dark-text-faint">
         {label}
       </div>
       <div className="space-y-0.5">{children}</div>
@@ -214,8 +214,8 @@ function NavItem({
       className={cn(
         "flex items-center gap-2.5 rounded-md px-2 py-[7px] text-[13px] transition",
         active
-          ? "bg-tf-purple-light font-medium text-tf-purple"
-          : "text-tf-text-muted hover:bg-tf-bg-page"
+          ? "bg-tf-purple-light font-medium text-tf-purple dark:bg-tf-dark-purple-light"
+          : "text-tf-text-muted hover:bg-tf-bg-page dark:text-tf-dark-text-muted dark:hover:bg-tf-dark-bg-page"
       )}
       href={href}
       onClick={onClick}
