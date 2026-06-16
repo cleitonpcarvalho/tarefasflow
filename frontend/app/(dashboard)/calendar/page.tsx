@@ -275,36 +275,34 @@ export default function CalendarPage() {
         {onboardingStatus ? (
           whatsappDisconnected ? (
             <div
-              className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#F59E0B] bg-[#FFF8E7] px-4 py-3 dark:border-tf-dark-border dark:bg-tf-dark-bg-card"
+              className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#F59E0B] bg-[#FFF8E7] px-4 py-3 dark:border-amber-700 dark:bg-amber-900/30"
             >
-              <span className="text-sm font-medium text-[#92400E] dark:text-tf-dark-text-muted">
+              <span className="text-sm font-medium text-[#92400E] dark:text-amber-200">
                 ⚠️ Seu agente ainda não está conectado. Conecte seu WhatsApp para começar a receber lembretes.
               </span>
               <Link
-                className="shrink-0 rounded-lg px-4 py-2 text-sm font-semibold text-white"
+                className="shrink-0 rounded-lg bg-[#534AB7] px-4 py-2 text-sm font-semibold text-white"
                 href="/onboarding"
-                style={{ background: "#534AB7", borderRadius: 8 }}
               >
                 Conectar WhatsApp
               </Link>
             </div>
           ) : showOnboardingReminder ? (
             <div
-              className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#F59E0B] bg-[#FFF8E7] px-4 py-3 dark:border-tf-dark-border dark:bg-tf-dark-bg-card"
+              className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-tf-border bg-white px-4 py-3 dark:border-tf-dark-border dark:bg-tf-dark-bg-card"
             >
-              <span className="text-sm font-medium text-[#92400E] dark:text-tf-dark-text-muted">
+              <span className="text-sm font-medium text-tf-text-primary dark:text-tf-dark-text-primary">
                 🚀 Complete a configuração do TarefasFlow para aproveitar todos os recursos.
               </span>
               <div className="flex shrink-0 items-center gap-3">
                 <Link
-                  className="rounded-lg px-4 py-2 text-sm font-semibold text-white"
+                  className="rounded-lg bg-[#534AB7] px-4 py-2 text-sm font-semibold text-white"
                   href="/onboarding"
-                  style={{ background: "#534AB7", borderRadius: 8 }}
                 >
                   Continuar configuração
                 </Link>
                 <button
-                  className="text-sm font-medium text-[#92400E] hover:underline dark:text-tf-dark-text-muted"
+                  className="text-sm font-medium text-tf-text-muted hover:underline dark:text-tf-dark-text-muted"
                   onClick={() => void handleDismissOnboarding()}
                   type="button"
                 >
