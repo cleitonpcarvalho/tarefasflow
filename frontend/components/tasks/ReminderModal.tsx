@@ -55,7 +55,7 @@ export function ReminderModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6 dark:bg-black/70">
       <section className="w-[90vw] max-w-[480px] rounded-xl bg-white p-6 shadow-xl dark:bg-tf-dark-bg-card">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div className="min-w-0">

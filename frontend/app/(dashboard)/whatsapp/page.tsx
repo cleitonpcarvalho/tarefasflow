@@ -1079,7 +1079,7 @@ function AuthorizedNumberModal({
   const editing = mode === "edit";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 px-4 py-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 px-4 py-6 dark:bg-black/70">
       <div className="max-h-[calc(100vh-3rem)] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-5 shadow-soft dark:bg-tf-dark-bg-card">
         <div className="flex items-start justify-between gap-3">
           <div>

@@ -59,7 +59,7 @@ export function MobileDaySheet({
   return (
     <>
       <div
-        className="fixed inset-0 z-40 bg-black/40"
+        className="fixed inset-0 z-40 bg-black/40 dark:bg-black/70"
         onClick={onClose}
       />
 

@@ -95,7 +95,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       {open ? (
         <button
           aria-label="Fechar menu lateral"
-          className="fixed inset-0 z-30 bg-slate-950/35 md:hidden"
+          className="fixed inset-0 z-30 bg-slate-950/35 dark:bg-black/70 md:hidden"
           onClick={onClose}
           type="button"
         />

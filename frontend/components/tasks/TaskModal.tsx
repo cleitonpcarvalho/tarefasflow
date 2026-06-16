@@ -112,7 +112,7 @@ export function TaskModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6 dark:bg-black/70">
       <section className="max-h-[calc(100vh-48px)] w-[94vw] max-w-[640px] overflow-y-auto rounded-xl bg-white p-6 shadow-xl dark:bg-tf-dark-bg-card">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-[#111827] dark:text-tf-dark-text-primary">

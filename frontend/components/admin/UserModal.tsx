@@ -85,20 +85,20 @@ export function UserModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6 dark:bg-black/70">
       <section
         aria-labelledby="user-modal-title"
         aria-modal="true"
-        className="w-full max-w-[520px] rounded-xl bg-white p-6 shadow-xl"
+        className="w-full max-w-[520px] rounded-xl bg-white p-6 shadow-xl dark:bg-tf-dark-bg-card"
         role="dialog"
       >
         <div className="mb-5 flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280] dark:text-tf-dark-text-muted">
               Administração
             </p>
             <h2
-              className="text-lg font-semibold text-[#111827]"
+              className="text-lg font-semibold text-[#111827] dark:text-tf-dark-text-primary"
               id="user-modal-title"
             >
               {user ? "Editar usuário" : "Novo usuário"}
@@ -106,7 +106,7 @@ export function UserModal({
           </div>
           <button
             aria-label="Fechar modal"
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-[#6B7280] hover:bg-[#F3F4F6]"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-[#6B7280] hover:bg-[#F3F4F6] dark:text-tf-dark-text-muted dark:hover:bg-tf-dark-bg-sidebar"
             onClick={onClose}
             type="button"
           >
@@ -171,12 +171,12 @@ export function UserModal({
           </Field>
 
           {user ? (
-            <label className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-3">
+            <label className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-3 dark:border-tf-dark-border">
               <span>
-                <span className="block text-sm font-medium text-[#111827]">
+                <span className="block text-sm font-medium text-[#111827] dark:text-tf-dark-text-primary">
                   Usuário ativo
                 </span>
-                <span className="block text-xs text-[#6B7280]">
+                <span className="block text-xs text-[#6B7280] dark:text-tf-dark-text-muted">
                   Usuários inativos não podem acessar a plataforma.
                 </span>
               </span>
@@ -184,7 +184,7 @@ export function UserModal({
                 aria-checked={active}
                 aria-label="Usuário ativo"
                 className={`relative h-6 w-11 rounded-full transition ${
-                  active ? "bg-[#534AB7]" : "bg-slate-300"
+                  active ? "bg-[#534AB7]" : "bg-slate-300 dark:bg-tf-dark-border"
                 }`}
                 disabled={!canChangeActive}
                 onClick={() => setActive((current) => !current)}
@@ -192,7 +192,7 @@ export function UserModal({
                 type="button"
               >
                 <span
-                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition ${
+                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition dark:bg-tf-dark-text-primary ${
                     active ? "left-[22px]" : "left-0.5"
                   }`}
                 />
@@ -221,7 +221,7 @@ export function UserModal({
 }
 
 const inputClasses =
-  "h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-[#534AB7] focus:ring-4 focus:ring-[#EEEDFE]";
+  "h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-[#534AB7] focus:ring-4 focus:ring-[#EEEDFE] dark:border-tf-dark-border dark:bg-tf-dark-bg-sidebar dark:text-tf-dark-text-primary";
 
 function Field({
   children,
@@ -232,7 +232,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-medium text-[#111827]">
+      <span className="mb-2 block text-sm font-medium text-[#111827] dark:text-tf-dark-text-primary">
         {label}
       </span>
       {children}

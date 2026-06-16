@@ -253,7 +253,7 @@ export function SpecialDateForm({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6 dark:bg-black/70"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onCancel?.();
       }}

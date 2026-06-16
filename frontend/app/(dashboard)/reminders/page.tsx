@@ -253,7 +253,7 @@ export default function RemindersPage() {
                             <div className="flex flex-wrap gap-2">
                               {reminders.map((reminder) => (
                                 <span
-                                  className="inline-flex items-center gap-1.5 rounded-full border border-[#D8D5F5] bg-white py-1 pl-2.5 pr-1 text-xs text-[#534AB7]"
+                                  className="inline-flex items-center gap-1.5 rounded-full border border-[#D8D5F5] bg-white py-1 pl-2.5 pr-1 text-xs text-[#534AB7] dark:border-tf-dark-border dark:bg-tf-dark-bg-card"
                                   key={reminder.id}
                                 >
                                   {formatReminderLabel(
@@ -261,7 +261,7 @@ export default function RemindersPage() {
                                   )}
                                   <button
                                     aria-label={`Remover lembrete de ${task.title}`}
-                                    className="flex h-5 w-5 items-center justify-center rounded-full hover:bg-[#EEEDFE]"
+                                    className="flex h-5 w-5 items-center justify-center rounded-full hover:bg-[#EEEDFE] dark:hover:bg-tf-dark-purple-light"
                                     onClick={() =>
                                       void removeReminder(reminder.id, task.id)
                                     }

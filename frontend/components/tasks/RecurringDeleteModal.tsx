@@ -20,7 +20,7 @@ export function RecurringDeleteModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 px-4 py-6">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 px-4 py-6 dark:bg-black/70">
       <section
         aria-labelledby="recurring-delete-title"
         aria-modal="true"
