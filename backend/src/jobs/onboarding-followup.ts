@@ -67,6 +67,7 @@ export async function dispatchOnboardingFollowup(): Promise<void> {
 
     for (const user of users) {
       await sendFollowup(adminInstance.instance_name, user, step.key);
+      await new Promise(resolve => setTimeout(resolve, 3000));
     }
   }
 }

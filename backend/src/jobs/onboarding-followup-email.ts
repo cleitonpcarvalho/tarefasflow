@@ -58,6 +58,7 @@ export async function dispatchOnboardingFollowupEmail(): Promise<void> {
 
     for (const user of users) {
       await sendFollowupEmail(user, step.day, step.key);
+      await new Promise(resolve => setTimeout(resolve, 3000));
     }
   }
 }
