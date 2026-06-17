@@ -1,5 +1,6 @@
 import { sendDailySummaries } from "./daily-summary";
 import { dispatchOnboardingFollowup } from "./onboarding-followup";
+import { dispatchOnboardingFollowupEmail } from "./onboarding-followup-email";
 import { dispatchPendingReminders } from "./reminder-dispatcher";
 import { dispatchSpecialDateNotifications } from "./special-dates-dispatcher";
 import { synchronizeInstances } from "./sync-instances";
@@ -42,6 +43,16 @@ export function startJobs() {
       await dispatchOnboardingFollowup();
     } catch (error) {
       console.error("[JOBS] Erro no onboarding follow-up:", error);
+    }
+  }, 60_000);
+
+  console.log("[JOBS] Onboarding follow-up email iniciado");
+
+  setInterval(async () => {
+    try {
+      await dispatchOnboardingFollowupEmail();
+    } catch (error) {
+      console.error("[JOBS] Erro no onboarding follow-up email:", error);
     }
   }, 60_000);
 

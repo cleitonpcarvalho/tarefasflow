@@ -23,6 +23,17 @@ const SEQUENCE: Array<{ day: FollowupDay; key: FollowupDay }> = [
 ];
 
 export async function dispatchOnboardingFollowup(): Promise<void> {
+  const now = new Date().toLocaleTimeString("pt-BR", {
+    timeZone: "America/Fortaleza",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+
+  if (!isWithinFollowupWindow(now)) {
+    return;
+  }
+
   const adminRows = await sql<AdminInstanceRow[]>`
     SELECT wi.instance_name, wi.status
     FROM users u
@@ -96,35 +107,42 @@ function buildFollowupMessage(day: FollowupDay, name: string) {
         `Olá, ${name}! 👋 Bem-vindo ao TarefasFlow. Você está a um passo de ter`,
         "um assistente pessoal que organiza sua rotina direto no WhatsApp.",
         "Para ativar, é só escanear o QR Code aqui:",
-        "app.tarefasflow.com.br/onboarding — leva menos de 2 minutos. 🚀"
+        "https://app.tarefasflow.com.br/onboarding — leva menos de 2 minutos. 🚀"
       ].join("\n");
     case 1:
       return [
         `Oi, ${name}! Vi que você ainda não conectou seu WhatsApp ao TarefasFlow.`,
         "Sem isso, você não recebe lembretes nem consegue criar tarefas por aqui.",
         "Ainda dá tempo de aproveitar seu período grátis completo:",
-        "app.tarefasflow.com.br/onboarding"
+        "https://app.tarefasflow.com.br/onboarding"
       ].join("\n");
     case 3:
       return [
         `${name}, enquanto você ainda não ativou, outros usuários já estão`,
         "recebendo lembretes automáticos, criando tarefas por voz e nunca mais",
         "esquecendo compromissos. Seu período gratuito está rodando.",
-        "Ativa agora e aproveita: app.tarefasflow.com.br/onboarding ✅"
+        "Ativa agora e aproveita: https://app.tarefasflow.com.br/onboarding ✅"
       ].join("\n");
     case 7:
       return [
         `Metade do seu período gratuito já passou, ${name}. Se você ativar hoje,`,
         "ainda tem 7 dias para testar tudo sem pagar nada. Depois disso, quem",
         "não testou acaba não sentindo a diferença — e a gente não quer que isso",
-        "aconteça com você. É rápido: app.tarefasflow.com.br/onboarding"
+        "aconteça com você. É rápido: https://app.tarefasflow.com.br/onboarding"
       ].join("\n");
     case 12:
       return [
         `${name}, faltam só 2 dias para encerrar seu período gratuito e você`,
         "ainda não experimentou o TarefasFlow de verdade. Não faz sentido deixar",
         "passar. Conecta agora, testa esses 2 dias, e aí você decide.",
-        "app.tarefasflow.com.br/onboarding — qualquer dúvida, é só responder aqui. 👊"
+        "https://app.tarefasflow.com.br/onboarding — qualquer dúvida, é só responder aqui. 👊"
       ].join("\n");
   }
+}
+
+function isWithinFollowupWindow(time: string): boolean {
+  return (
+    (time >= "11:00" && time <= "13:00") ||
+    (time >= "18:00" && time <= "20:00")
+  );
 }
