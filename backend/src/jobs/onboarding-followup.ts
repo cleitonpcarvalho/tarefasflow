@@ -50,14 +50,15 @@ export async function dispatchOnboardingFollowup(): Promise<void> {
 
   for (const step of SEQUENCE) {
     const users = await sql<FollowupUserRow[]>`
-      SELECT id, name, whatsapp_phone
-      FROM users
-      WHERE role = 'user'
-        AND active = true
-        AND whatsapp_phone IS NOT NULL
-        AND onboarding_completed = false
-        AND created_at <= NOW() - ${step.day} * INTERVAL '1 day'
-        AND id NOT IN (
+      SELECT u.id, u.name, u.whatsapp_phone
+      FROM users u
+      LEFT JOIN whatsapp_instances wi ON wi.user_id = u.id
+      WHERE u.role = 'user'
+        AND u.active = true
+        AND u.whatsapp_phone IS NOT NULL
+        AND (wi.status IS NULL OR wi.status != 'open')
+        AND u.created_at <= NOW() - ${step.day} * INTERVAL '1 day'
+        AND u.id NOT IN (
           SELECT user_id
           FROM onboarding_followup_logs
           WHERE day_sequence = ${step.key}
