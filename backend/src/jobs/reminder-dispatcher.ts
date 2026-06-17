@@ -123,8 +123,10 @@ async function createNextRecurringReminder(reminder: PendingReminderRow) {
     const currentOccurrenceDate = formatDateOnly(
       reminder.occurrence_date ?? reminder.task_date
     );
-    const rangeStart = parseDateAtStartOfDay(getTodayKey());
-    const rangeEnd = parseDateAtEndOfDay(getFutureDateKey(60));
+    const rangeStart = parseDateAtStartOfDay(currentOccurrenceDate);
+    const rangeEnd = parseDateAtEndOfDay(
+      getFutureDateKey(currentOccurrenceDate, 60)
+    );
     const nextOccurrence = expandRecurringTask(
       toTask(reminder),
       rangeStart,
@@ -164,22 +166,27 @@ async function createNextRecurringReminder(reminder: PendingReminderRow) {
   }
 }
 
-function buildReminderMessage(reminder: PendingReminderRow) {
-  const emoji = colorEmoji(reminder.color ?? "purple");
-  const horario = reminder.task_time?.slice(0, 5) ?? "";
+function buildReminderMessage(reminder: PendingReminderRow): string {
+  const date = new Date(reminder.scheduled_for!);
+  const day = date.toLocaleDateString("pt-BR", {
+    timeZone: "America/Fortaleza",
+    day: "2-digit",
+    month: "2-digit"
+  });
+  const time = reminder.task_time?.slice(0, 5) ?? "";
   const minutos = reminder.minutes_before;
 
-  const linhas = [
-    `${emoji} *Lembrete em ${minutos} minuto${minutos !== 1 ? "s" : ""}*`,
+  return [
+    `⏰ *Lembrete TarefasFlow*`,
     ``,
-    `📌 ${reminder.title}`,
-    horario ? `🕐 ${horario}` : null,
-    reminder.description ? `📝 ${reminder.description}` : null
-  ]
-    .filter(Boolean)
-    .join("\n");
-
-  return linhas;
+    `Olá, ${reminder.user_name}! Você tem um compromisso chegando:`,
+    ``,
+    `📌 *${reminder.title}*`,
+    `📅 ${day} às ${time}`,
+    `🔔 Este lembrete é ${minutos} minuto${minutos !== 1 ? "s" : ""} antes`,
+    ``,
+    `Boa sorte! 💪`
+  ].join("\n");
 }
 
 function colorEmoji(color: string): string {
@@ -216,13 +223,9 @@ function toTask(row: PendingReminderRow): Task {
   };
 }
 
-function getTodayKey() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function getFutureDateKey(daysFromToday: number) {
-  const date = new Date(`${getTodayKey()}T00:00:00.000Z`);
-  date.setUTCDate(date.getUTCDate() + daysFromToday);
+function getFutureDateKey(dateKey: string, daysFromDate: number) {
+  const date = new Date(`${dateKey}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + daysFromDate);
   return date.toISOString().slice(0, 10);
 }
 

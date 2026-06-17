@@ -315,7 +315,18 @@ export async function updateTask(
     params
   );
 
-  return rows[0] ? toTask(rows[0]) : null;
+  if (!rows[0]) {
+    return null;
+  }
+
+  const task = toTask(rows[0]);
+
+  if (data.task_date !== undefined || data.task_time !== undefined) {
+    const { updateRemindersScheduledFor } = await import("./reminder.service");
+    await updateRemindersScheduledFor(task.id, task.task_date, task.task_time);
+  }
+
+  return task;
 }
 
 export async function deleteTask(

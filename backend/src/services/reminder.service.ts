@@ -55,18 +55,29 @@ export async function createReminder(
   { requesterId }: { requesterId: string }
 ): Promise<Reminder> {
   const tasks = await sql<
-    { id: string; task_date: Date | string; task_time: string | null }[]
+    {
+      id: string;
+      task_date: Date | string;
+      task_time: string | null;
+      rrule: string | null;
+    }[]
   >`
-    SELECT id, task_date, task_time
+    SELECT id, task_date, task_time, rrule
     FROM tasks
     WHERE id = ${data.task_id}
       AND user_id = ${requesterId}
     LIMIT 1
   `;
 
-  if (!tasks[0]) {
+  const task = tasks[0];
+
+  if (!task) {
     throw new ReminderServiceError("Tarefa não encontrada.", 404);
   }
+
+  const occurrenceDate = task.rrule
+    ? data.occurrence_date ?? formatDateOnly(task.task_date)
+    : data.occurrence_date ?? null;
 
   const existingReminders = await sql<{ id: string }[]>`
     SELECT id
@@ -74,7 +85,7 @@ export async function createReminder(
     WHERE task_id = ${data.task_id}
       AND user_id = ${requesterId}
       AND minutes_before = ${data.minutes_before}
-      AND occurrence_date IS NOT DISTINCT FROM ${data.occurrence_date ?? null}
+      AND occurrence_date IS NOT DISTINCT FROM ${occurrenceDate}
     LIMIT 1
   `;
 
@@ -91,15 +102,15 @@ export async function createReminder(
       ${data.task_id},
       ${requesterId},
       ${data.minutes_before},
-      ${data.occurrence_date ?? null}
+      ${occurrenceDate}
     )
     RETURNING id, task_id, user_id, minutes_before, sent_at, created_at
   `;
 
   const reminder = toReminder(rows[0]);
   const scheduledFor = calculateScheduledFor(
-    data.occurrence_date ?? tasks[0].task_date,
-    tasks[0].task_time,
+    occurrenceDate ?? task.task_date,
+    task.task_time,
     data.minutes_before
   );
 
@@ -110,6 +121,36 @@ export async function createReminder(
   `;
 
   return reminder;
+}
+
+export async function updateRemindersScheduledFor(
+  taskId: string,
+  taskDate: string,
+  taskTime: string | null
+): Promise<void> {
+  const reminders = await sql<
+    { id: string; minutes_before: number; occurrence_date: Date | string | null }[]
+  >`
+    SELECT id, minutes_before, occurrence_date
+    FROM reminders
+    WHERE task_id = ${taskId}
+  `;
+
+  await Promise.all(
+    reminders.map((reminder) =>
+      sql`
+        UPDATE reminders
+        SET scheduled_for = ${calculateScheduledFor(
+          reminder.occurrence_date ?? taskDate,
+          taskTime,
+          reminder.minutes_before
+        )},
+        sent_at = NULL,
+        pending_send = false
+        WHERE id = ${reminder.id}
+      `
+    )
+  );
 }
 
 export async function deleteReminder(
@@ -154,4 +195,12 @@ function calculateScheduledFor(
   scheduledFor.setMinutes(scheduledFor.getMinutes() - minutesBefore);
 
   return scheduledFor;
+}
+
+function formatDateOnly(value: Date | string) {
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
+
+  return value.slice(0, 10);
 }
