@@ -78,22 +78,27 @@ async function sendFollowup(
   day: FollowupDay
 ) {
   try {
+    const phone = user.whatsapp_phone.startsWith("55")
+      ? user.whatsapp_phone
+      : `55${user.whatsapp_phone}`;
+
     const delivery = await sendTextMessage(
       instanceName,
-      user.whatsapp_phone,
+      phone,
       buildFollowupMessage(day, user.name)
     );
+
+    if (!delivery.delivered) {
+      console.error(`[followup] dia ${day} → ${phone} → não entregue`, delivery);
+      return;
+    }
 
     await sql`
       INSERT INTO onboarding_followup_logs (user_id, day_sequence)
       VALUES (${user.id}, ${day})
     `;
 
-    console.log(
-      `[followup] dia ${day} → ${user.whatsapp_phone} → ${
-        delivery.delivered ? "ok" : "erro"
-      }`
-    );
+    console.log(`[followup] dia ${day} → ${phone} → ok`);
   } catch (error) {
     console.error(
       `[followup] dia ${day} → ${user.whatsapp_phone} → erro`,
