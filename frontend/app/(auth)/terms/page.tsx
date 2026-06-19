@@ -1,30 +1,31 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 
 export default function TermsPage() {
-  const router = useRouter();
-
   return (
-    <main className="min-h-screen bg-white px-4 py-10 dark:bg-tf-dark-bg-page sm:px-6">
-      <article className="mx-auto w-full max-w-[680px] rounded-[20px] border border-[#E5E7EB] bg-white p-6 shadow-soft dark:border-tf-dark-border dark:bg-tf-dark-bg-card sm:p-10">
-        <div className="mb-8 flex justify-center">
+    <main
+      className="min-h-screen bg-[#F8F7FF] px-4 py-8 dark:bg-tf-dark-bg-page sm:py-12"
+      style={{ fontFamily: "system-ui, sans-serif" }}
+    >
+      <article
+        className="mx-auto w-full max-w-[720px] rounded-2xl bg-white p-12 dark:bg-tf-dark-bg-card"
+        style={{ boxShadow: "0 12px 40px rgba(15,23,42,0.08)" }}
+      >
+        <div className="mb-8 flex justify-center dark:text-tf-dark-text-primary">
           <Image src="/logo-light.png" width={140} height={42} alt="TarefasFlow" priority />
         </div>
 
         <button
-          className="mb-8 inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[#534AB7] transition hover:bg-[#F0EFFE] dark:hover:bg-tf-dark-purple-light"
-          onClick={() => router.back()}
+          className="mb-8 border-0 bg-transparent p-0 text-sm font-medium text-[#534AB7] transition hover:underline dark:text-tf-dark-text-muted"
+          onClick={() => window.history.back()}
           type="button"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar
+          ← Voltar
         </button>
 
         <header className="mb-8 border-b border-[#E5E7EB] pb-6 dark:border-tf-dark-border">
-          <h1 className="text-2xl font-bold text-[#1A1A2E] dark:text-tf-dark-text-primary sm:text-3xl">
+          <h1 className="text-2xl font-bold text-[#534AB7] dark:text-tf-dark-text-primary sm:text-3xl">
             TarefasFlow — Termos de Uso
           </h1>
           <p className="mt-2 text-sm text-[#6B7280] dark:text-tf-dark-text-muted">
@@ -32,7 +33,7 @@ export default function TermsPage() {
           </p>
         </header>
 
-        <div className="space-y-7 text-[15px] leading-7 text-[#6B7280] dark:text-tf-dark-text-muted">
+        <div className="space-y-7 text-[15px] leading-[1.7] text-[#6B7280] dark:text-tf-dark-text-muted">
           <section>
             <h2 className="mb-2 text-lg font-semibold text-[#1A1A2E] dark:text-tf-dark-text-primary">
               1. Aceitação dos Termos
