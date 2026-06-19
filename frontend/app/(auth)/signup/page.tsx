@@ -249,13 +249,23 @@ export default function SignupPage() {
               />
               <span className="text-sm leading-relaxed text-[#6B7280] dark:text-tf-dark-text-muted">
                 Concordo com os{" "}
-                <a className="font-medium hover:underline" href="#" style={{ color: "#534AB7" }}>
+                <Link
+                  className="font-medium hover:underline"
+                  href="/terms"
+                  style={{ color: "#534AB7" }}
+                  target="_blank"
+                >
                   Termos de Uso
-                </a>{" "}
+                </Link>{" "}
                 e{" "}
-                <a className="font-medium hover:underline" href="#" style={{ color: "#534AB7" }}>
+                <Link
+                  className="font-medium hover:underline"
+                  href="/privacy"
+                  style={{ color: "#534AB7" }}
+                  target="_blank"
+                >
                   Política de Privacidade
-                </a>
+                </Link>
               </span>
             </label>
 
