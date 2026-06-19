@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 
 const collectedData = [
   "Nome completo",
@@ -60,23 +61,20 @@ export default function PrivacyPage() {
 
           <div className="my-8 h-px bg-[#E5E7EB]" />
 
-          <button
-            onClick={() => window.history.back()}
+          <Link
+            href="/signup"
             style={{
               color: "#534AB7",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
               fontSize: 14,
-              padding: "0 0 24px 0",
               display: "flex",
               alignItems: "center",
-              gap: 6
+              gap: 6,
+              marginBottom: 24,
+              textDecoration: "none"
             }}
-            type="button"
           >
-            ← Voltar
-          </button>
+            ← Voltar para o cadastro
+          </Link>
 
           <h1 className="text-[28px] font-bold leading-tight text-[#1A1A2E]">
             Política de Privacidade

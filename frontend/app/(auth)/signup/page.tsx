@@ -253,7 +253,6 @@ export default function SignupPage() {
                   className="font-medium hover:underline"
                   href="/terms"
                   style={{ color: "#534AB7" }}
-                  target="_blank"
                 >
                   Termos de Uso
                 </Link>{" "}
@@ -262,7 +261,6 @@ export default function SignupPage() {
                   className="font-medium hover:underline"
                   href="/privacy"
                   style={{ color: "#534AB7" }}
-                  target="_blank"
                 >
                   Política de Privacidade
                 </Link>

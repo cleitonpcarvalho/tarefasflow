@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 
 const sectionTitleClass = "text-base font-semibold text-[#534AB7]";
 const bodyClass = "mt-3 text-[15px] leading-[1.8] text-[#4B5563]";
@@ -16,23 +17,20 @@ export default function TermsPage() {
 
           <div className="my-8 h-px bg-[#E5E7EB]" />
 
-          <button
-            onClick={() => window.history.back()}
+          <Link
+            href="/signup"
             style={{
               color: "#534AB7",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
               fontSize: 14,
-              padding: "0 0 24px 0",
               display: "flex",
               alignItems: "center",
-              gap: 6
+              gap: 6,
+              marginBottom: 24,
+              textDecoration: "none"
             }}
-            type="button"
           >
-            ← Voltar
-          </button>
+            ← Voltar para o cadastro
+          </Link>
 
           <h1 className="text-[28px] font-bold leading-tight text-[#1A1A2E]">Termos de Uso</h1>
           <p className="mt-2 text-[13px] text-[#9CA3AF]">
