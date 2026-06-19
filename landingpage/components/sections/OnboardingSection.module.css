@@ -1,0 +1,355 @@
+.section {
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid var(--color-border);
+  background:
+    radial-gradient(circle at 22% 52%, rgba(79, 70, 229, 0.065), transparent 30%),
+    #fff;
+  padding-block: clamp(96px, 10vw, 150px);
+}
+
+/* DOM order: content, visual. On desktop visual moves LEFT via order: -1 */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(390px, 0.92fr);
+  align-items: center;
+  gap: clamp(46px, 6vw, 88px);
+}
+
+.visual {
+  position: relative;
+  order: -1;
+  margin: 0;
+  min-width: 0;
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  max-width: 540px;
+}
+
+/* ── Badge ─────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 20px;
+  border: 1px solid #e3e0ff;
+  border-radius: 999px;
+  background: #f8f7ff;
+  padding: 8px 13px;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.badgeDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #25d366;
+  box-shadow: 0 0 0 4px rgba(37, 211, 102, 0.15);
+}
+
+/* ── Heading ────────────────────────────────────────── */
+.content h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-family: var(--font-heading), var(--font-heading-fallback);
+  font-size: clamp(36px, 3.8vw, 50px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+
+.subheadline {
+  margin: 22px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 15px;
+  line-height: 1.68;
+  text-wrap: pretty;
+}
+
+/* ── Steps ──────────────────────────────────────────── */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.stepTrack {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0;
+}
+
+.stepNumber {
+  display: inline-flex;
+  width: 26px;
+  height: 26px;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid rgba(79, 70, 229, 0.35);
+  border-radius: 50%;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.stepLine {
+  display: block;
+  width: 1px;
+  height: 22px;
+  margin: 3px 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(79, 70, 229, 0.25),
+    rgba(79, 70, 229, 0.08)
+  );
+}
+
+.stepContent {
+  padding-bottom: 8px;
+  min-height: 50px;
+}
+
+.stepContent h3 {
+  margin: 3px 0 0;
+  color: var(--color-text);
+  font-family: var(--font-heading), var(--font-heading-fallback);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.stepContent p {
+  margin: 4px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+/* ── Micro Benefits ─────────────────────────────────── */
+.benefits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.benefit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #e3e0ff;
+  border-radius: 999px;
+  background: #f8f7ff;
+  padding: 5px 11px 5px 7px;
+  color: var(--color-text);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.benefitCheck {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #25d366;
+  color: #fff;
+}
+
+/* ── Visual / Image ─────────────────────────────────── */
+.glow {
+  position: absolute;
+  z-index: 0;
+  inset: 5% 4% 3%;
+  border-radius: 50%;
+  background: rgba(79, 70, 229, 0.18);
+  filter: blur(68px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.imageFrame {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 24px;
+  background: #efedff;
+  box-shadow:
+    0 30px 76px rgba(45, 38, 131, 0.17),
+    0 2px 0 rgba(255, 255, 255, 0.78) inset;
+}
+
+.image {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ── Floating Cards ─────────────────────────────────── */
+.floatingCard {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.74);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 10px 30px rgba(25, 22, 66, 0.13);
+  padding: 10px 13px 10px 10px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.floatingCard small,
+.floatingCard strong {
+  display: block;
+  line-height: 1.25;
+}
+
+.floatingCard strong {
+  color: var(--color-text);
+  font-size: 11px;
+}
+
+.floatingCard small {
+  margin-top: 3px;
+  color: #727983;
+  font-size: 9px;
+}
+
+.successDot {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(37, 211, 102, 0.14);
+  color: #159447;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.floatingIcon {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: var(--color-primary-soft);
+  font-size: 14px;
+}
+
+/* Diagonal placement */
+.agentCard {
+  top: 18px;
+  right: 18px;
+}
+
+.whatsappCard {
+  bottom: 18px;
+  left: 18px;
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: minmax(0, 1.12fr) minmax(350px, 0.88fr);
+    gap: 42px;
+  }
+
+  .floatingCard {
+    transform: scale(0.88);
+  }
+
+  .agentCard {
+    transform-origin: right top;
+  }
+
+  .whatsappCard {
+    transform-origin: left bottom;
+  }
+}
+
+@media (max-width: 800px) {
+  .section {
+    padding-block: 94px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 52px;
+  }
+
+  .content {
+    max-width: 680px;
+  }
+
+  /* Reset order so content reads first on mobile */
+  .visual {
+    order: 0;
+  }
+}
+
+@media (max-width: 540px) {
+  .section {
+    padding-block: 72px;
+  }
+
+  .content h2 {
+    font-size: clamp(32px, 9.5vw, 40px);
+  }
+
+  .subheadline {
+    font-size: 15px;
+  }
+
+  .imageFrame {
+    border-radius: 16px;
+  }
+
+  .floatingCard {
+    padding: 7px 9px 7px 7px;
+    transform: scale(0.78);
+  }
+
+  .agentCard {
+    top: 8px;
+    right: 8px;
+    transform-origin: right top;
+  }
+
+  .whatsappCard {
+    bottom: 8px;
+    left: 8px;
+    transform-origin: left bottom;
+  }
+}

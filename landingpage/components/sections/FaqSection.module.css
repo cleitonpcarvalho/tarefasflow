@@ -1,0 +1,152 @@
+/* ═══════════════════════════════════════════════════
+   FAQ — accordion, minimal Linear/Notion style
+   ═══════════════════════════════════════════════════ */
+
+.section {
+  border-top: 1px solid var(--color-border);
+  background: #fff;
+  padding-block: clamp(96px, 10vw, 152px);
+}
+
+/* ── Header ─────────────────────────────────────────── */
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: clamp(52px, 6vw, 72px);
+  text-align: center;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 22px;
+  border: 1px solid rgba(79, 70, 229, 0.2);
+  border-radius: 999px;
+  background: rgba(79, 70, 229, 0.05);
+  padding: 7px 14px;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.badgeDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.14);
+  flex-shrink: 0;
+}
+
+.header h2 {
+  margin: 0;
+  max-width: 520px;
+  color: var(--color-text);
+  font-family: var(--font-heading), var(--font-heading-fallback);
+  font-size: clamp(32px, 3.8vw, 48px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.12;
+}
+
+.paragraph {
+  margin: 16px 0 0;
+  max-width: 420px;
+  color: var(--color-text-secondary);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+/* ── List ────────────────────────────────────────────── */
+.list {
+  max-width: 680px;
+  margin-inline: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* ── Item ────────────────────────────────────────────── */
+.item {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.item:last-child {
+  border-bottom: 0;
+}
+
+/* ── Trigger ─────────────────────────────────────────── */
+.trigger {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: transparent;
+  border: 0;
+  padding: 20px 24px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 160ms ease;
+}
+
+.trigger:hover {
+  background: #fafafa;
+}
+
+.trigger:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: -3px;
+}
+
+.question {
+  color: var(--color-text);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+}
+
+/* ── Chevron ─────────────────────────────────────────── */
+.chevron {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--color-text-secondary);
+  transition: transform 240ms ease, color 160ms ease;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+  color: var(--color-primary);
+}
+
+/* ── Answer ──────────────────────────────────────────── */
+.answer {
+  margin: 0;
+  padding: 0 24px 20px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* ── Responsive ──────────────────────────────────────── */
+@media (max-width: 480px) {
+  .section {
+    padding-block: 72px;
+  }
+
+  .header h2 {
+    font-size: clamp(28px, 9vw, 38px);
+  }
+
+  .trigger {
+    padding: 18px 18px;
+  }
+
+  .answer {
+    padding: 0 18px 18px;
+  }
+}

@@ -1,0 +1,317 @@
+/* ═══════════════════════════════════════════════════
+   Pricing — single centered card, primary conversion
+   ═══════════════════════════════════════════════════ */
+
+.section {
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid var(--color-border);
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(79, 70, 229, 0.09), transparent 58%),
+    #fff;
+  padding-block: clamp(96px, 10vw, 160px);
+}
+
+/* ── Header ─────────────────────────────────────────── */
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: clamp(52px, 6vw, 72px);
+  text-align: center;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 22px;
+  border: 1px solid rgba(37, 211, 102, 0.3);
+  border-radius: 999px;
+  background: rgba(37, 211, 102, 0.07);
+  padding: 7px 14px;
+  color: #159447;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+/* WhatsApp green accent — signals free trial */
+.badgeDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #25d366;
+  box-shadow: 0 0 0 4px rgba(37, 211, 102, 0.2);
+}
+
+.header h2 {
+  margin: 0;
+  max-width: 640px;
+  color: var(--color-text);
+  font-family: var(--font-heading), var(--font-heading-fallback);
+  font-size: clamp(34px, 4vw, 52px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+
+.paragraph {
+  margin: 18px 0 0;
+  max-width: 520px;
+  color: var(--color-text-secondary);
+  font-size: 16px;
+  line-height: 1.68;
+  text-wrap: pretty;
+}
+
+/* ── Card area ──────────────────────────────────────── */
+.cardArea {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.cardGlow {
+  position: absolute;
+  z-index: 0;
+  inset: -40% 15%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(79, 70, 229, 0.16),
+    rgba(79, 70, 229, 0.04) 55%,
+    transparent 100%
+  );
+  filter: blur(56px);
+  pointer-events: none;
+}
+
+/* Gradient-border wrapper — same technique as ProductShowcaseSection */
+.cardWrapper {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 520px;
+  border-radius: 28px;
+  padding: 1.5px;
+  background: linear-gradient(
+    150deg,
+    rgba(79, 70, 229, 0.38) 0%,
+    rgba(255, 255, 255, 0.7) 48%,
+    rgba(79, 70, 229, 0.22) 100%
+  );
+  box-shadow:
+    0 40px 96px rgba(45, 38, 131, 0.16),
+    0 8px 24px rgba(45, 38, 131, 0.08);
+}
+
+.card {
+  border-radius: 24px;
+  background: #fdfcff;
+  padding: clamp(32px, 5vw, 48px) clamp(28px, 4.5vw, 44px);
+}
+
+/* ── Trial badge inside card ────────────────────────── */
+.trialBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 28px;
+  border: 1px solid rgba(37, 211, 102, 0.28);
+  border-radius: 999px;
+  background: rgba(37, 211, 102, 0.07);
+  padding: 6px 13px;
+  color: #159447;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.trialDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #25d366;
+  flex-shrink: 0;
+}
+
+/* ── Price ──────────────────────────────────────────── */
+.priceRow {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  line-height: 1;
+}
+
+.currency {
+  color: var(--color-text);
+  font-family: var(--font-heading), var(--font-heading-fallback);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.amount {
+  color: var(--color-text);
+  font-family: var(--font-heading), var(--font-heading-fallback);
+  font-size: 62px;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.period {
+  color: var(--color-text-secondary);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.noCard {
+  margin: 8px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+/* ── Divider ────────────────────────────────────────── */
+.divider {
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  margin: 28px 0;
+}
+
+/* ── Benefits list ──────────────────────────────────── */
+.benefits {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.benefitItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-text);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.checkCircle {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+}
+
+/* ── Setup requirements group ───────────────────────── */
+.setupGroup {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid rgba(79, 70, 229, 0.12);
+  border-radius: 10px;
+  background: #faf9ff;
+}
+
+.setupGroupTitle {
+  margin: 0 0 10px;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.setupList {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.setupItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #606878;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.setupDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  flex: 0 0 auto;
+  opacity: 0.6;
+}
+
+/* ── CTA ────────────────────────────────────────────── */
+.cta {
+  display: flex;
+  width: 100%;
+  min-height: 52px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  transition:
+    background-color 200ms ease,
+    box-shadow 200ms ease,
+    transform 200ms ease;
+}
+
+.cta:hover {
+  transform: translateY(-1px);
+  background: var(--color-primary-hover);
+  box-shadow: 0 10px 28px rgba(79, 70, 229, 0.3);
+}
+
+.cta:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+.subtext {
+  margin: 14px 0 0;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.subtextAccent {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 560px) {
+  .section {
+    padding-block: 72px;
+  }
+
+  .header h2 {
+    font-size: clamp(30px, 9vw, 38px);
+  }
+
+  .cardWrapper {
+    max-width: 100%;
+  }
+
+  .amount {
+    font-size: 52px;
+  }
+}

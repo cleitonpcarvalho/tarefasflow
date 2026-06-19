@@ -1,0 +1,10 @@
+.container {
+  width: min(calc(100% - 48px), var(--container-width));
+  margin-inline: auto;
+}
+
+@media (max-width: 480px) {
+  .container {
+    width: min(calc(100% - 32px), var(--container-width));
+  }
+}

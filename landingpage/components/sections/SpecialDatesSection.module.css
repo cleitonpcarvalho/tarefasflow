@@ -1,0 +1,364 @@
+.section {
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid var(--color-border);
+  /* Warm coral + cool purple — both extremely subtle */
+  background:
+    radial-gradient(circle at 78% 42%, rgba(255, 127, 80, 0.08), transparent 30%),
+    radial-gradient(circle at 82% 22%, rgba(79, 70, 229, 0.05), transparent 24%),
+    #fff;
+  padding-block: clamp(96px, 10vw, 150px);
+}
+
+/* Content LEFT, image RIGHT — same direction as VoiceTasksSection / RemindersSection */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(390px, 0.92fr) minmax(0, 1.35fr);
+  align-items: center;
+  gap: clamp(46px, 6vw, 88px);
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  max-width: 540px;
+}
+
+/* ── Badge ─────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 20px;
+  /* Warm tint on badge border/background */
+  border: 1px solid rgba(255, 127, 80, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 127, 80, 0.06);
+  padding: 8px 13px;
+  color: #c0522a;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.badgeDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #e0663a;
+  box-shadow: 0 0 0 4px rgba(224, 102, 58, 0.15);
+  animation: badgePulse 2.8s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 4px rgba(224, 102, 58, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(224, 102, 58, 0.05);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badgeDot {
+    animation: none;
+  }
+}
+
+/* ── Heading ────────────────────────────────────────── */
+.content h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-family: var(--font-heading), var(--font-heading-fallback);
+  font-size: clamp(38px, 4vw, 52px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+
+.subheadline {
+  margin: 24px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 16px;
+  line-height: 1.68;
+  text-wrap: pretty;
+}
+
+/* ── Benefit Cards ──────────────────────────────────── */
+.cards {
+  display: grid;
+  gap: 10px;
+  margin: 30px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: flex;
+  min-height: 88px;
+  align-items: flex-start;
+  gap: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 26px rgba(26, 25, 48, 0.04);
+  padding: 16px;
+  transition:
+    transform 260ms ease,
+    border-color 260ms ease,
+    box-shadow 260ms ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  /* Warm hover border */
+  border-color: rgba(255, 127, 80, 0.28);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.07),
+    0 0 0 1px rgba(255, 127, 80, 0.1);
+}
+
+.cardIcon {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  /* Warm icon background */
+  background: rgba(255, 127, 80, 0.1);
+  color: #d05a30;
+}
+
+.card h3 {
+  margin: 2px 0 0;
+  color: var(--color-text);
+  font-family: var(--font-heading), var(--font-heading-fallback);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.card p {
+  margin: 5px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* ── Micro Timeline ─────────────────────────────────── */
+.timeline {
+  margin: 28px 0 0;
+}
+
+.timelineLabel {
+  margin: 0 0 10px;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.timelinePills {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.timelineItem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  /* Warm-tinted pill */
+  border: 1px solid rgba(255, 127, 80, 0.25);
+  border-radius: 999px;
+  background: rgba(255, 127, 80, 0.05);
+  padding: 5px 13px;
+  color: #c0522a;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pillConnector {
+  display: block;
+  padding: 2px 0 2px 14px;
+  color: rgba(224, 102, 58, 0.35);
+  font-size: 12px;
+  line-height: 1;
+  user-select: none;
+}
+
+/* ── Visual / Image ─────────────────────────────────── */
+.visual {
+  position: relative;
+  min-width: 0;
+  margin: 0;
+}
+
+.glow {
+  position: absolute;
+  z-index: 0;
+  inset: 5% 4% 3%;
+  border-radius: 50%;
+  /* Warm coral glow behind image */
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(255, 127, 80, 0.22) 0%,
+    rgba(79, 70, 229, 0.14) 60%,
+    transparent 100%
+  );
+  filter: blur(60px);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.imageFrame {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 24px;
+  background: #fdf3ee;
+  box-shadow:
+    0 30px 76px rgba(45, 38, 131, 0.14),
+    0 2px 0 rgba(255, 255, 255, 0.78) inset;
+}
+
+.image {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ── Floating Cards ─────────────────────────────────── */
+.floatingCard {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.74);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 10px 30px rgba(25, 22, 66, 0.12);
+  padding: 10px 13px 10px 10px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.floatingCard strong,
+.floatingCard small {
+  display: block;
+  line-height: 1.25;
+}
+
+.floatingCard strong {
+  color: var(--color-text);
+  font-size: 11px;
+}
+
+.floatingCard small {
+  margin-top: 3px;
+  color: #727983;
+  font-size: 9px;
+}
+
+.floatingIcon {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+.iconWarm {
+  background: rgba(255, 127, 80, 0.12);
+}
+
+.iconPrimary {
+  background: var(--color-primary-soft);
+}
+
+.birthdayCard {
+  top: 18px;
+  right: 18px;
+}
+
+.suggestionCard {
+  right: 18px;
+  bottom: 18px;
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: minmax(350px, 0.88fr) minmax(0, 1.12fr);
+    gap: 42px;
+  }
+
+  .floatingCard {
+    transform: scale(0.88);
+    transform-origin: right;
+  }
+}
+
+@media (max-width: 800px) {
+  .section {
+    padding-block: 94px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 52px;
+  }
+
+  .content {
+    max-width: 680px;
+  }
+}
+
+@media (max-width: 540px) {
+  .section {
+    padding-block: 72px;
+  }
+
+  .content h2 {
+    font-size: clamp(34px, 10vw, 42px);
+  }
+
+  .subheadline {
+    font-size: 15px;
+  }
+
+  .imageFrame {
+    border-radius: 16px;
+  }
+
+  .floatingCard {
+    padding: 7px 9px 7px 7px;
+    transform: scale(0.78);
+  }
+
+  .birthdayCard {
+    top: 8px;
+    right: 8px;
+  }
+
+  .suggestionCard {
+    right: 8px;
+    bottom: 8px;
+  }
+}

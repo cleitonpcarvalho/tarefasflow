@@ -1,0 +1,50 @@
+.card {
+  display: flex;
+  min-height: 126px;
+  align-items: flex-start;
+  gap: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 8px 28px rgba(28, 26, 55, 0.045);
+  padding: 22px;
+  transition:
+    transform 260ms ease,
+    border-color 260ms ease,
+    box-shadow 260ms ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  border-color: #dedbff;
+  box-shadow: 0 14px 34px rgba(28, 26, 55, 0.075);
+}
+
+.sparkle {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 17px;
+}
+
+.card h3 {
+  margin: 2px 0 0;
+  color: var(--color-text);
+  font-family: var(--font-heading), var(--font-heading-fallback);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.card p {
+  margin: 7px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+}

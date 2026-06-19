@@ -1,0 +1,361 @@
+.section {
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid var(--color-border);
+  background:
+    radial-gradient(circle at 78% 44%, rgba(79, 70, 229, 0.06), transparent 30%),
+    #fff;
+  padding-block: clamp(96px, 10vw, 150px);
+}
+
+/* Content LEFT, image RIGHT — same column ratio as VoiceTasksSection */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(390px, 0.92fr) minmax(0, 1.35fr);
+  align-items: center;
+  gap: clamp(46px, 6vw, 88px);
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  max-width: 540px;
+}
+
+/* ── Badge ─────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 20px;
+  border: 1px solid #e3e0ff;
+  border-radius: 999px;
+  background: #f8f7ff;
+  padding: 8px 13px;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.badgeDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.14);
+  animation: badgePulse 2.4s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.14);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(79, 70, 229, 0.05);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badgeDot {
+    animation: none;
+  }
+}
+
+/* ── Heading ────────────────────────────────────────── */
+.content h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-family: var(--font-heading), var(--font-heading-fallback);
+  font-size: clamp(38px, 4vw, 52px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+
+.subheadline {
+  margin: 24px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 16px;
+  line-height: 1.68;
+  text-wrap: pretty;
+}
+
+/* ── Benefit Cards ──────────────────────────────────── */
+.cards {
+  display: grid;
+  gap: 10px;
+  margin: 30px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: flex;
+  min-height: 88px;
+  align-items: flex-start;
+  gap: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 26px rgba(26, 25, 48, 0.04);
+  padding: 16px;
+  transition:
+    transform 260ms ease,
+    border-color 260ms ease,
+    box-shadow 260ms ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: #dfdcff;
+  box-shadow: var(--shadow-card);
+}
+
+.cardIcon {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.card h3 {
+  margin: 2px 0 0;
+  color: var(--color-text);
+  font-family: var(--font-heading), var(--font-heading-fallback);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.card p {
+  margin: 5px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* ── Micro Timeline ─────────────────────────────────── */
+.timeline {
+  margin: 28px 0 0;
+}
+
+.timelineLabel {
+  margin: 0 0 12px;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.timelinePills {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.timelineItem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #e3e0ff;
+  border-radius: 999px;
+  background: #f8f7ff;
+  padding: 5px 13px;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pillConnector {
+  display: block;
+  padding: 2px 0 2px 14px;
+  color: #c7c2f0;
+  font-size: 12px;
+  line-height: 1;
+  user-select: none;
+}
+
+/* ── Visual / Image ─────────────────────────────────── */
+.visual {
+  position: relative;
+  min-width: 0;
+  margin: 0;
+}
+
+.glow {
+  position: absolute;
+  z-index: 0;
+  inset: 5% 4% 3%;
+  border-radius: 50%;
+  background: rgba(79, 70, 229, 0.18);
+  filter: blur(68px);
+  opacity: 0.52;
+  pointer-events: none;
+}
+
+.imageFrame {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 24px;
+  background: #efedff;
+  box-shadow:
+    0 30px 76px rgba(45, 38, 131, 0.17),
+    0 2px 0 rgba(255, 255, 255, 0.78) inset;
+}
+
+.image {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ── Floating Cards ─────────────────────────────────── */
+.floatingCard {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.74);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 10px 30px rgba(25, 22, 66, 0.13);
+  padding: 10px 13px 10px 10px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.floatingCard small,
+.floatingCard strong {
+  display: block;
+  line-height: 1.25;
+}
+
+.floatingCard small {
+  color: #727983;
+  font-size: 9px;
+}
+
+.floatingCard strong {
+  margin-top: 2px;
+  color: var(--color-text);
+  font-size: 11px;
+}
+
+.detail {
+  margin-top: 3px !important;
+}
+
+.floatingIcon {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: var(--color-primary-soft);
+  font-size: 15px;
+}
+
+.successDot {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(37, 211, 102, 0.14);
+  color: #159447;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.reminderCard {
+  top: 18px;
+  right: 18px;
+}
+
+.sentCard {
+  right: 18px;
+  bottom: 18px;
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: minmax(350px, 0.88fr) minmax(0, 1.12fr);
+    gap: 42px;
+  }
+
+  .floatingCard {
+    transform: scale(0.88);
+    transform-origin: right;
+  }
+}
+
+@media (max-width: 800px) {
+  .section {
+    padding-block: 94px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 52px;
+  }
+
+  .content {
+    max-width: 680px;
+  }
+}
+
+@media (max-width: 540px) {
+  .section {
+    padding-block: 72px;
+  }
+
+  .content h2 {
+    font-size: clamp(34px, 10vw, 42px);
+  }
+
+  .subheadline {
+    font-size: 15px;
+  }
+
+  .imageFrame {
+    border-radius: 16px;
+  }
+
+  .floatingCard {
+    padding: 7px 9px 7px 7px;
+    transform: scale(0.78);
+  }
+
+  .reminderCard {
+    top: 8px;
+    right: 8px;
+  }
+
+  .sentCard {
+    right: 8px;
+    bottom: 8px;
+  }
+}

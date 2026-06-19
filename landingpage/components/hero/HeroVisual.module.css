@@ -1,0 +1,137 @@
+.figure {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 780px;
+  margin: 0;
+  justify-self: end;
+}
+
+.float {
+  position: relative;
+}
+
+.glow {
+  position: absolute;
+  z-index: -1;
+  inset: 9% 4% 5% 4%;
+  border-radius: 50%;
+  background: rgba(79, 70, 229, 0.22);
+  filter: blur(60px);
+  opacity: 0.62;
+  pointer-events: none;
+}
+
+.frame {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  border-radius: var(--radius-md);
+  background: #efedff;
+  box-shadow:
+    var(--shadow-hero),
+    0 2px 0 rgba(255, 255, 255, 0.78) inset;
+  isolation: isolate;
+}
+
+.image {
+  width: 100%;
+  height: auto;
+}
+
+.playButton {
+  position: absolute;
+  z-index: 2;
+  right: 22px;
+  bottom: 20px;
+  display: inline-flex;
+  min-height: 54px;
+  align-items: center;
+  gap: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 30px rgba(32, 25, 105, 0.18);
+  padding: 8px 14px 8px 8px;
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: left;
+  backdrop-filter: blur(16px);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.playButton:hover {
+  transform: translateY(-2px);
+  background: #fff;
+  box-shadow: 0 14px 34px rgba(32, 25, 105, 0.24);
+}
+
+.playIcon {
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.playButton strong,
+.playButton small {
+  display: block;
+}
+
+.playButton strong {
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.playButton small {
+  margin-top: 2px;
+  color: var(--color-text-secondary);
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+@media (max-width: 1199px) {
+  .figure {
+    max-width: 700px;
+  }
+}
+
+@media (max-width: 900px) {
+  .figure {
+    width: 100%;
+    max-width: 760px;
+    justify-self: center;
+  }
+}
+
+@media (max-width: 520px) {
+  .frame {
+    border-radius: 14px;
+  }
+
+  .playButton {
+    right: 10px;
+    bottom: 10px;
+    min-height: 44px;
+    border-radius: 11px;
+    padding: 6px 10px 6px 6px;
+  }
+
+  .playIcon {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+  }
+
+  .playButton small {
+    display: none;
+  }
+}

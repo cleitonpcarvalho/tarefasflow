@@ -1,0 +1,219 @@
+/* ═══════════════════════════════════════════════════
+   HeroVideoEmbed — inline YouTube player in hero
+   ═══════════════════════════════════════════════════ */
+
+.figure {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  /* ~10% larger than 780px */
+  max-width: 855px;
+  margin: 0;
+  justify-self: end;
+}
+
+/* ── Ambient glow behind the frame ──────────────────── */
+.glow {
+  position: absolute;
+  z-index: -1;
+  inset: 9% 4% 5% 4%;
+  border-radius: 50%;
+  background: rgba(79, 70, 229, 0.24);
+  filter: blur(64px);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+/* ── Video frame ─────────────────────────────────────── */
+.frame {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  border-radius: var(--radius-md);
+  background: #060614;
+  box-shadow:
+    var(--shadow-hero),
+    0 2px 0 rgba(255, 255, 255, 0.78) inset;
+  /* Locks aspect ratio — prevents CLS */
+  aspect-ratio: 16 / 9;
+}
+
+/* ── Player container ────────────────────────────────── */
+.playerWrap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.playerMount {
+  width: 100%;
+  height: 100%;
+}
+
+/* YouTube replaces the mount div with an iframe */
+.playerMount :global(iframe) {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* ── Interaction shield — blocks YouTube hover UI ────── */
+.shield {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  cursor: default;
+}
+
+/* ── Dark scrim behind audio CTA ─────────────────────── */
+.videoScrim {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: rgba(6, 6, 20, 0.52);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+/* ── Audio unlock button ─────────────────────────────── */
+.audioButton {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 200px;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 12px 48px rgba(14, 10, 50, 0.32),
+    0 4px 16px rgba(14, 10, 50, 0.18),
+    0 1px 0 rgba(255, 255, 255, 0.96) inset;
+  padding: 24px 32px 20px;
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: center;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.audioButton:hover {
+  transform: translate(-50%, calc(-50% - 3px));
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow:
+    0 18px 56px rgba(14, 10, 50, 0.38),
+    0 6px 20px rgba(14, 10, 50, 0.2),
+    0 1px 0 rgba(255, 255, 255, 0.96) inset;
+}
+
+.audioButton:active {
+  transform: translate(-50%, calc(-50% + 1px));
+  box-shadow:
+    0 8px 28px rgba(14, 10, 50, 0.22),
+    0 2px 8px rgba(14, 10, 50, 0.14);
+}
+
+.audioButton:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+/* Large speaker emoji */
+.audioEmoji {
+  font-size: 40px;
+  line-height: 1;
+  display: block;
+  margin-bottom: 2px;
+}
+
+/* "Ativar áudio" — primary label */
+.audioLabel {
+  display: block;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--color-text);
+}
+
+/* "Toque para ouvir a demonstração completa" */
+.audioSub {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  max-width: 160px;
+}
+
+/* ── Progress bar ─────────────────────────────────────── */
+.progressTrack {
+  height: 5px;
+  margin-top: 12px;
+  border-radius: 999px;
+  background: rgba(79, 70, 229, 0.12);
+  overflow: visible; /* allows glow to bleed out */
+  position: relative;
+}
+
+.progressFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6366f1 0%, var(--color-primary) 40%, #818cf8 100%);
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 320ms ease;
+  box-shadow:
+    0 0 8px rgba(99, 102, 241, 0.7),
+    0 0 2px rgba(99, 102, 241, 0.5);
+  border-radius: 999px;
+}
+
+/* ── Responsive ──────────────────────────────────────── */
+@media (max-width: 1199px) {
+  .figure {
+    max-width: 770px;
+  }
+}
+
+@media (max-width: 900px) {
+  .figure {
+    width: 100%;
+    max-width: 840px;
+    justify-self: center;
+  }
+}
+
+@media (max-width: 600px) {
+  .frame {
+    border-radius: 14px;
+  }
+
+  .audioButton {
+    min-width: 168px;
+    padding: 18px 24px 16px;
+    border-radius: 16px;
+  }
+
+  .audioEmoji {
+    font-size: 32px;
+  }
+
+  .audioLabel {
+    font-size: 16px;
+  }
+
+  .audioSub {
+    font-size: 10px;
+  }
+}
