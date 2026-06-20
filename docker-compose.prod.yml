@@ -50,6 +50,21 @@ services:
         - "traefik.http.routers.tarefasflow-frontend.tls=true"
         - "traefik.http.routers.tarefasflow-frontend.tls.certresolver=letsencrypt"
         - "traefik.http.services.tarefasflow-frontend.loadbalancer.server.port=3000"
+  landing:
+    image: ghcr.io/cleitonpcarvalho/tarefasflow-landing:latest
+    restart: unless-stopped
+    networks:
+      - AutomaNet
+    deploy:
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=AutomaNet"
+        - "traefik.http.routers.tarefasflow-landing.rule=Host(`tarefasflow.com.br`) || Host(`www.tarefasflow.com.br`)"
+        - "traefik.http.routers.tarefasflow-landing.entrypoints=websecure"
+        - "traefik.http.routers.tarefasflow-landing.tls=true"
+        - "traefik.http.routers.tarefasflow-landing.tls.certresolver=letsencrypt"
+        - "traefik.http.services.tarefasflow-landing.loadbalancer.server.port=3000"
 
 networks:
   AutomaNet:
