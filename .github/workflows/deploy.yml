@@ -7,6 +7,7 @@ on:
     paths:
       - "backend/**"
       - "frontend/**"
+      - "landingpage/**"
       - "docker-compose.prod.yml"
 
 jobs:
@@ -47,6 +48,16 @@ jobs:
           file: ./frontend/Dockerfile.prod
           push: true
           tags: ghcr.io/cleitonpcarvalho/tarefasflow/frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push landing page
+        uses: docker/build-push-action@v5
+        with:
+          context: ./landingpage
+          file: ./landingpage/Dockerfile
+          push: true
+          tags: ghcr.io/cleitonpcarvalho/tarefasflow-landing:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
