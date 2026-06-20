@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - staging
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - "docker-compose.prod.yml"
 
 jobs:
   build-and-push:
