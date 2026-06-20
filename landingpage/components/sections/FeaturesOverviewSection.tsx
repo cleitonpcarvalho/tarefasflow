@@ -1,7 +1,10 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { ArrowIcon } from "@/components/ui/ArrowIcon";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Container } from "@/components/ui/Container";
+import { seoConfig } from "@/lib/seo";
 import styles from "./FeaturesOverviewSection.module.css";
 
 function IconWhatsApp() {
@@ -212,6 +215,15 @@ export function FeaturesOverviewSection() {
             </motion.article>
           ))}
         </div>
+
+        <motion.div className={styles.ctaWrap} {...headerReveal}>
+          <ButtonLink
+            href={`${seoConfig.appUrl}/signup`}
+            icon={<ArrowIcon />}
+          >
+            Começar gratuitamente
+          </ButtonLink>
+        </motion.div>
       </Container>
     </section>
   );

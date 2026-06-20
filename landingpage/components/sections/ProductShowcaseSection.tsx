@@ -2,7 +2,10 @@
 
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
+import { ArrowIcon } from "@/components/ui/ArrowIcon";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Container } from "@/components/ui/Container";
+import { seoConfig } from "@/lib/seo";
 import styles from "./ProductShowcaseSection.module.css";
 
 const benefits = [
@@ -113,6 +116,15 @@ export function ProductShowcaseSection() {
         <motion.p className={styles.statement} {...reveal}>
           Menos coisas na cabeça. Mais controle do seu dia.
         </motion.p>
+
+        <motion.div className={styles.ctaWrap} {...reveal}>
+          <ButtonLink
+            href={`${seoConfig.appUrl}/signup`}
+            icon={<ArrowIcon />}
+          >
+            Quero testar meu agente grátis
+          </ButtonLink>
+        </motion.div>
       </Container>
     </section>
   );

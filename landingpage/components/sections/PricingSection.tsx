@@ -24,6 +24,13 @@ const setupRequirements = [
   "Configuração em poucos minutos"
 ];
 
+const trustPoints = [
+  "14 dias grátis",
+  "Sem cartão de crédito",
+  "Cancele quando quiser",
+  "Configuração em poucos minutos"
+];
+
 export function PricingSection() {
   const reduceMotion = useReducedMotion();
 
@@ -87,7 +94,17 @@ export function PricingSection() {
                 <span className={styles.amount}>29,97</span>
                 <span className={styles.period}>/mês</span>
               </div>
-              <p className={styles.noCard}>Sem cartão de crédito para começar.</p>
+
+              <ul className={styles.trustPoints} role="list">
+                {trustPoints.map((point) => (
+                  <li className={styles.trustPoint} key={point}>
+                    <span aria-hidden="true" className={styles.trustCheck}>
+                      <CheckIcon />
+                    </span>
+                    {point}
+                  </li>
+                ))}
+              </ul>
 
               <hr className={styles.divider} />
 

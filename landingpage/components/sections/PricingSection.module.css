@@ -169,10 +169,43 @@
   line-height: 1;
 }
 
-.noCard {
-  margin: 8px 0 0;
-  color: var(--color-text-secondary);
-  font-size: 13px;
+.trustPoints {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+  margin: 22px 0 0;
+  border: 1px solid rgba(79, 70, 229, 0.12);
+  border-radius: 14px;
+  background: rgba(248, 247, 255, 0.8);
+  padding: 16px;
+  list-style: none;
+}
+
+.trustPoint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #596171;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.trustCheck {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(37, 211, 102, 0.12);
+  color: #159447;
+}
+
+.trustCheck svg {
+  width: 11px;
+  height: 11px;
 }
 
 /* ── Divider ────────────────────────────────────────── */
@@ -313,5 +346,9 @@
 
   .amount {
     font-size: 52px;
+  }
+
+  .trustPoints {
+    grid-template-columns: 1fr;
   }
 }

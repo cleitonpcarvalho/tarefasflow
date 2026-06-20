@@ -70,9 +70,9 @@
   position: absolute;
   inset: 0;
   z-index: 2;
-  background: rgba(6, 6, 20, 0.52);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  background: rgba(6, 6, 20, 0.62);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 /* ── Audio unlock button ─────────────────────────────── */
@@ -127,12 +127,13 @@
   outline-offset: 3px;
 }
 
-/* Large speaker emoji */
-.audioEmoji {
-  font-size: 40px;
-  line-height: 1;
-  display: block;
+/* Play circle icon */
+.audioIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 2px;
+  color: var(--color-primary);
 }
 
 /* "Ativar áudio" — primary label */
@@ -205,8 +206,9 @@
     border-radius: 16px;
   }
 
-  .audioEmoji {
-    font-size: 32px;
+  .audioIcon svg {
+    width: 44px;
+    height: 44px;
   }
 
   .audioLabel {

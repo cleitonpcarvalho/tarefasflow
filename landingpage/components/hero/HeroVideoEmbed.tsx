@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { PlayCircleIcon } from "@/components/ui/PlayCircleIcon";
 import styles from "./HeroVideoEmbed.module.css";
 
 const VIDEO_ID = "RXkQV21uKTg";
@@ -47,8 +48,8 @@ export function HeroVideoEmbed() {
         playerVars: {
           autoplay: 1,
           mute: 1,
-          controls: 0,
-          disablekb: 1,
+          controls: 1,
+          disablekb: 0,
           fs: 0,
           iv_load_policy: 3,
           modestbranding: 1,
@@ -66,6 +67,11 @@ export function HeroVideoEmbed() {
             if (!window.YT) return;
             if (data === window.YT.PlayerState.PLAYING) {
               startTracking();
+            } else if (data === window.YT.PlayerState.PAUSED) {
+              if (trackingRef.current) {
+                window.clearInterval(trackingRef.current);
+                trackingRef.current = null;
+              }
             } else if (data === window.YT.PlayerState.ENDED) {
               if (trackingRef.current) {
                 window.clearInterval(trackingRef.current);
@@ -134,8 +140,10 @@ export function HeroVideoEmbed() {
           <div className={styles.playerMount} ref={mountRef} />
         </div>
 
-        {/* Blocks native YouTube controls on hover */}
-        <div aria-hidden="true" className={styles.shield} />
+        {/* Protects the muted preview until the visitor unlocks the audio. */}
+        {!audioUnlocked ? (
+          <div aria-hidden="true" className={styles.shield} />
+        ) : null}
 
         {/* Dark scrim — draws attention to the CTA overlay */}
         {showOverlay ? (
@@ -148,7 +156,9 @@ export function HeroVideoEmbed() {
             onClick={handleUnlockAudio}
             type="button"
           >
-            <span aria-hidden="true" className={styles.audioEmoji}>🔊</span>
+            <span aria-hidden="true" className={styles.audioIcon}>
+              <PlayCircleIcon />
+            </span>
             <span className={styles.audioLabel}>Ativar áudio</span>
             <span className={styles.audioSub}>Toque para ouvir a demonstração completa</span>
           </button>

@@ -264,6 +264,12 @@
   line-height: 1.4;
 }
 
+.ctaWrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 28px;
+}
+
 /* ── Responsive ──────────────────────────────────────── */
 @media (max-width: 1000px) {
   .cards {

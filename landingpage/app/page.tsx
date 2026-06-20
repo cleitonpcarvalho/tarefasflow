@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { FaqSection } from "@/components/sections/FaqSection";
 import { FeaturesOverviewSection } from "@/components/sections/FeaturesOverviewSection";
 import { PricingSection } from "@/components/sections/PricingSection";
+import { PreFaqCtaSection } from "@/components/sections/PreFaqCtaSection";
 import { ProductShowcaseSection } from "@/components/sections/ProductShowcaseSection";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 
@@ -14,11 +15,12 @@ export default function HomePage() {
       <SiteHeader />
       <main>
         <HeroSection />
+        <ProductShowcaseSection />
         <HowItWorksSection />
         <FeaturesOverviewSection />
-        <ProductShowcaseSection />
         <PricingSection />
         <TestimonialsSection />
+        <PreFaqCtaSection />
         <FaqSection />
       </main>
       <SiteFooter />
